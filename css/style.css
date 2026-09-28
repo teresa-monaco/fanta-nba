@@ -314,11 +314,15 @@ details summary {
 .reset-zone { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); }
 
 /* ---- barra dei rilanci, fissa in fondo ---- */
+/* --vv-bottom lo calcola app.js dal viewport VISIVO: su iOS il viewport di
+   layout si estende dietro la barra di Safari, e senza questo scostamento
+   i tasti restano tagliati a metà sotto la toolbar. Vale 0 ovunque altro. */
 .bidbar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  position: fixed; left: 0; right: 0; bottom: var(--vv-bottom, 0px); z-index: 30;
   background: var(--surface); border-top: 3px solid var(--red);
   padding: 9px 12px calc(9px + env(safe-area-inset-bottom));
   box-shadow: 0 -10px 26px rgba(0, 0, 0, .5);
+  transition: bottom .12s ease-out;
 }
 .bidrow { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; max-width: 700px; margin: 0 auto; }
 .bidrow + .bidrow { margin-top: 6px; }
@@ -348,7 +352,9 @@ details summary {
   padding: 14px 8px; background: var(--surface-2);
 }
 .flatnote.lead { color: var(--gold); font-weight: 700; }
-.bidbar-spacer { height: 116px; }
+/* spazio sotto il contenuto: la barra è fixed e altrimenti coprirebbe il fondo.
+   Include lo scostamento della toolbar, così anche l'ultima riga resta leggibile. */
+.bidbar-spacer { height: calc(124px + var(--vv-bottom, 0px)); }
 
 @media (min-width: 600px) {
   .seats { grid-template-columns: repeat(4, 1fr); }

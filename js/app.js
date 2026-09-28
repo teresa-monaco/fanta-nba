@@ -76,6 +76,30 @@ function fatal(err) {
 }
 
 /* ==========================================================
+   iOS: tenere la barra dei rilanci sopra la toolbar di Safari
+   ========================================================== */
+
+// Su iOS "position: fixed; bottom: 0" si ancora al viewport di LAYOUT, che si
+// estende dietro la barra degli indirizzi: i tasti finivano tagliati a metà.
+// env(safe-area-inset-bottom) non basta, copre solo la tacca del gesto.
+// La differenza fra innerHeight e il viewport VISIBILE dice di quanto alzarla.
+function syncViewportInset() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const nascosto = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+  document.documentElement.style.setProperty('--vv-bottom', `${nascosto}px`);
+}
+
+if (typeof window !== 'undefined' && window.visualViewport) {
+  const vv = window.visualViewport;
+  vv.addEventListener('resize', syncViewportInset);
+  vv.addEventListener('scroll', syncViewportInset);
+  // Dopo la rotazione Safari assesta la toolbar con qualche frame di ritardo.
+  window.addEventListener('orientationchange', () => setTimeout(syncViewportInset, 300));
+  syncViewportInset();
+}
+
+/* ==========================================================
    Cronometro dell'asta
    ========================================================== */
 

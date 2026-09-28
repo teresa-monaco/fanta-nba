@@ -51,6 +51,14 @@ globalThis.fetch = async (url) => {
   return { ok: true, json: async () => JSON.parse(body) };
 };
 
+// Viewport finto da iPhone con la barra di Safari APERTA: il viewport di
+// layout è 844, quello visibile 730. La barra dei rilanci deve alzarsi di 114.
+const cssVars = {};
+globalThis.document.documentElement = { style: { setProperty(k, v) { cssVars[k] = v; } } };
+globalThis.innerHeight = 844;
+globalThis.visualViewport = { height: 730, offsetTop: 0, addEventListener() {} };
+globalThis.addEventListener = () => {};
+
 let uncaught = null;
 process.on('unhandledRejection', (e) => { uncaught = e; });
 
@@ -80,6 +88,8 @@ console.log('\nCollaudo interfaccia (modalita locale, DOM simulato)\n');
 ok(!!F?.session, 'l\'app si avvia e apre una sessione', F?.session?.mode);
 ok(clean() && has('Fanta NBA', 'Inizia'), 'la lobby si disegna');
 ok(els.topbar.innerHTML.includes('FANTA'), 'la barra in alto si disegna');
+ok(cssVars['--vv-bottom'] === '114px',
+  'la barra dei rilanci si alza sopra la toolbar di Safari', `--vv-bottom = ${cssVars['--vv-bottom']}`);
 
 /* 2. Asta */
 const now = () => Date.now();
