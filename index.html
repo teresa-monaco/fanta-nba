@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1017">
+  <meta name="description" content="Fanta NBA: asta a crediti fra quattro squadre, quintetti, playoff simulati. Gira nel browser, nessuna installazione.">
+  <title>Fanta NBA</title>
+
+  <!-- App installabile dalla home del telefono, senza store. -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏀</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏀</text></svg>">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header class="topbar" id="topbar">
+    <div class="brand">FANTA<span>NBA</span></div>
+  </header>
+
+  <main id="app">
+    <div class="card center muted">Caricamento…</div>
+  </main>
+
+  <noscript>
+    <div style="padding:16px;color:#e8ecf4">Questo gioco ha bisogno di JavaScript attivo.</div>
+  </noscript>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,530 @@
+// engine.js — modello aggregato di simulazione.
+//
+// Come funziona, in breve:
+//  1. buildTeam() riduce un quintetto a un profilo numerico (attacco, difesa,
+//     spacing, rimbalzi, protezione del ferro, taglia...) e registra le
+//     penalita di fit come "fattori" leggibili.
+//  2. matchup() confronta due profili e applica i modificatori di strategia,
+//     che dipendono da CHI hai davanti (il post-up vale meno contro un
+//     protettore del ferro, la transizione vale di piu contro un quintetto grosso).
+//  3. simGame() traduce la differenza in possessi e punti per possesso, aggiunge
+//     la varianza (che la strategia puo alzare o abbassare) e distribuisce il
+//     punteggio in un box score.
+//
+// Ogni numero che conta viene esportato come "fattore" con la sua grandezza:
+// il narratore ci costruisce sopra la spiegazione, quindi il racconto non puo
+// mai contraddire il risultato.
+
+import { db, makeRng, gauss, clamp, SLOTS, TEAM_NAMES } from './core.js';
+
+const W_SCORING = [0.30, 0.24, 0.19, 0.15, 0.12]; // peso per rango di realizzazione
+
+/* ==========================================================
+   1. PROFILO SQUADRA
+   ========================================================== */
+
+export function buildTeam(key, lineup, tactics) {
+  const D = db();
+  const five = SLOTS.map((slot) => {
+    const p = D.byId[lineup[slot]];
+    if (!p) throw new Error(`Quintetto incompleto per ${key}: manca ${slot}`);
+    return { ...p, slot };
+  });
+
+  const a = (p) => p.attrs;
+  const factors = [];
+
+  // --- aggregati grezzi ---
+  const scoSorted = five.map(a).map((x) => x.sco).sort((x, y) => y - x);
+  const teamScoring = scoSorted.reduce((s, v, i) => s + v * W_SCORING[i], 0);
+
+  const treSorted = five.map(a).map((x) => x.tre).sort((x, y) => y - x);
+  const spacing = (treSorted[0] * 0.32 + treSorted[1] * 0.28 + treSorted[2] * 0.22 + treSorted[3] * 0.18);
+  const shooters = five.filter((p) => a(p).tre >= 75).length;
+
+  const plaSorted = five.map(a).map((x) => x.pla).sort((x, y) => y - x);
+  const playmaking = plaSorted[0] * 0.55 + plaSorted[1] * 0.30 + (plaSorted[2] + plaSorted[3] + plaSorted[4]) / 3 * 0.15;
+
+  const rebounding = five.reduce((s, p) => s + a(p).reb, 0) / 5;
+  const difSorted = five.map(a).map((x) => x.dif).sort((x, y) => y - x);
+  const rimProtect = difSorted[0] * 0.60 + difSorted[1] * 0.40;
+
+  const perimeterCrew = five.filter((p) => ['PG', 'SG', 'SF'].includes(p.slot));
+  const perimD = perimeterCrew.reduce((s, p) => s + a(p).dpe, 0) / perimeterCrew.length;
+
+  const athleticism = five.reduce((s, p) => s + a(p).atl, 0) / 5;
+  const size = five.reduce((s, p) => s + D.positionSize[p.pos], 0); // sulla posizione NATURALE
+  const usageTotal = five.reduce((s, p) => s + a(p).usg, 0);
+  const avgSco = five.reduce((s, p) => s + a(p).sco, 0) / 5;
+  const bigs = five.filter((p) => ['PF', 'C'].includes(p.slot));
+  const bigScoring = Math.max(...bigs.map((p) => a(p).sco));
+  const bigPlay = Math.max(...bigs.map((p) => a(p).pla));
+
+  // --- base ---
+  let off = teamScoring * 0.62 + spacing * 0.20 + playmaking * 0.18;
+  let def = perimD * 0.42 + rimProtect * 0.36 + rebounding * 0.12 + (size / 15) * 80 * 0.10;
+
+  // --- penalita di fit (le stesse cose che guarderebbe un allenatore) ---
+
+  const misfits = five.filter((p) => p.slot !== p.pos && !(p.alt || []).includes(p.slot));
+  if (misfits.length) {
+    const d = -2.6 * misfits.length;
+    off += d; def += d;
+    factors.push({ key: 'fuori-ruolo', side: key, delta: d * 2, label: 'Giocatori fuori ruolo',
+      data: { names: misfits.map((p) => `${p.n} da ${p.slot}`) } });
+  }
+
+  if (shooters < 2) {
+    const d = -(2 - shooters) * 5.0;
+    off += d;
+    factors.push({ key: 'no-spacing', side: key, delta: d, label: 'Spacing assente', data: { shooters } });
+  } else if (shooters >= 4) {
+    const d = 3.2;
+    off += d;
+    factors.push({ key: 'spacing-totale', side: key, delta: d, label: 'Spacing totale', data: { shooters } });
+  }
+
+  if (plaSorted[0] < 72) {
+    const d = -(72 - plaSorted[0]) * 0.50;
+    off += d;
+    factors.push({ key: 'no-playmaker', side: key, delta: d, label: 'Nessun vero regista', data: { best: Math.round(plaSorted[0]) } });
+  }
+
+  const usageOver = usageTotal - 340;
+  let usageClashDelta = 0;
+  if (usageOver > 0) {
+    usageClashDelta = -usageOver * 0.105;
+    factors.push({ key: 'troppe-bocche', side: key, delta: usageClashDelta, label: 'Troppe bocche da sfamare',
+      data: { over: Math.round(usageOver) } });
+  }
+
+  if (rimProtect < 76) {
+    const d = -(76 - rimProtect) * 0.50;
+    def += d;
+    factors.push({ key: 'ferro-scoperto', side: key, delta: d, label: 'Ferro scoperto', data: { rim: Math.round(rimProtect) } });
+  }
+
+  if (size < 13) {
+    const d = -(13 - size) * 2.4;
+    def += d;
+    factors.push({ key: 'quintetto-piccolo', side: key, delta: d, label: 'Quintetto sottodimensionato', data: { size } });
+  }
+
+  // Il primo violino dovrebbe essere il miglior realizzatore: se non lo e,
+  // l'attacco sta dando la palla alla persona sbagliata.
+  const topScorerId = five.slice().sort((x, y) => a(y).sco - a(x).sco)[0].id;
+  if (tactics.v1 && tactics.v1 !== topScorerId) {
+    const d = -2.2;
+    off += d;
+    factors.push({ key: 'violino-sbagliato', side: key, delta: d, label: 'Prima opzione non ottimale',
+      data: { chosen: D.byId[tactics.v1]?.n, best: D.byId[topScorerId]?.n } });
+  }
+
+  return {
+    key, name: TEAM_NAMES[key], five, tactics,
+    off, def, usageClashDelta,
+    spacing, shooters, playmaking, rebounding, rimProtect, perimD,
+    athleticism, size, usageTotal, avgSco, teamScoring, bigScoring, bigPlay,
+    factors,
+    byId: (id) => five.find((p) => p.id === id),
+  };
+}
+
+/* ==========================================================
+   2. STRATEGIE — modificatori che dipendono dall'avversario
+   ========================================================== */
+
+const STRAT = {
+  'palla-star': { pace: 0, variance: 0.90, fx(t, o) {
+    const f = [];
+    const v1 = t.byId(t.tactics.v1) || t.five[0];
+    const lift = (v1.attrs.sco - t.avgSco) * 0.36;
+    f.push({ key: 'star-usage', delta: lift, label: `${v1.n} con la palla in mano`, data: { player: v1.n } });
+    const pressure = -Math.max(0, o.perimD - 76) * 0.38;
+    if (pressure < -0.6) f.push({ key: 'star-contenuta', delta: pressure, label: 'Attacco prevedibile contro una difesa perimetrale forte', data: { oppPerimD: Math.round(o.perimD) } });
+    return f;
+  }},
+  'isolamento': { pace: -2, variance: 1.00, fx(t, o) {
+    const f = [];
+    const v1 = t.byId(t.tactics.v1) || t.five[0];
+    const v2 = t.byId(t.tactics.v2) || t.five[1];
+    f.push({ key: 'iso-talento', delta: ((v1.attrs.sco + v2.attrs.sco) / 2 - t.avgSco) * 0.34, label: 'Uno contro uno per i due violini', data: { player: v1.n } });
+    f.push({ key: 'iso-ritmo', delta: -Math.max(0, o.perimD - 74) * 0.30, label: 'Ritmo bloccato dalla difesa individuale avversaria', data: {} });
+    return f;
+  }},
+  'pick-roll': { pace: 2, variance: 0.98, fx(t, o) {
+    const f = [];
+    const quality = (Math.max(t.playmaking, 60) - 70) * 0.30 + (t.bigScoring - 78) * 0.22;
+    f.push({ key: 'pnr-coppia', delta: quality, label: 'Qualita della coppia nel pick and roll', data: {} });
+    const slow = Math.max(0, 80 - o.athleticism) * 0.16;
+    if (slow > 0.5) f.push({ key: 'pnr-difesa-lenta', delta: slow, label: 'Difesa avversaria lenta nei cambi', data: {} });
+    return f;
+  }},
+  'post-up': { pace: -3, variance: 0.92, fx(t, o) {
+    const f = [];
+    f.push({ key: 'post-peso', delta: (t.bigScoring - 80) * 0.40, label: 'Peso offensivo nel pitturato', data: {} });
+    const wall = -Math.max(0, o.rimProtect - 80) * 0.42;
+    if (wall < -0.6) f.push({ key: 'post-muro', delta: wall, label: 'Il ferro avversario e protetto', data: { oppRim: Math.round(o.rimProtect) } });
+    f.push({ key: 'post-scarichi', delta: (t.shooters - 2) * 1.8, label: 'Scarichi sui tiratori dopo il raddoppio', data: { shooters: t.shooters } });
+    return f;
+  }},
+  'attacco-ferro': { pace: 3, variance: 1.02, fx(t, o) {
+    const f = [];
+    f.push({ key: 'ferro-atletismo', delta: (t.athleticism - 78) * 0.24, label: 'Pressione atletica sul canestro', data: {} });
+    f.push({ key: 'ferro-muro', delta: -Math.max(0, o.rimProtect - 80) * 0.36, label: 'Protezione del ferro avversaria', data: { oppRim: Math.round(o.rimProtect) } });
+    return f;
+  }},
+  'tiro-3': { pace: 4, variance: 1.48, fx(t, o) {
+    const f = [];
+    f.push({ key: 'tre-volume', delta: (t.spacing - 76) * 0.32, label: 'Volume e qualita dal perimetro', data: { spacing: Math.round(t.spacing) } });
+    f.push({ key: 'tre-varianza', delta: 0, label: 'Serata al tiro', data: {}, varianceOnly: true });
+    return f;
+  }},
+  'transizione': { pace: 7, variance: 1.12, fx(t, o) {
+    const f = [];
+    f.push({ key: 'tr-atletismo', delta: (t.athleticism - 78) * 0.26, label: 'Gambe e campo aperto', data: {} });
+    const heavy = Math.max(0, o.size - 15) * 1.4;
+    if (heavy > 0.5) f.push({ key: 'tr-pesantezza', delta: heavy, label: 'Quintetto avversario troppo pesante per correre', data: { oppSize: o.size } });
+    return f;
+  }},
+  'motion': { pace: 1, variance: 0.94, fx(t, o) {
+    const f = [];
+    // Il motion e l'unica strategia che RIPARA il caos da troppe stelle.
+    if (t.usageClashDelta < 0) {
+      const heal = -t.usageClashDelta * 0.72;
+      f.push({ key: 'motion-armonia', delta: heal, label: 'Il movimento di palla disinnesca il conflitto di usage', data: {} });
+    }
+    f.push({ key: 'motion-lettura', delta: (t.playmaking - 74) * 0.24, label: 'Letture collettive e gioco senza palla', data: {} });
+    const solo = t.five.filter((p) => p.attrs.pla >= 72).length;
+    if (solo <= 1) f.push({ key: 'motion-un-creatore', delta: -3.4, label: 'Un solo creatore: il motion gira a vuoto', data: {} });
+    return f;
+  }},
+  'dentro-fuori': { pace: 0, variance: 1.04, fx(t, o) {
+    const f = [];
+    f.push({ key: 'df-lungo', delta: (t.bigScoring - 80) * 0.24, label: 'Il lungo attira la difesa', data: {} });
+    f.push({ key: 'df-tiro', delta: (t.spacing - 76) * 0.20, label: 'Tiratori pronti sugli scarichi', data: {} });
+    if (t.shooters < 2 || t.bigScoring < 80) f.push({ key: 'df-incompleto', delta: -3.0, label: 'Manca meta del meccanismo dentro-fuori', data: {} });
+    return f;
+  }},
+  'handoff': { pace: 2, variance: 1.00, fx(t, o) {
+    const f = [];
+    f.push({ key: 'ho-tiro', delta: (t.spacing - 76) * 0.18, label: 'Tiratori liberati in movimento', data: {} });
+    f.push({ key: 'ho-lettura', delta: (t.playmaking - 74) * 0.16 + (t.bigPlay - 66) * 0.12, label: 'Consegne e letture dei lunghi', data: {} });
+    return f;
+  }},
+  'equilibrato': { pace: 0, variance: 1.00, fx() {
+    return [{ key: 'eq-solido', delta: 1.6, label: 'Nessuna debolezza sfruttabile', data: {} }];
+  }},
+};
+
+export function matchup(A, B) {
+  const sA = STRAT[A.tactics.strategy] || STRAT['equilibrato'];
+  const sB = STRAT[B.tactics.strategy] || STRAT['equilibrato'];
+
+  const fxA = sA.fx(A, B).map((f) => ({ ...f, side: A.key }));
+  const fxB = sB.fx(B, A).map((f) => ({ ...f, side: B.key }));
+
+  const offA = A.off + fxA.reduce((s, f) => s + (f.varianceOnly ? 0 : f.delta), 0);
+  const offB = B.off + fxB.reduce((s, f) => s + (f.varianceOnly ? 0 : f.delta), 0);
+
+  // Vantaggi strutturali indipendenti dalla strategia.
+  const structural = [];
+  const rebDiff = A.rebounding - B.rebounding;
+  if (Math.abs(rebDiff) > 4) {
+    structural.push({ key: 'rimbalzi', side: rebDiff > 0 ? A.key : B.key,
+      delta: Math.abs(rebDiff) * 0.16, label: 'Dominio a rimbalzo', data: { diff: Math.round(Math.abs(rebDiff)) } });
+  }
+  const sizeDiff = A.size - B.size;
+  if (Math.abs(sizeDiff) >= 3) {
+    structural.push({ key: 'taglia', side: sizeDiff > 0 ? A.key : B.key,
+      delta: Math.abs(sizeDiff) * 0.55, label: 'Vantaggio di stazza', data: { diff: Math.abs(sizeDiff) } });
+  }
+  const spcDiff = A.spacing - B.spacing;
+  if (Math.abs(spcDiff) > 5) {
+    structural.push({ key: 'spacing-diff', side: spcDiff > 0 ? A.key : B.key,
+      delta: Math.abs(spcDiff) * 0.13, label: 'Campo piu aperto', data: { diff: Math.round(Math.abs(spcDiff)) } });
+  }
+  const pdDiff = A.perimD - B.perimD;
+  if (Math.abs(pdDiff) > 5) {
+    structural.push({ key: 'difesa-perimetro', side: pdDiff > 0 ? A.key : B.key,
+      delta: Math.abs(pdDiff) * 0.14, label: 'Difesa perimetrale superiore', data: { diff: Math.round(Math.abs(pdDiff)) } });
+  }
+
+  const pace = 95 + (sA.pace + sB.pace) / 2;
+  return {
+    offA, offB, defA: A.def, defB: B.def, pace,
+    varA: sA.variance, varB: sB.variance,
+    factors: [...A.factors, ...B.factors, ...fxA, ...fxB, ...structural],
+  };
+}
+
+/* ==========================================================
+   3. SIMULAZIONE PARTITA
+   ========================================================== */
+
+export function simGame(A, B, m, rng, opts = {}) {
+  const homeIsA = !!opts.homeIsA;
+  const poss = Math.round(m.pace + gauss(rng) * 2.4);
+
+  // Taratura: con questi due numeri una sfida fra squadre di pari valore da
+  // circa il 62% alla favorita per singola gara — il che produce una
+  // distribuzione di serie vicina a quella dei playoff veri. Alzare il
+  // coefficiente rende il gioco piu prevedibile, alzare la sigma piu casuale.
+  // Verificabile con: node tools/balance.mjs
+  const RATING_WEIGHT = 0.0047;
+  const GAME_SIGMA = 8.5;
+
+  // La normale pura ha code infinite: senza un taglio esce ogni tanto una gara
+  // da 65 punti, che per dei quintetti di All-Star non e verosimile.
+  const bump = () => clamp(gauss(rng), -2.1, 2.1);
+  const ppp = (off, def, home) => clamp(1.105 + (off - def) * RATING_WEIGHT + (home ? 0.017 : -0.017), 0.96, 1.33);
+
+  const pppA = ppp(m.offA, m.defB, homeIsA);
+  const pppB = ppp(m.offB, m.defA, !homeIsA);
+
+  let sa = poss * pppA + bump() * GAME_SIGMA * m.varA;
+  let sb = poss * pppB + bump() * GAME_SIGMA * m.varB;
+  let scoreA = Math.round(sa);
+  let scoreB = Math.round(sb);
+
+  let ot = 0;
+  while (scoreA === scoreB) {
+    ot++;
+    scoreA += Math.round(10 + gauss(rng) * 3);
+    scoreB += Math.round(10 + gauss(rng) * 3);
+  }
+
+  const boxA = boxScore(A, scoreA, rng);
+  const boxB = boxScore(B, scoreB, rng);
+  const aWon = scoreA > scoreB;
+
+  const all = [
+    ...boxA.map((l) => ({ ...l, team: A.key, won: aWon })),
+    ...boxB.map((l) => ({ ...l, team: B.key, won: !aWon })),
+  ];
+  all.forEach((l) => { l.gs = l.pts + l.reb * 1.15 + l.ast * 1.45 + (l.won ? 6 : 0); });
+  const mvp = all.slice().sort((x, y) => y.gs - x.gs)[0];
+
+  return { scoreA, scoreB, boxA, boxB, mvp, ot, poss, margin: Math.abs(scoreA - scoreB) };
+}
+
+// Ripartisce il punteggio di squadra fra i cinque secondo usage e strategia.
+function boxScore(T, teamPts, rng) {
+  const mult = usageMultipliers(T);
+  const raw = T.five.map((p, i) => Math.max(4, p.attrs.usg * mult[i] * (0.86 + rng() * 0.28)));
+  const tot = raw.reduce((s, v) => s + v, 0);
+
+  let lines = T.five.map((p, i) => ({
+    id: p.id, n: p.n, slot: p.slot,
+    pts: Math.max(2, Math.round(teamPts * (raw[i] / tot))),
+    reb: 0, ast: 0,
+  }));
+
+  // Riallinea la somma al punteggio esatto.
+  let diff = teamPts - lines.reduce((s, l) => s + l.pts, 0);
+  let guard = 0;
+  while (diff !== 0 && guard++ < 60) {
+    const idx = Math.floor(rng() * 5);
+    if (diff > 0) { lines[idx].pts++; diff--; }
+    else if (lines[idx].pts > 2) { lines[idx].pts--; diff++; }
+  }
+
+  const teamReb = Math.round(42 + gauss(rng) * 3.4);
+  const rebW = T.five.map((p) => Math.pow(p.attrs.reb / 50, 2.3));
+  const rebTot = rebW.reduce((s, v) => s + v, 0);
+
+  const teamAst = Math.round(26 + gauss(rng) * 3.4);
+  const astW = T.five.map((p) => Math.pow(p.attrs.pla / 50, 2.6));
+  const astTot = astW.reduce((s, v) => s + v, 0);
+
+  lines.forEach((l, i) => {
+    l.reb = Math.max(0, Math.round(teamReb * (rebW[i] / rebTot) * (0.8 + rng() * 0.4)));
+    l.ast = Math.max(0, Math.round(teamAst * (astW[i] / astTot) * (0.75 + rng() * 0.5)));
+  });
+
+  return lines;
+}
+
+function usageMultipliers(T) {
+  const s = T.tactics.strategy;
+  const v1 = T.tactics.v1, v2 = T.tactics.v2;
+  return T.five.map((p) => {
+    let m = 1;
+    if (p.id === v1) m *= 1.22;
+    if (p.id === v2) m *= 1.10;
+    switch (s) {
+      case 'palla-star':
+        m *= p.id === v1 ? 1.34 : (p.id === v2 ? 1.08 : 0.76); break;
+      case 'isolamento':
+        m *= (p.id === v1 || p.id === v2) ? 1.22 : 0.82; break;
+      case 'post-up':
+        if (p.slot === 'C') m *= 1.36; if (p.slot === 'PG') m *= 0.90; break;
+      case 'pick-roll':
+        if (p.slot === 'PG') m *= 1.20; if (p.slot === 'C') m *= 1.18; break;
+      case 'tiro-3':
+        m *= p.attrs.tre >= 78 ? 1.26 : 0.80; break;
+      case 'transizione':
+        m *= p.attrs.atl >= 82 ? 1.20 : 0.90; break;
+      case 'motion':
+        m = 1 + (m - 1) * 0.35; m *= 0.96 + (p.attrs.pla / 500); break;
+      case 'attacco-ferro':
+        m *= p.attrs.atl >= 80 ? 1.16 : 0.92; break;
+      case 'dentro-fuori':
+        if (p.slot === 'C' || p.attrs.tre >= 78) m *= 1.14; break;
+      case 'handoff':
+        if (p.attrs.tre >= 76) m *= 1.14; break;
+      default: break;
+    }
+    return m;
+  });
+}
+
+/* ==========================================================
+   4. SERIE
+   ========================================================== */
+
+const HOME_PATTERN = [true, true, false, false, true, false, true]; // 2-2-1-1-1 per la testa di serie
+
+export function simSeries(A, B, seed) {
+  const rng = makeRng(seed);
+  const m = matchup(A, B);
+  // Testa di serie: chi ha il profilo complessivo migliore gioca in casa gara 1.
+  const powerA = A.off + A.def, powerB = B.off + B.def;
+  const aIsHost = powerA >= powerB;
+
+  const games = [];
+  let wa = 0, wb = 0;
+  const tally = {};
+
+  while (wa < 4 && wb < 4) {
+    const i = games.length;
+    const homeIsA = aIsHost ? HOME_PATTERN[i] : !HOME_PATTERN[i];
+    const g = simGame(A, B, m, rng, { homeIsA });
+    if (g.scoreA > g.scoreB) wa++; else wb++;
+    g.n = i + 1;
+    g.seriesAfter = { a: wa, b: wb };
+    games.push(g);
+    [...g.boxA.map((l) => ({ ...l, team: A.key })), ...g.boxB.map((l) => ({ ...l, team: B.key }))]
+      .forEach((l) => {
+        const t = (tally[l.id] ||= { id: l.id, n: l.n, team: l.team, pts: 0, reb: 0, ast: 0, g: 0 });
+        t.pts += l.pts; t.reb += l.reb; t.ast += l.ast; t.g++;
+      });
+  }
+
+  const winner = wa === 4 ? A.key : B.key;
+  const mvp = Object.values(tally)
+    .filter((t) => t.team === winner)
+    .map((t) => ({ ...t, ppg: t.pts / t.g, rpg: t.reb / t.g, apg: t.ast / t.g,
+      score: t.pts / t.g + (t.reb / t.g) * 1.15 + (t.ast / t.g) * 1.45 }))
+    .sort((x, y) => y.score - x.score)[0];
+
+  return { a: A.key, b: B.key, wins: { a: wa, b: wb }, games, winner, mvp, matchup: m, aIsHost, done: true };
+}
+
+// Per le Finals: ricostruisce la serie fino alla gara n. Poiche tutto e
+// deterministico, ogni client che chiama questa funzione con lo stesso seed
+// ottiene le stesse identiche partite — non serve trasmettere i risultati.
+export function simSeriesUpTo(A, B, seed, n) {
+  const m = matchup(A, B);
+  let s = {
+    a: A.key, b: B.key, seed, wins: { a: 0, b: 0 }, games: [],
+    done: false, winner: null, mvp: null,
+    aIsHost: A.off + A.def >= B.off + B.def,
+    matchup: m, _m: m,
+  };
+  for (let i = 0; i < n && !s.done; i++) s = playNextGame(A, B, s);
+  return s;
+}
+
+// Per le Finals: una gara alla volta, stato serializzabile fra un "Vai" e l'altro.
+export function playNextGame(A, B, series) {
+  const m = series._m || matchup(A, B);
+  const rng = makeRng(series.seed + ':' + series.games.length);
+  const powerA = A.off + A.def, powerB = B.off + B.def;
+  const aIsHost = series.aIsHost ?? (powerA >= powerB);
+  const homeIsA = aIsHost ? HOME_PATTERN[series.games.length] : !HOME_PATTERN[series.games.length];
+
+  const g = simGame(A, B, m, rng, { homeIsA });
+  g.n = series.games.length + 1;
+  const wins = { ...series.wins };
+  if (g.scoreA > g.scoreB) wins.a++; else wins.b++;
+  g.seriesAfter = wins;
+
+  const games = [...series.games, g];
+  const done = wins.a === 4 || wins.b === 4;
+  const winner = done ? (wins.a === 4 ? A.key : B.key) : null;
+
+  let mvp = null;
+  if (done) {
+    const tally = {};
+    games.forEach((gg) => {
+      [...gg.boxA.map((l) => ({ ...l, team: A.key })), ...gg.boxB.map((l) => ({ ...l, team: B.key }))]
+        .forEach((l) => {
+          const t = (tally[l.id] ||= { id: l.id, n: l.n, team: l.team, pts: 0, reb: 0, ast: 0, g: 0 });
+          t.pts += l.pts; t.reb += l.reb; t.ast += l.ast; t.g++;
+        });
+    });
+    mvp = Object.values(tally).filter((t) => t.team === winner)
+      .map((t) => ({ ...t, ppg: t.pts / t.g, rpg: t.reb / t.g, apg: t.ast / t.g,
+        score: t.pts / t.g + (t.reb / t.g) * 1.15 + (t.ast / t.g) * 1.45 }))
+      .sort((x, y) => y.score - x.score)[0];
+  }
+
+  return { ...series, games, wins, done, winner, mvp, aIsHost, matchup: m };
+}
+
+/* ==========================================================
+   5. ACCOPPIAMENTI — il matchup piu interessante
+   ========================================================== */
+
+const AXES = [
+  { key: 'pace', label: 'ritmo', get: (t) => (STRAT[t.tactics.strategy] || STRAT['equilibrato']).pace * 6 + 50 },
+  { key: 'size', label: 'stazza', get: (t) => t.size * 5 },
+  { key: 'spacing', label: 'spacing', get: (t) => t.spacing },
+  { key: 'star', label: 'dipendenza dalla star', get: (t) => {
+      const sc = t.five.map((p) => p.attrs.sco).sort((a, b) => b - a);
+      return 50 + (sc[0] - (sc[1] + sc[2] + sc[3] + sc[4]) / 4) * 1.6;
+    } },
+  { key: 'defense', label: 'impianto difensivo', get: (t) => t.def },
+];
+
+function contrast(t1, t2) {
+  let sum = 0;
+  const per = {};
+  for (const ax of AXES) {
+    const d = Math.abs(ax.get(t1) - ax.get(t2));
+    per[ax.key] = d;
+    sum += d * d;
+  }
+  return { total: Math.sqrt(sum), per };
+}
+
+// Delle 3 partizioni possibili di 4 squadre sceglie quella che massimizza il
+// contrasto stilistico complessivo, e dice su quale asse si gioca lo scontro.
+export function pickBracket(teams) {
+  const k = Object.keys(teams);
+  const partitions = [
+    [[k[0], k[1]], [k[2], k[3]]],
+    [[k[0], k[2]], [k[1], k[3]]],
+    [[k[0], k[3]], [k[1], k[2]]],
+  ];
+
+  let best = null;
+  for (const p of partitions) {
+    const c1 = contrast(teams[p[0][0]], teams[p[0][1]]);
+    const c2 = contrast(teams[p[1][0]], teams[p[1][1]]);
+    const score = c1.total + c2.total;
+    if (!best || score > best.score) best = { pairs: p, score, contrasts: [c1, c2] };
+  }
+
+  const reasons = best.pairs.map((pair, i) => {
+    const c = best.contrasts[i];
+    const topAxis = AXES.slice().sort((x, y) => c.per[y.key] - c.per[x.key])[0];
+    const t1 = teams[pair[0]], t2 = teams[pair[1]];
+    const hi = topAxis.get(t1) >= topAxis.get(t2) ? t1 : t2;
+    const lo = hi === t1 ? t2 : t1;
+    return `${t1.name} contro ${t2.name}: è sull'asse "${topAxis.label}" che le due squadre sono più lontane — ${hi.name} sta molto sopra, ${lo.name} molto sotto. È il confronto che dice di più.`;
+  });
+
+  return { semis: best.pairs, reasons };
+}

@@ -1,0 +1,113 @@
+{
+  "_doc": "Ogni archetipo definisce come si distribuiscono gli attributi attorno all'overall del giocatore. I valori sono scostamenti (delta) applicati all'overall, poi limitati a 35-99. Modificare qui cambia TUTTI i giocatori di quell'archetipo. Attributi: sco=realizzazione, tre=tiro da 3 / spacing, pla=playmaking, reb=rimbalzi, dif=protezione del ferro, dpe=difesa perimetrale, atl=atletismo, usg=quanta palla richiede.",
+  "archetypes": {
+    "floor-general": {
+      "label": "Playmaker puro",
+      "desc": "Regia, ritmo, pochi errori. Non deve segnare per incidere.",
+      "d": { "sco": -7, "tre": 1, "pla": 18, "reb": -14, "dif": -22, "dpe": 2, "atl": 0, "usg": 1 }
+    },
+    "scoring-pg": {
+      "label": "Playmaker realizzatore",
+      "desc": "Regista che porta il grosso dei punti, spesso dal palleggio.",
+      "d": { "sco": 8, "tre": 10, "pla": 7, "reb": -14, "dif": -22, "dpe": -6, "atl": 2, "usg": 13 }
+    },
+    "combo-guard": {
+      "label": "Guardia combo",
+      "desc": "Segna in ogni modo, regia intermittente, difesa sacrificabile.",
+      "d": { "sco": 8, "tre": 8, "pla": 2, "reb": -12, "dif": -20, "dpe": -6, "atl": 1, "usg": 10 }
+    },
+    "two-way-guard": {
+      "label": "Guardia two-way",
+      "desc": "Tiene la guardia avversaria e gestisce la palla. Il collante di un backcourt.",
+      "d": { "sco": -1, "tre": 2, "pla": 8, "reb": -10, "dif": -18, "dpe": 15, "atl": 4, "usg": -3 }
+    },
+    "sharpshooter": {
+      "label": "Tiratore",
+      "desc": "Spacing puro. Sposta la difesa anche senza toccare palla.",
+      "d": { "sco": 2, "tre": 18, "pla": -8, "reb": -10, "dif": -18, "dpe": -1, "atl": -3, "usg": -5 }
+    },
+    "three-and-d": {
+      "label": "3&D",
+      "desc": "Tira da fuori e marca il migliore. Usage bassissimo per costruzione.",
+      "d": { "sco": -7, "tre": 12, "pla": -6, "reb": -5, "dif": -11, "dpe": 17, "atl": 3, "usg": -17 }
+    },
+    "slasher": {
+      "label": "Attaccante del ferro",
+      "desc": "Vive di penetrazioni e falli subiti. Tiro da fuori discutibile.",
+      "d": { "sco": 8, "tre": -11, "pla": 4, "reb": -8, "dif": -15, "dpe": 2, "atl": 14, "usg": 10 }
+    },
+    "iso-scorer": {
+      "label": "Realizzatore da isolamento",
+      "desc": "Si crea il tiro da solo contro chiunque. Ha bisogno della palla.",
+      "d": { "sco": 14, "tre": 6, "pla": 0, "reb": -8, "dif": -14, "dpe": -4, "atl": 4, "usg": 16 }
+    },
+    "all-around-star": {
+      "label": "Stella completa",
+      "desc": "Nessun buco: segna, crea, difende. Il motore di tutto.",
+      "d": { "sco": 12, "tre": 2, "pla": 8, "reb": 3, "dif": -5, "dpe": 9, "atl": 10, "usg": 14 }
+    },
+    "point-forward": {
+      "label": "Ala playmaker",
+      "desc": "Gestisce l'attacco da ala. Crea vantaggi di taglia sul perimetro.",
+      "d": { "sco": 6, "tre": 0, "pla": 14, "reb": 2, "dif": -8, "dpe": 6, "atl": 6, "usg": 10 }
+    },
+    "two-way-wing": {
+      "label": "Ala two-way",
+      "desc": "Seconda opzione affidabile e miglior difensore perimetrale della squadra.",
+      "d": { "sco": 6, "tre": 4, "pla": 0, "reb": -2, "dif": -8, "dpe": 16, "atl": 6, "usg": 3 }
+    },
+    "athletic-wing": {
+      "label": "Ala atletica",
+      "desc": "Transizione, tagli, verticalita. Punisce le squadre lente.",
+      "d": { "sco": 4, "tre": -2, "pla": -4, "reb": 2, "dif": -6, "dpe": 6, "atl": 16, "usg": 0 }
+    },
+    "stretch-four": {
+      "label": "Ala grande tiratrice",
+      "desc": "Porta il centro avversario lontano dal ferro. Apre la lunetta a tutti.",
+      "d": { "sco": 6, "tre": 14, "pla": -4, "reb": 6, "dif": -2, "dpe": -6, "atl": -4, "usg": 5 }
+    },
+    "power-forward": {
+      "label": "Ala grande classica",
+      "desc": "Fisicita, rimbalzi, punti vicino al ferro. Zero spacing.",
+      "d": { "sco": 4, "tre": -9, "pla": 0, "reb": 14, "dif": 8, "dpe": 0, "atl": 2, "usg": 6 }
+    },
+    "glue-forward": {
+      "label": "Ala di sistema",
+      "desc": "Non segna quasi mai ma fa funzionare tutto: difesa, rimbalzi, passaggi.",
+      "d": { "sco": -15, "tre": -6, "pla": 8, "reb": 14, "dif": 8, "dpe": 13, "atl": 0, "usg": -21 }
+    },
+    "post-scorer": {
+      "label": "Realizzatore in post",
+      "desc": "Attacca spalle a canestro, obbliga al raddoppio, libera i tiratori.",
+      "d": { "sco": 8, "tre": -12, "pla": 0, "reb": 12, "dif": 12, "dpe": -4, "atl": -2, "usg": 10 }
+    },
+    "dominant-center": {
+      "label": "Centro dominante",
+      "desc": "Prima opzione dal pitturato. Cambia la difesa avversaria da solo.",
+      "d": { "sco": 12, "tre": -19, "pla": -2, "reb": 16, "dif": 16, "dpe": -6, "atl": 3, "usg": 14 }
+    },
+    "playmaking-center": {
+      "label": "Centro regista",
+      "desc": "L'attacco passa dai suoi passaggi dal gomito. Lento ma intelligente.",
+      "d": { "sco": 6, "tre": 0, "pla": 16, "reb": 14, "dif": 5, "dpe": -8, "atl": -9, "usg": 10 }
+    },
+    "rim-runner": {
+      "label": "Centro verticale",
+      "desc": "Blocco e taglio. Finalizza, non crea. Non tira mai.",
+      "d": { "sco": -6, "tre": -25, "pla": -14, "reb": 16, "dif": 15, "dpe": -6, "atl": 11, "usg": -15 }
+    },
+    "defensive-anchor": {
+      "label": "Ancora difensiva",
+      "desc": "Protegge il ferro e basta. In attacco e un passeggero.",
+      "d": { "sco": -18, "tre": -26, "pla": -12, "reb": 18, "dif": 22, "dpe": -3, "atl": 5, "usg": -23 }
+    }
+  },
+  "positionSize": {
+    "_doc": "Proxy di stazza per posizione, usato per rimbalzi, protezione del ferro e penalita da quintetto troppo piccolo o troppo grande.",
+    "PG": 1,
+    "SG": 2,
+    "SF": 3,
+    "PF": 4,
+    "C": 5
+  }
+}

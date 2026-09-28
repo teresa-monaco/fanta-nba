@@ -1,0 +1,185 @@
+# Fanta NBA
+
+Asta a crediti fra quattro squadre, costruzione dei quintetti, playoff simulati.
+Gira interamente nel browser: niente installazione, niente server, niente account.
+
+Trasposizione web delle regole di `NBA gioco regole.txt`, con una differenza
+voluta: l'asta non è più a voce con un segnapunti, è un'asta vera a rilanci con
+ognuno sul proprio telefono.
+
+---
+
+## Come si gioca
+
+**1. Asta.** Ogni squadra parte con **50 crediti** e deve comprare **5 giocatori**.
+Il sistema estrae un giocatore dal pool (260 nomi, picco NBA 2K fra 85 e 100),
+parte un cronometro e si rilancia. Ogni rilancio rimette il timer a 8 secondi:
+chi resta in testa allo scadere se lo porta a casa.
+
+C'è una **regola di riserva** automatica: non puoi spendere tanto da non
+poterti più permettere gli slot che ti restano. Se ti mancano 3 giocatori,
+almeno 3 crediti restano bloccati. Nessuno rimane a secco.
+
+Chi ospita può sempre scavalcare l'asta e assegnare un giocatore a mano al
+prezzo che decide — utile se vi mettete d'accordo a voce.
+
+**2. Quintetti.** I 5 acquisti vengono assegnati ai ruoli PG/SG/SF/PF/C
+minimizzando gli adattamenti. Tocca due caselle per scambiarle. Un giocatore
+in un ruolo che non sa fare è marcato **fuori ruolo** e costa in attacco e in difesa.
+
+**3. Tattica.** Per ogni squadra scegli **primo violino**, **secondo violino** e
+una delle 11 **strategie offensive**. Non è decorazione: la strategia cambia chi
+prende i tiri, quanto è prevedibile la squadra e quali difese la mettono in crisi.
+
+**4. Playoff.** L'app accoppia le semifinali cercando il **contrasto stilistico
+massimo** fra le quattro squadre e spiega perché. Le semifinali si simulano per
+intero; le **Finals si giocano una gara alla volta**, premendo "Vai". Alla quarta
+vittoria la serie si chiude e viene proclamato il campione. Poi, se volete, la
+finalina 3°/4° posto.
+
+---
+
+## Modalità locale e modalità stanza
+
+| | Locale | Stanza |
+|---|---|---|
+| Serve configurare qualcosa | No | Firebase, 3 minuti una volta sola |
+| Chi comanda | Una persona sola, su un solo schermo | Ognuno dal proprio telefono |
+| Rilanci | Li digita chi ospita | Li fa ognuno per sé, in tempo reale |
+
+Finché `js/firebase-config.js` esporta `null`, parte la modalità locale.
+Per accendere le stanze → **[SETUP.md](SETUP.md)**.
+
+Nelle stanze, le squadre su cui **nessuno si è seduto** le gestisce chi ospita:
+si può giocare anche in tre, o in due.
+
+**Limite da conoscere:** è chi ospita a far scattare la chiusura dei lotti (se
+lo facessero tutti e quattro i device, quattro transazioni simultanee
+proverebbero ad assegnare lo stesso giocatore). Quindi se chi ospita chiude il
+tab, l'asta si ferma finché non riapre. Lo stato è salvo sul database, non si
+perde niente: basta che torni.
+
+---
+
+## Provarlo sul tuo computer
+
+I moduli ES non funzionano aprendo il file con doppio clic (il browser blocca
+`file://`). Serve un server locale, una riga:
+
+```bash
+cd nba-fantasy
+python -m http.server 8000     # oppure:  npx serve .
+```
+
+Poi apri `http://localhost:8000`.
+
+---
+
+## Pubblicarlo su GitHub Pages
+
+Non c'è build: si pubblica quello che c'è.
+
+1. Crea un repository (pubblico, se vuoi Pages gratis) e caricaci questa cartella
+2. Repository → **Settings** → **Pages**
+3. *Source*: **Deploy from a branch** · *Branch*: `main` · *Folder*: `/ (root)`
+4. Dopo un minuto il sito è su `https://<tuo-utente>.github.io/<repo>/`
+
+Dal telefono, "Aggiungi alla schermata Home" lo installa come un'app.
+
+---
+
+## Come funziona dentro
+
+```
+index.html            pagina unica
+css/style.css         stile, mobile-first
+data/players.json     260 giocatori
+data/archetypes.json  20 archetipi → attributi
+js/core.js            RNG deterministico, derivazione attributi, costanti
+js/engine.js          motore di simulazione (profili, matchup, serie, bracket)
+js/narrator.js        cronaca e "perché ha vinto", generati dai fattori
+js/state.js           stato condiviso e regole (asta, budget, fasi)
+js/net.js             sincronizzazione: Firebase oppure locale
+js/ui.js              rendering delle cinque schermate
+js/app.js             avvio e gestione dei click
+tools/                test e diagnostiche (vedi sotto)
+```
+
+**Il motore è deterministico.** Stesso seed, stessa partita. È il trucco che
+tiene sincronizzati i device: sul database finisce solo il *seed* della serie,
+mai i risultati — ogni telefono ricalcola da sé le stesse identiche gare. Lo
+stato condiviso resta di pochi KB e due schermi non possono mai divergere.
+
+**Il narratore non inventa.** Ogni frase nasce da un fattore che il motore ha
+davvero calcolato o da una riga di box score reale. Se il testo dice "ha vinto
+a rimbalzo", quel vantaggio esiste nei numeri.
+
+---
+
+## Modificare i giocatori
+
+`data/players.json`, una riga per giocatore:
+
+```json
+{ "id": "jordan", "n": "Michael Jordan", "ovr": 99, "pos": "SG",
+  "alt": ["SF"], "arc": "all-around-star", "era": "1990s", "tm": "Bulls" }
+```
+
+Gli attributi non si scrivono a mano: nascono dall'**archetipo** più l'overall,
+più uno scostamento deterministico che evita i cloni. Se un giocatore ti sembra
+sbagliato, cambia `ovr` o `arc` — gli archetipi disponibili sono in
+`data/archetypes.json`, con la descrizione di cosa fanno.
+
+> **Onestà sui dati:** gli overall sono **ricostruzioni plausibili**, non i
+> rating ufficiali 2K. Non esiste una fonte gratuita e scaricabile di quei dati.
+> Se una valutazione vi sembra sbagliata, probabilmente lo è: correggetela.
+
+---
+
+## Test
+
+```bash
+node tools/selftest.mjs    # dati, distribuzioni, statistiche, determinismo, testi
+node tools/flowtest.mjs    # 200 partite intere: nessuna regola deve rompersi
+node tools/domtest.mjs     # l'app vera attraverso tutte e cinque le schermate
+node tools/balance.mjs     # diagnostica di taratura (non fallisce mai)
+node tools/fairness.mjs    # le quattro sedie valgono uguale? (non fallisce mai)
+
+node tools/checkfirebase.mjs   # parla col progetto vero: login anonimo, regole, scrittura
+```
+
+`checkfirebase` è quello da lanciare quando il multiplayer non va: dice quale
+dei tre pezzi (database, login anonimo, regole) è fuori posto, invece di
+lasciarti indovinare guardando la console del browser.
+
+Per giocare da solo su un unico schermo anche con Firebase attivo, apri il sito
+con **`?local=1`** in fondo all'indirizzo.
+
+`selftest` non verifica solo che il codice giri: verifica che i risultati siano
+**plausibili**. Che esistano sia gli sweep sia le gare 7, che il 4-3 non domini,
+che lo scarto medio somigli a quello vero, che nessuno segni 70 punti.
+
+### Taratura del motore
+
+Due costanti in `js/engine.js` governano tutto:
+
+```js
+const RATING_WEIGHT = 0.0047;  // quanto pesa il divario di forza
+const GAME_SIGMA    = 8.5;     // quanto pesa il caso
+```
+
+Alzare `RATING_WEIGHT` rende il gioco più prevedibile, alzare `GAME_SIGMA` più
+casuale. Con i valori attuali, fra squadre di pari valore la favorita vince circa
+il 62% delle singole gare, e le serie finiscono così:
+
+| | qui | playoff NBA reali |
+|---|---|---|
+| 4-0 | 21% | ~13% |
+| 4-1 | 31% | ~25% |
+| 4-2 | 27% | ~32% |
+| 4-3 | 21% | ~30% |
+
+Restano un po' più sbrigative dei playoff veri, ed è corretto così: qui le
+squadre sono cinque giocatori senza panchina, sorteggiati da un'asta, con
+differenze di fit molto più larghe di quelle fra due teste di serie NBA.
+Se le volete più combattute, alzate `GAME_SIGMA` e rilanciate `tools/balance.mjs`.
