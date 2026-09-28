@@ -53,6 +53,9 @@ h3 { font-size: 16px; }
   padding: 10px 16px; border-bottom: 1px solid var(--line);
   background: var(--surface); position: sticky; top: 0; z-index: 20;
 }
+/* Senza wrap, su schermi stretti il tasto "Nuova" finiva fuori dallo
+   schermo e veniva tagliato via da overflow-x:hidden sul body. */
+.topbar .row { flex-wrap: wrap; justify-content: flex-end; }
 .topbar .brand { font-weight: 800; font-size: 15px; letter-spacing: -0.01em; }
 .topbar .brand span { color: var(--accent); }
 .code-pill {
@@ -205,6 +208,8 @@ label.field > span { display: block; font-size: 13px; color: var(--muted); margi
   border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: var(--gap);
 }
 .banner.err { border-color: var(--bad); background: #2a1417; color: #fca5a5; }
+
+.reset-zone { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); }
 
 .log { max-height: 190px; overflow-y: auto; font-size: 13px; }
 .log div { padding: 4px 0; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; }

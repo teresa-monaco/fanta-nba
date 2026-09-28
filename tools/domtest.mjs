@@ -86,7 +86,8 @@ await F.session.apply((s) => S.startAuction(s, now()));
 ok(clean() && has('OVR', 'crediti'), 'la schermata d\'asta si disegna');
 ok(has('Realizzazione', 'Protezione ferro'), 'gli attributi del giocatore sono visibili');
 ok(has('Chiudi il lotto'), 'chi ospita vede i comandi del banditore');
-ok(els.topbar.innerHTML.includes('new-game'), 'a partita iniziata compare il tasto per ricominciare');
+ok(els.topbar.innerHTML.includes('new-game'), 'la barra in alto ha il tasto per ricominciare');
+ok(has('Ricomincia da capo'), 'e c\'è anche in fondo alla schermata, dove si vede');
 
 // Compra 20 giocatori tirando a sorte fra le squadre che hanno ancora posto.
 let guard = 0;
@@ -143,7 +144,8 @@ ok(clean() && has('MVP delle Finals'), 'l\'MVP delle Finals viene assegnato');
 ok(has('Finale 3° / 4° posto'), 'compare la finalina fra le due eliminate');
 await F.session.apply((s) => S.revealThird(s));
 ok(clean() && has('MVP della serie'), 'la finalina si simula');
-ok(has('Nuova partita'), 'a fine partita si può ricominciare senza toccare la console');
+ok(has('Nuova partita'), 'a fine partita il tasto diventa in evidenza');
+ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
 
 /* 6. Ricominciare */
 {

@@ -39,7 +39,26 @@ export function render(root, ctx) {
     body = `<div class="banner err"><b>Errore di rendering.</b><br>${esc(err.message)}</div>`;
     console.error(err);
   }
-  root.innerHTML = (ui.banner ? `<div class="banner${ui.banner.err ? ' err' : ''}">${esc(ui.banner.text)}</div>` : '') + body;
+  root.innerHTML =
+    (ui.banner ? `<div class="banner${ui.banner.err ? ' err' : ''}">${esc(ui.banner.text)}</div>` : '')
+    + body
+    + resetZone(ctx);
+}
+
+// Un unico punto per ricominciare, in fondo a ogni schermata a partita
+// avviata. Sta qui e non solo nella barra in alto perche un tasto piccolo
+// e grigio fra un'etichetta e un codice non lo trova nessuno.
+function resetZone({ state: s, session }) {
+  if (!s || s.host !== session.uid || s.phase === 'lobby') return '';
+  const finita = (s.po?.final?.gamesPlayed ?? 0) >= 4;
+  return `<div class="reset-zone">
+    <button class="${finita ? 'primary' : 'ghost'} wide" data-act="new-game">
+      ${finita ? 'Nuova partita' : 'Ricomincia da capo'}
+    </button>
+    <p class="tiny muted center" style="margin-top:8px">
+      Cancella asta, quintetti e playoff${session.mode === 'local' ? '' : '. Le squadre assegnate restano'}.
+    </p>
+  </div>`;
 }
 
 export function renderTopbar(el, ctx) {
@@ -333,7 +352,7 @@ function viewPlayoffs({ state: s, session }) {
       const third = po.third.revealed
         ? simSeries(T[po.third.a], T[po.third.b], po.third.seed) : null;
       out += seriesCard('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], third, isHost, 'reveal-third');
-      if (isHost) out += `<button class="primary wide" data-act="new-game">Nuova partita</button>`;
+      // Il tasto per ricominciare lo mette resetZone(), in fondo a ogni schermata.
     }
   }
   return out;
