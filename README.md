@@ -145,6 +145,23 @@ Se un giocatore ti sembra sbagliato, cambia il suo `ovr` o il suo `arc`. Se
 sbagliata ti sembra un'intera *categoria* di giocatori, correggi il profilo
 dell'archetipo: cambia tutti quelli che lo usano in un colpo solo.
 
+### Quando l'archetipo non basta: `mod`
+
+Alcuni giocatori sfuggono alla loro categoria. Jason Kidd era un playmaker puro
+che rimbalzava come un'ala; Penny Hardaway molto meno di quanto dica il suo.
+Per questi c'è una via di fuga, uno scostamento sul singolo attributo:
+
+```json
+{ "id": "kidd", ..., "arc": "floor-general", "mod": { "reb": 23 } }
+```
+
+Vale per qualunque attributo (`sco tre pla reb dif dpe atl usg`), in positivo o
+in negativo, e si applica al profilo **prima** che l'overall lo scali. Usalo per
+le eccezioni, non per aggiustare tutti: se ti serve su mezza categoria, il
+problema è il profilo dell'archetipo. Un test controlla che le chiavi esistano
+davvero (un refuso verrebbe ignorato in silenzio) e che nessuna correzione sia
+così grande da svuotare l'archetipo.
+
 > Attenzione: cambiare i profili sposta le soglie interne del motore
 > (cosa conta come "tiratore", quando scatta "ferro scoperto"). Dopo una
 > modifica sostanziale lancia `node tools/calibra.mjs` per vedere dove cadono

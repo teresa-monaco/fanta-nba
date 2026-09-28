@@ -97,13 +97,18 @@ export function deriveAttrs(p, archetypes) {
   const livello = clamp((p.ovr - OVR_MIN) / (OVR_MAX - OVR_MIN), 0, 1);
   const scala = SCALA_MIN + (SCALA_MAX - SCALA_MIN) * livello;
 
+  // "mod" e la via di fuga per i casi che l'archetipo non sa esprimere:
+  // Kidd rimbalzava come un'ala pur essendo un playmaker puro, Penny molto
+  // meno di quanto dica il suo archetipo. Senza questo, due giocatori dello
+  // stesso archetipo differiscono solo per l'overall.
+  const mod = p.mod || {};
   const out = {};
   for (const k of ATTR_KEYS) {
     // Scostamento stabile per giocatore+attributo: due pari-overall dello
     // stesso archetipo non devono essere cloni perfetti.
     const jitter = (hashStr(p.id + ':' + k) % 1000) / 1000;
     const nudge = (jitter - 0.5) * 6; // -3 .. +3
-    out[k] = Math.round(clamp(arc.p[k] * scala + nudge, 20, 99));
+    out[k] = Math.round(clamp((arc.p[k] + (mod[k] || 0)) * scala + nudge, 20, 99));
   }
   return out;
 }

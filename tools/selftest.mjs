@@ -51,6 +51,17 @@ console.log('\n1. Integrita dei dati');
     'copertura per ruolo', perSlot.join(' '));
   ok(D.players.every((p) => Object.values(p.attrs).every((v) => v >= 20 && v <= 99)),
     'attributi derivati nel range');
+
+  // Le correzioni individuali sono facili da sbagliare scrivendole a mano:
+  // una chiave con un refuso verrebbe semplicemente ignorata, in silenzio.
+  const CHIAVI = ['sco', 'tre', 'pla', 'reb', 'dif', 'dpe', 'atl', 'usg'];
+  const conMod = D.players.filter((p) => p.mod);
+  const chiaviStorte = conMod.flatMap((p) => Object.keys(p.mod).filter((k) => !CHIAVI.includes(k)).map((k) => `${p.n}: ${k}`));
+  ok(chiaviStorte.length === 0, 'le correzioni individuali usano solo attributi esistenti',
+    chiaviStorte.length ? chiaviStorte.join(', ') : `${conMod.length} giocatori corretti a mano`);
+  const troppoGrandi = conMod.filter((p) => Object.values(p.mod).some((v) => Math.abs(v) > 40));
+  ok(troppoGrandi.length === 0, 'nessuna correzione cosi grande da svuotare l\'archetipo',
+    troppoGrandi.map((p) => p.n).join(', '));
 }
 
 /* ---------- Helper: quattro squadre casuali ---------- */
