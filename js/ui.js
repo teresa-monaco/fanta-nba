@@ -13,8 +13,7 @@ export const ui = {
   selSlot: null,      // { team, slot } in fase quintetti
   banner: null,
   manualOpen: false,
-  customFor: null,    // squadra per cui è aperto il selettore di importo
-  customBid: null,    // importo in corso di selezione
+  allIn: null,        // { team, at } — All in armato, valido finché l'offerta non cambia
 };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -153,11 +152,14 @@ function viewAuction({ state: s, session }) {
 
   // Comandi del banditore: dentro il blocco del giocatore, subito sotto le
   // valutazioni, cioè dove si sta già guardando mentre si decide.
+  // Le due azioni sono opposte, quindi le etichette lo devono dire:
+  // una ASSEGNA a chi è in testa, l'altra BUTTA VIA il giocatore.
+  // Senza offerte "aggiudica" non ha senso e sparisce.
   const hostBar = !isHost ? '' : `
     <div class="host-bar">
       <button class="sm ${paused ? 'primary' : 'ghost'}" data-act="toggle-pause"
               title="${paused ? 'Riprendi' : 'Ferma'} il cronometro">${paused ? '&#9654;' : '&#9632;'}</button>
-      <button class="sm" data-act="resolve">Chiudi lotto</button>
+      ${bid ? `<button class="sm" data-act="resolve">Assegna</button>` : ''}
       <button class="sm ghost" data-act="pass">Salta</button>
       <button class="sm ghost" data-act="toggle-manual">${ui.manualOpen ? 'Annulla' : 'Assegna a mano'}</button>
     </div>
@@ -262,25 +264,22 @@ function bidBar(s, bidders, bid, paused) {
     if (leader) return `<div class="bidrow">${tag}<div class="flatnote lead">Sei in testa a ${cur}</div></div>`;
     if (max < minBid) return `<div class="bidrow">${tag}<div class="flatnote">Budget esaurito per questo lotto</div></div>`;
 
+    // Sul tasto: di quanto rilanci. Sotto, piccolo: dove finisce l'offerta.
     const step = (n) => (cur + n <= max
-      ? `<button class="sm" data-act="bid" data-team="${k}" data-amt="${cur + n}">+${n}</button>`
-      : `<button class="sm" disabled>+${n}</button>`);
+      ? `<button class="bidbtn" data-act="bid" data-team="${k}" data-amt="${cur + n}">+${n}<small>${cur + n}</small></button>`
+      : `<button class="bidbtn" disabled>+${n}</button>`);
 
-    const open = ui.customFor === k;
-    const val = Math.min(max, Math.max(minBid, ui.customBid ?? minBid));
+    // All in svuota il budget in un tocco: serve una seconda conferma, ma
+    // inline e non con una finestra, perché il cronometro intanto corre.
+    const armed = ui.allIn && ui.allIn.team === k && ui.allIn.at === cur;
+    const allIn = max >= minBid
+      ? `<button class="bidbtn allin ${armed ? 'armed' : ''}"
+                 data-act="${armed ? 'bid' : 'arm-allin'}" data-team="${k}" data-amt="${max}">
+           ${armed ? 'Sicuro?' : 'All in'}<small>${max}</small>
+         </button>`
+      : '';
 
-    return `<div class="bidrow">
-      ${tag}
-      <button class="primary grow" data-act="bid" data-team="${k}" data-amt="${minBid}">Rilancia a ${minBid}</button>
-      ${step(2)}${step(5)}
-      <button class="sm ${open ? 'primary' : 'ghost'}" data-act="toggle-custom" data-team="${k}">&#183;&#183;&#183;</button>
-      ${open ? `<div class="stepper">
-        <button class="sm" data-act="custom-minus">&minus;</button>
-        <div class="val">${val}</div>
-        <button class="sm" data-act="custom-plus">+</button>
-        <button class="sm primary grow" data-act="bid" data-team="${k}" data-amt="${val}">Offri ${val}</button>
-      </div>` : ''}
-    </div>`;
+    return `<div class="bidrow">${tag}${step(1)}${step(2)}${step(3)}${allIn}</div>`;
   }).join('')}</div>`;
 }
 

@@ -70,6 +70,7 @@ const clean = () => !html().includes('Errore di rendering') && !html().includes(
 
 const F = globalThis.FANTA;
 const S = await import('../js/state.js');
+const { ui, render } = await import('../js/ui.js');
 const { buildTeam, pickBracket, simSeries } = await import('../js/engine.js');
 const { TEAM_KEYS, STRATEGIES } = await import('../js/core.js');
 
@@ -85,13 +86,29 @@ const now = () => Date.now();
 await F.session.apply((s) => S.startAuction(s, now()));
 ok(clean() && has('OVR', 'crediti'), 'la schermata d\'asta si disegna');
 ok(has('Realizzazione', 'Protezione ferro'), 'gli attributi del giocatore sono visibili');
-ok(has('Chiudi lotto') && has('Assegna a mano') && has('Salta'),
-  'i comandi del banditore stanno nel blocco del giocatore');
+ok(has('Assegna a mano') && has('>Salta<'), 'i comandi del banditore stanno nel blocco del giocatore');
 ok(html().indexOf('Assegna a mano') < html().indexOf('class="card bidbox'),
   'e stanno sotto le valutazioni, prima del riquadro offerte');
+ok(!has('>Assegna</button>'), 'senza offerte "Assegna" non compare: non c\'è niente da assegnare');
 ok(has('data-act="toggle-pause"'), 'c\'è il tasto per fermare il cronometro');
-ok(has('Rilancia a 1') && has('>+2<') && has('>+5<'),
-  'la barra dei rilanci ha il tasto dominante e le due scorciatoie');
+ok(has('+1<small>1') && has('+2<small>2') && has('+3<small>3') && has('All in'),
+  'i quattro tasti di rilancio ci sono, con l\'importo risultante sotto');
+ok(!has('Rilancia a'), 'niente etichette lunghe sui tasti di rilancio');
+
+/* Con un'offerta sul tavolo "Assegna" compare, e All in si arma in due tocchi */
+await F.session.apply((s) => S.placeBid(s, TEAM_KEYS[1], 3, now()));
+ok(has('>Assegna</button>'), 'con un\'offerta sul tavolo compare "Assegna"');
+ok(has('+1<small>4'), 'i rilanci ripartono dall\'offerta corrente, non da zero');
+{
+  const maxAgre = S.maxBid(F.state, TEAM_KEYS[0]);
+  ui.allIn = { team: TEAM_KEYS[0], at: 3 };
+  render(els.app, { state: F.state, session: F.session });
+  ok(has('Sicuro?'), 'All in chiede conferma invece di svuotare il budget al primo tocco');
+  ok(has(`data-amt="${maxAgre}"`), 'e la conferma offre esattamente il massimo consentito');
+  ui.allIn = null;
+  render(els.app, { state: F.state, session: F.session });
+  ok(!has('Sicuro?'), 'l\'armamento si annulla');
+}
 
 /* Squadra propria in evidenza — è il comportamento della modalità online */
 await F.session.apply((s) => S.takeSeat(s, 'local', 'Diego', 'agre'));
@@ -102,14 +119,16 @@ ok(has('class="chip'), 'la propria rosa è visibile a colpo d\'occhio');
 await F.session.apply((s) => S.leaveSeat(s, 'local'));
 
 /* Pausa: ferma il cronometro per tutti e blocca i rilanci */
+// Importo valido, così il rifiuto dipende SOLO dalla pausa e non dal prezzo.
+const valido = () => (F.state.auction.bid?.amount ?? 0) + 1;
 await F.session.apply((s) => S.pauseAuction(s, now()));
 ok(F.state.auction.paused, 'la pausa entra nello stato condiviso, non solo nel browser');
-ok(!S.canBid(F.state, TEAM_KEYS[0], 1), 'in pausa non si può rilanciare');
+ok(!S.canBid(F.state, TEAM_KEYS[0], valido()), 'in pausa un rilancio per il resto valido viene rifiutato');
 ok(has('Cronometro fermo'), 'la barra dice chiaramente che è fermo');
 const rimasto = F.state.auction.remaining;
 ok(rimasto > 0 && rimasto <= 15000, 'il tempo residuo viene conservato', `${Math.round(rimasto / 1000)}s`);
 await F.session.apply((s) => S.resumeAuction(s, now()));
-ok(!F.state.auction.paused && S.canBid(F.state, TEAM_KEYS[0], 1), 'alla ripresa si torna a poter rilanciare');
+ok(!F.state.auction.paused && S.canBid(F.state, TEAM_KEYS[0], valido()), 'alla ripresa si torna a poter rilanciare');
 ok(els.topbar.innerHTML.includes('new-game'), 'la barra in alto ha il tasto per ricominciare');
 ok(has('Ricomincia da capo'), 'e c\'è anche in fondo alla schermata, dove si vede');
 

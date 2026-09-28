@@ -146,7 +146,7 @@ document.addEventListener('click', async (ev) => {
       /* --- asta --- */
       case 'bid': {
         const amt = Number(el.dataset.amt);
-        ui.customFor = null; ui.customBid = null;
+        ui.allIn = null;
         const ok = await session.apply((s) => {
           if (!S.canBid(s, team, amt)) return undefined;
           return S.placeBid(s, team, amt, now());
@@ -155,36 +155,29 @@ document.addEventListener('click', async (ev) => {
         break;
       }
 
+      // Primo tocco arma, secondo conferma. L'armamento decade da solo appena
+      // qualcun altro rilancia, così non offri alla cieca su un prezzo vecchio.
+      case 'arm-allin':
+        ui.allIn = { team, at: state.auction.bid ? state.auction.bid.amount : 0 };
+        paint();
+        break;
+
       case 'toggle-pause':
         await session.apply((s) => (s.auction.paused ? S.resumeAuction(s, now()) : S.pauseAuction(s, now())));
         break;
-
-      case 'toggle-custom': {
-        const bid = state.auction.bid;
-        ui.customFor = ui.customFor === team ? null : team;
-        ui.customBid = (bid ? bid.amount : 0) + 1;
-        paint();
-        break;
-      }
-
-      case 'custom-minus':
-      case 'custom-plus': {
-        const bid = state.auction.bid;
-        const min = (bid ? bid.amount : 0) + 1;
-        const max = S.maxBid(state, ui.customFor);
-        const d = act === 'custom-plus' ? 1 : -1;
-        ui.customBid = Math.min(max, Math.max(min, (ui.customBid ?? min) + d));
-        paint();
-        break;
-      }
 
       case 'resolve':
         await session.apply((s) => (s.auction.running ? S.resolveLot(s, now()) : undefined));
         break;
 
-      case 'pass':
+      case 'pass': {
+        // Scartare con un'offerta valida sul tavolo butta via quell'offerta:
+        // vale una conferma, perché non si torna indietro.
+        const b = state.auction.bid;
+        if (b && !confirm(`Saltare? L'offerta di ${b.amount} di ${S.TEAM_NAMES[b.team]} viene annullata e il giocatore non va a nessuno.`)) break;
         await session.apply((s) => (s.phase === 'auction' ? S.passLot(s, now()) : undefined));
         break;
+      }
 
       case 'toggle-manual':
         ui.manualOpen = !ui.manualOpen;

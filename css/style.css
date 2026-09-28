@@ -180,12 +180,21 @@ label.field > span { display: block; font-size: 13px; color: var(--muted); margi
   padding: 13px 8px; background: var(--surface-2); border-radius: 10px;
 }
 .flatnote.lead { color: var(--accent-2); font-weight: 700; }
-.stepper { display: flex; align-items: center; gap: 7px; width: 100%; margin-top: 7px; }
-.stepper .val {
-  font: 800 19px/1 ui-monospace, Menlo, monospace; min-width: 52px; text-align: center;
-  background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; padding: 12px 6px;
+/* i quattro tasti di rilancio: numero grande = di quanto rilanci,
+   numerino sotto = dove finisce l'offerta */
+.bidbtn {
+  flex: 1; min-height: 54px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 1px;
+  font-size: 18px; font-weight: 800; padding: 6px 4px;
 }
-.stepper button.sm { min-width: 46px; min-height: 46px; }
+.bidbtn small {
+  font: 600 11px/1 ui-monospace, Menlo, monospace; color: var(--muted);
+}
+.bidbtn.allin { background: var(--surface-2); border-color: var(--accent); color: var(--accent); font-size: 14px; }
+.bidbtn.allin small { color: var(--accent); opacity: .8; }
+.bidbtn.allin.armed { background: var(--bad); border-color: var(--bad); color: #fff; }
+.bidbtn.allin.armed small { color: #fff; }
+.bidbtn:disabled small { display: none; }
 /* la barra è fixed: senza questo spazio coprirebbe il fondo della pagina */
 .bidbar-spacer { height: 120px; }
 
