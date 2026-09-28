@@ -268,7 +268,7 @@ export function matchup(A, B) {
 
 export function simGame(A, B, m, rng, opts = {}) {
   const homeIsA = !!opts.homeIsA;
-  const poss = Math.round(m.pace + gauss(rng) * 2.4);
+  const poss = Math.round(m.pace + clamp(gauss(rng), -2, 2) * 2.4);
 
   // Taratura: con questi due numeri una sfida fra squadre di pari valore da
   // circa il 62% alla favorita per singola gara — il che produce una
@@ -280,8 +280,10 @@ export function simGame(A, B, m, rng, opts = {}) {
 
   // La normale pura ha code infinite: senza un taglio esce ogni tanto una gara
   // da 65 punti, che per dei quintetti di All-Star non e verosimile.
-  const bump = () => clamp(gauss(rng), -2.1, 2.1);
-  const ppp = (off, def, home) => clamp(1.105 + (off - def) * RATING_WEIGHT + (home ? 0.017 : -0.017), 0.96, 1.33);
+  const bump = () => clamp(gauss(rng), -1.9, 1.9);
+  // Il pavimento a 1.00 punti per possesso: sotto, un quintetto di All-Star
+  // non ci va nemmeno nella peggiore delle serate.
+  const ppp = (off, def, home) => clamp(1.105 + (off - def) * RATING_WEIGHT + (home ? 0.017 : -0.017), 1.02, 1.33);
 
   const pppA = ppp(m.offA, m.defB, homeIsA);
   const pppB = ppp(m.offB, m.defA, !homeIsA);

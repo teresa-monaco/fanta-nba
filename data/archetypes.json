@@ -4,7 +4,7 @@
     "floor-general": {
       "label": "Playmaker puro",
       "desc": "Regia, ritmo, pochi errori. Non deve segnare per incidere.",
-      "p": { "sco": 72, "tre": 76, "pla": 99, "reb": 32, "dif": 20, "dpe": 62, "atl": 58, "usg": 70 }
+      "p": { "sco": 72, "tre": 70, "pla": 99, "reb": 32, "dif": 20, "dpe": 62, "atl": 58, "usg": 70 }
     },
     "scoring-pg": {
       "label": "Playmaker realizzatore",
@@ -19,7 +19,7 @@
     "two-way-guard": {
       "label": "Guardia two-way",
       "desc": "Tiene la guardia avversaria e gestisce la palla. Il collante di un backcourt.",
-      "p": { "sco": 76, "tre": 74, "pla": 80, "reb": 40, "dif": 26, "dpe": 94, "atl": 72, "usg": 62 }
+      "p": { "sco": 76, "tre": 62, "pla": 80, "reb": 40, "dif": 26, "dpe": 94, "atl": 72, "usg": 62 }
     },
     "sharpshooter": {
       "label": "Tiratore",
@@ -34,32 +34,32 @@
     "slasher": {
       "label": "Attaccante del ferro",
       "desc": "Vive di penetrazioni e falli subiti. Tiro da fuori discutibile.",
-      "p": { "sco": 90, "tre": 58, "pla": 78, "reb": 44, "dif": 26, "dpe": 66, "atl": 96, "usg": 88 }
+      "p": { "sco": 90, "tre": 40, "pla": 78, "reb": 44, "dif": 26, "dpe": 66, "atl": 96, "usg": 88 }
     },
     "iso-scorer": {
       "label": "Realizzatore da isolamento",
       "desc": "Si crea il tiro da solo contro chiunque. Ha bisogno della palla.",
-      "p": { "sco": 98, "tre": 84, "pla": 66, "reb": 44, "dif": 24, "dpe": 56, "atl": 76, "usg": 97 }
+      "p": { "sco": 98, "tre": 76, "pla": 66, "reb": 44, "dif": 24, "dpe": 56, "atl": 76, "usg": 97 }
     },
     "all-around-star": {
       "label": "Stella completa",
       "desc": "Nessun buco: segna, crea, difende. Il motore di tutto.",
-      "p": { "sco": 96, "tre": 76, "pla": 84, "reb": 62, "dif": 42, "dpe": 90, "atl": 94, "usg": 95 }
+      "p": { "sco": 96, "tre": 45, "pla": 84, "reb": 62, "dif": 42, "dpe": 90, "atl": 94, "usg": 95 }
     },
     "point-forward": {
       "label": "Ala playmaker",
       "desc": "Gestisce l'attacco da ala. Crea vantaggi di taglia sul perimetro.",
-      "p": { "sco": 90, "tre": 78, "pla": 96, "reb": 64, "dif": 38, "dpe": 74, "atl": 82, "usg": 92 }
+      "p": { "sco": 90, "tre": 58, "pla": 96, "reb": 64, "dif": 38, "dpe": 74, "atl": 82, "usg": 92 }
     },
     "two-way-wing": {
       "label": "Ala two-way",
       "desc": "Seconda opzione affidabile e miglior difensore perimetrale della squadra.",
-      "p": { "sco": 86, "tre": 80, "pla": 64, "reb": 54, "dif": 38, "dpe": 95, "atl": 82, "usg": 78 }
+      "p": { "sco": 86, "tre": 70, "pla": 64, "reb": 54, "dif": 38, "dpe": 95, "atl": 82, "usg": 78 }
     },
     "athletic-wing": {
       "label": "Ala atletica",
       "desc": "Transizione, tagli, verticalita. Punisce le squadre lente.",
-      "p": { "sco": 86, "tre": 68, "pla": 56, "reb": 54, "dif": 32, "dpe": 72, "atl": 98, "usg": 76 }
+      "p": { "sco": 86, "tre": 55, "pla": 56, "reb": 54, "dif": 32, "dpe": 72, "atl": 98, "usg": 76 }
     },
     "stretch-four": {
       "label": "Ala grande tiratrice",
@@ -69,7 +69,7 @@
     "power-forward": {
       "label": "Ala grande classica",
       "desc": "Fisicita, rimbalzi, punti vicino al ferro. Zero spacing.",
-      "p": { "sco": 86, "tre": 38, "pla": 56, "reb": 88, "dif": 72, "dpe": 58, "atl": 74, "usg": 82 }
+      "p": { "sco": 86, "tre": 30, "pla": 56, "reb": 88, "dif": 72, "dpe": 58, "atl": 74, "usg": 82 }
     },
     "glue-forward": {
       "label": "Ala di sistema",
@@ -79,7 +79,7 @@
     "post-scorer": {
       "label": "Realizzatore in post",
       "desc": "Attacca spalle a canestro, obbliga al raddoppio, libera i tiratori.",
-      "p": { "sco": 90, "tre": 32, "pla": 56, "reb": 86, "dif": 82, "dpe": 44, "atl": 62, "usg": 86 }
+      "p": { "sco": 90, "tre": 26, "pla": 56, "reb": 86, "dif": 82, "dpe": 44, "atl": 62, "usg": 86 }
     },
     "dominant-center": {
       "label": "Centro dominante",
@@ -104,10 +104,6 @@
   },
   "positionSize": {
     "_doc": "Proxy di stazza per posizione, usato per rimbalzi, protezione del ferro e penalita da quintetto troppo piccolo o troppo grande.",
-    "PG": 1,
-    "SG": 2,
-    "SF": 3,
-    "PF": 4,
-    "C": 5
+    "PG": 1, "SG": 2, "SF": 3, "PF": 4, "C": 5
   }
 }
