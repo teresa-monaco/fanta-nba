@@ -69,7 +69,7 @@ try {
 
 /* 4. Scrittura e lettura autenticate (è quello che fa il gioco) */
 if (idToken) {
-  const payload = { phase: 'lobby', teams: { agre: { credits: 50 } }, host: uid };
+  const payload = { phase: 'lobby', teams: { t1: { credits: 50 } }, host: uid };
   try {
     const w = await fetch(`${DB}/rooms/${ROOM}.json?auth=${idToken}`, { method: 'PUT', body: JSON.stringify(payload) });
     ok(w.ok, 'un utente anonimo può creare una stanza', `HTTP ${w.status}`);
@@ -77,7 +77,7 @@ if (idToken) {
 
     const g = await fetch(`${DB}/rooms/${ROOM}.json?auth=${idToken}`);
     const back = await g.json();
-    ok(back?.phase === 'lobby' && back?.teams?.agre?.credits === 50,
+    ok(back?.phase === 'lobby' && back?.teams?.t1?.credits === 50,
       'e rileggere quello che ha scritto');
 
     const d = await fetch(`${DB}/rooms/${ROOM}.json?auth=${idToken}`, { method: 'DELETE' });

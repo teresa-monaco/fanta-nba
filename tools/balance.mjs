@@ -14,7 +14,7 @@ import { dirname, join } from 'node:path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
 
-const { installData, makeRng, shuffle, STRATEGIES } = await import('../js/core.js');
+const { installData, makeRng, shuffle, STRATEGIES, TEAM_KEYS } = await import('../js/core.js');
 const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'));
 const { buildTeam, simSeries } = await import('../js/engine.js');
 const { autoLineup } = await import('../js/state.js');
@@ -41,7 +41,7 @@ function pairOfTeams(seed) {
     const roster = five.map((p) => p.id);
     const lineup = autoLineup(roster);
     const sorted = five.slice().sort((a, b) => b.attrs.sco - a.attrs.sco);
-    return buildTeam(i === 0 ? 'agre' : 'steve', lineup, {
+    return buildTeam(TEAM_KEYS[i], lineup, {
       v1: sorted[0].id, v2: sorted[1].id,
       strategy: strategies[Math.floor(rng() * strategies.length)],
     });

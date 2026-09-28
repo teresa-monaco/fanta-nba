@@ -111,7 +111,7 @@ function viewLobby({ state: s, session }) {
       </div>
       <div class="card">
         <label class="field"><span>Il tuo nome</span>
-          <input id="nick" value="${esc(ui.nickname)}" placeholder="Diego" maxlength="14" autocomplete="off">
+          <input id="nick" value="${esc(ui.nickname)}" placeholder="il tuo nome" maxlength="14" autocomplete="off">
         </label>
         <p class="small muted mb">Scegli la tua squadra:</p>
         <div class="seats">${seats}</div>
@@ -194,16 +194,23 @@ function viewAuction({ state: s, session }) {
 
   return `
     <div class="card lot">
-      <div class="ovr">${p.ovr} OVR</div>
-      <div class="nm">${esc(p.n)}</div>
-      <div class="meta">${p.pos}${p.alt?.length ? ' / ' + p.alt.join('/') : ''} · ${esc(arc?.label || p.arc)} · ${esc(p.tm)}, ${p.era}</div>
+      <div class="lot-head">
+        <div>
+          <div class="eyebrow">In asta ora</div>
+          <div class="nm">${esc(p.n)}</div>
+          <div class="meta">${p.pos}${p.alt?.length ? ' / ' + p.alt.join('/') : ''} · ${esc(arc?.label || p.arc)} · ${esc(p.tm)}, ${p.era}</div>
+        </div>
+        <div class="ovr"><b>${p.ovr}</b><i>Overall</i></div>
+      </div>
       <div class="attrs">${attrs}</div>
       ${hostBar}
     </div>
 
     <div class="card bidbox ${paused ? 'paused' : ''}">
-      <div class="bidnow">${bid ? bid.amount : 0}<small> crediti</small></div>
-      <div class="bidder">${bid ? `offerta di <b>${TEAM_NAMES[bid.team]}</b>` : '<span class="muted">nessuna offerta</span>'}</div>
+      <div class="bid-info">
+        <div class="bidnow">${bid ? bid.amount : 0}<small> crediti</small></div>
+        <div class="bidder">${bid ? `offerta di <b>${TEAM_NAMES[bid.team]}</b>` : '<span class="muted">nessuna offerta</span>'}</div>
+      </div>
       <div class="clock" id="clock">--</div>
     </div>
 

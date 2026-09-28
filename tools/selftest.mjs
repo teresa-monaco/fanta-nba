@@ -24,6 +24,10 @@ const { buildTeam, simSeries, matchup, pickBracket } = await import('../js/engin
 const { narrateGame, explainSeries, teamIdentity } = await import('../js/narrator.js');
 const { autoLineup } = await import('../js/state.js');
 
+// Le quattro posizioni, per nome corto: i test non devono rompersi
+// quando le squadre vengono rinominate.
+const [K0, K1, K2, K3] = TEAM_KEYS;
+
 let fails = 0;
 const ok = (cond, label, extra = '') => {
   if (cond) console.log(`  PASS  ${label}${extra ? ' — ' + extra : ''}`);
@@ -77,7 +81,7 @@ console.log('\n2. Distribuzione dei risultati (400 serie)');
 
   for (let i = 0; i < 400; i++) {
     const T = randomTeams('dist' + i);
-    const r = simSeries(T.agre, T.steve, 'ser' + i);
+    const r = simSeries(T[K0], T[K1], 'ser' + i);
     const loser = Math.min(r.wins.a, r.wins.b);
     dist[`4-${loser}`]++;
     for (const g of r.games) {
@@ -117,14 +121,14 @@ console.log('\n3. Plausibilita delle statistiche individuali');
   let starSample = [];
   for (let i = 0; i < 120; i++) {
     const T = randomTeams('stat' + i);
-    const r = simSeries(T.diego, T.fabio, 'st' + i);
+    const r = simSeries(T[K2], T[K3], 'st' + i);
     for (const g of r.games) {
       for (const l of [...g.boxA, ...g.boxB]) {
         lines++;
         maxPts = Math.max(maxPts, l.pts); minPts = Math.min(minPts, l.pts);
         maxReb = Math.max(maxReb, l.reb); maxAst = Math.max(maxAst, l.ast);
       }
-      const v1 = T.diego.tactics.v1;
+      const v1 = T[K2].tactics.v1;
       const line = g.boxA.find((l) => l.id === v1);
       if (line) starSample.push(line.pts);
     }
@@ -143,12 +147,12 @@ console.log('\n4. Determinismo (e la base della sincronizzazione)');
 {
   const T1 = randomTeams('det');
   const T2 = randomTeams('det');
-  const a = simSeries(T1.agre, T1.steve, 'same-seed');
-  const b = simSeries(T2.agre, T2.steve, 'same-seed');
+  const a = simSeries(T1[K0], T1[K1], 'same-seed');
+  const b = simSeries(T2[K0], T2[K1], 'same-seed');
   ok(JSON.stringify(a.games.map((g) => [g.scoreA, g.scoreB])) ===
      JSON.stringify(b.games.map((g) => [g.scoreA, g.scoreB])),
     'stesso seed => stesse partite', `${a.games.length} gare`);
-  const c = simSeries(T1.agre, T1.steve, 'other-seed');
+  const c = simSeries(T1[K0], T1[K1], 'other-seed');
   ok(JSON.stringify(a.games.map((g) => g.scoreA)) !== JSON.stringify(c.games.map((g) => g.scoreA)),
     'seed diverso => partite diverse');
 }
@@ -157,11 +161,11 @@ console.log('\n4. Determinismo (e la base della sincronizzazione)');
 console.log('\n5. Impatto delle scelte tattiche');
 {
   const T = randomTeams('strat');
-  const base = T.agre;
-  const opp = T.steve;
+  const base = T[K0];
+  const opp = T[K1];
   const results = {};
   for (const strat of Object.keys(STRATEGIES)) {
-    const variant = buildTeam('agre', lineupOf(base), { ...base.tactics, strategy: strat });
+    const variant = buildTeam(K0, lineupOf(base), { ...base.tactics, strategy: strat });
     const m = matchup(variant, opp);
     results[strat] = m.offA;
   }
@@ -174,8 +178,8 @@ console.log('\n5. Impatto delle scelte tattiche');
   console.log(`     per questo quintetto: meglio "${STRATEGIES[best[0]].label}" (${best[1].toFixed(1)}), peggio "${STRATEGIES[worst[0]].label}" (${worst[1].toFixed(1)})`);
 
   // Il tiro da 3 deve alzare la varianza, non la media.
-  const three = buildTeam('agre', lineupOf(base), { ...base.tactics, strategy: 'tiro-3' });
-  const bal = buildTeam('agre', lineupOf(base), { ...base.tactics, strategy: 'equilibrato' });
+  const three = buildTeam(K0, lineupOf(base), { ...base.tactics, strategy: 'tiro-3' });
+  const bal = buildTeam(K0, lineupOf(base), { ...base.tactics, strategy: 'equilibrato' });
   ok(matchup(three, opp).varA > matchup(bal, opp).varA * 1.3,
     'il tiro da 3 alza davvero la varianza');
 }
@@ -207,12 +211,12 @@ console.log('\n6. Accoppiamenti e narrazione');
   const stories = new Set();
   for (let i = 0; i < 40; i++) {
     const TT = randomTeams('v' + i);
-    const rr = simSeries(TT.agre, TT.steve, 'v' + i);
-    rr.games.forEach((g) => stories.add(narrateGame(TT.agre, TT.steve, g)));
+    const rr = simSeries(TT[K0], TT[K1], 'v' + i);
+    rr.games.forEach((g) => stories.add(narrateGame(TT[K0], TT[K1], g)));
   }
   ok(stories.size > 120, 'le cronache non si ripetono', `${stories.size} testi diversi su ~200 gare`);
 
-  ok(teamIdentity(T.agre).length > 3, 'identita di squadra generata', teamIdentity(T.agre));
+  ok(teamIdentity(T[K0]).length > 3, 'identita di squadra generata', teamIdentity(T[K0]));
 }
 
 /* ---------- Esito ---------- */

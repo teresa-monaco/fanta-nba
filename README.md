@@ -116,6 +116,17 @@ a rimbalzo", quel vantaggio esiste nei numeri.
 
 ---
 
+## Rinominare le squadre
+
+Una riga sola, in `js/core.js`:
+
+```js
+export const TEAM_NAMES = { t1: 'USZ', t2: 'FollowTheLeader', t3: 'Volta Reno', t4: 'R4cist' };
+```
+
+Le chiavi `t1…t4` sono **posizioni**, non nomi: reggono i colori in CSS
+(`.t-t1` … `.t-t4`) e le partite già salvate. Cambia solo i valori, mai le chiavi.
+
 ## Modificare i giocatori
 
 `data/players.json`, una riga per giocatore:

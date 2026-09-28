@@ -84,7 +84,8 @@ ok(els.topbar.innerHTML.includes('FANTA'), 'la barra in alto si disegna');
 /* 2. Asta */
 const now = () => Date.now();
 await F.session.apply((s) => S.startAuction(s, now()));
-ok(clean() && has('OVR', 'crediti'), 'la schermata d\'asta si disegna');
+// Agganciato alla struttura, non a una parola: le etichette cambiano con la grafica.
+ok(clean() && has('class="card lot"', 'class="lot-head"', 'crediti'), 'la schermata d\'asta si disegna');
 ok(has('Realizzazione', 'Protezione ferro'), 'gli attributi del giocatore sono visibili');
 ok(has('Assegna a mano') && has('>Salta<'), 'i comandi del banditore stanno nel blocco del giocatore');
 ok(html().indexOf('Assegna a mano') < html().indexOf('class="card bidbox'),
@@ -100,18 +101,18 @@ await F.session.apply((s) => S.placeBid(s, TEAM_KEYS[1], 3, now()));
 ok(has('>Assegna</button>'), 'con un\'offerta sul tavolo compare "Assegna"');
 ok(has('+1<small>4'), 'i rilanci ripartono dall\'offerta corrente, non da zero');
 {
-  const maxAgre = S.maxBid(F.state, TEAM_KEYS[0]);
+  const maxMia = S.maxBid(F.state, TEAM_KEYS[0]);
   ui.allIn = { team: TEAM_KEYS[0], at: 3 };
   render(els.app, { state: F.state, session: F.session });
   ok(has('Sicuro?'), 'All in chiede conferma invece di svuotare il budget al primo tocco');
-  ok(has(`data-amt="${maxAgre}"`), 'e la conferma offre esattamente il massimo consentito');
+  ok(has(`data-amt="${maxMia}"`), 'e la conferma offre esattamente il massimo consentito');
   ui.allIn = null;
   render(els.app, { state: F.state, session: F.session });
   ok(!has('Sicuro?'), 'l\'armamento si annulla');
 }
 
 /* Squadra propria in evidenza — è il comportamento della modalità online */
-await F.session.apply((s) => S.takeSeat(s, 'local', 'Diego', 'agre'));
+await F.session.apply((s) => S.takeSeat(s, 'local', 'Diego', TEAM_KEYS[0]));
 ok(has('(tu)') && has('puoi arrivare a'), 'chi ha una squadra la vede in evidenza, con budget e tetto di spesa');
 ok(has('Gli avversari'), 'gli altri finiscono in un blocco separato, sotto');
 ok(html().indexOf('(tu)') < html().indexOf('Gli avversari'), 'e la propria viene prima');

@@ -97,8 +97,16 @@ export function deriveAttrs(p, archetypes) {
 
 /* ---------- Costanti di gioco ---------- */
 
-export const TEAM_KEYS = ['agre', 'steve', 'diego', 'fabio'];
-export const TEAM_NAMES = { agre: 'Agre', steve: 'Steve', diego: 'Diego', fabio: 'Fabio' };
+// Le chiavi sono POSIZIONI fisse (t1..t4), non nomi: reggono i colori in CSS
+// (.t-t1 … .t-t4) e le partite già salvate. Per rinominare le squadre si
+// cambia solo TEAM_NAMES, qui sotto, e non si tocca nient'altro.
+export const TEAM_KEYS = ['t1', 't2', 't3', 't4'];
+export const TEAM_NAMES = {
+  t1: 'USZ',
+  t2: 'FollowTheLeader',
+  t3: 'Volta Reno',
+  t4: 'R4cist',
+};
 export const SLOTS = ['PG', 'SG', 'SF', 'PF', 'C'];
 export const SLOT_LABEL = {
   PG: 'Playmaker',
