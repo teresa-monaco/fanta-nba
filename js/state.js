@@ -47,6 +47,7 @@ export function hydrate(raw) {
   s.auction = {
     order: a.order || null, idx: a.idx ?? 0, bid: a.bid || null,
     deadline: a.deadline || null, running: !!a.running,
+    paused: !!a.paused, remaining: a.remaining ?? null,
     log: a.log || [], unsold: a.unsold || [],
   };
   if (s.po) {
@@ -84,8 +85,22 @@ export function maxBid(s, teamKey) {
   return Math.max(0, s.teams[teamKey].credits - (left - 1));
 }
 
+// La pausa vale per tutti: il cronometro vive nello stato condiviso, non nel
+// browser di chi ospita. Si conserva il tempo residuo, così alla ripresa non
+// si riparte da capo né si scade subito.
+export function pauseAuction(s, now) {
+  if (!s.auction.running || s.auction.paused) return s;
+  return { ...s, auction: { ...s.auction, paused: true, remaining: Math.max(0, (s.auction.deadline || now) - now) } };
+}
+
+export function resumeAuction(s, now) {
+  if (!s.auction.paused) return s;
+  const left = s.auction.remaining ?? BID_SECONDS * 1000;
+  return { ...s, auction: { ...s.auction, paused: false, remaining: null, deadline: now + Math.max(3000, left) } };
+}
+
 export function canBid(s, teamKey, amount) {
-  if (s.phase !== 'auction' || !s.auction.running) return false;
+  if (s.phase !== 'auction' || !s.auction.running || s.auction.paused) return false;
   if (slotsLeft(s, teamKey) <= 0) return false;
   const cur = s.auction.bid;
   if (cur && cur.team === teamKey) return false; // non si rilancia su se stessi
@@ -105,9 +120,11 @@ export function startAuction(s, now) {
 // la partita potrebbe restare bloccata con quintetti incompleti.
 export function openLot(s, now) {
   const a = s.auction;
+  // Un lotto nuovo riparte sempre spausato: la pausa vale per il lotto in corso.
+  const fresh = { ...a, bid: null, paused: false, remaining: null };
   const stillBuying = TEAM_KEYS.some((k) => slotsLeft(s, k) > 0 && maxBid(s, k) >= 1);
   if (!stillBuying || !a.order?.length) {
-    return { ...s, auction: { ...a, running: false, bid: null, deadline: null } };
+    return { ...s, auction: { ...fresh, running: false, deadline: null } };
   }
 
   const owned = new Set(TEAM_KEYS.flatMap((k) => s.teams[k].roster));
@@ -115,11 +132,11 @@ export function openLot(s, now) {
   for (let step = 0; step < a.order.length; step++) {
     idx = (idx + 1) % a.order.length;
     if (!owned.has(a.order[idx])) {
-      return { ...s, auction: { ...a, idx, bid: null, deadline: now + BID_SECONDS * 1000, running: true } };
+      return { ...s, auction: { ...fresh, idx, deadline: now + BID_SECONDS * 1000, running: true } };
     }
   }
   // Non dovrebbe succedere: il pool e molto piu grande dei 20 posti totali.
-  return { ...s, auction: { ...a, running: false, bid: null, deadline: null } };
+  return { ...s, auction: { ...fresh, running: false, deadline: null } };
 }
 
 export function placeBid(s, teamKey, amount, now) {

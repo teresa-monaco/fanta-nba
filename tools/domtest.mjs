@@ -85,7 +85,31 @@ const now = () => Date.now();
 await F.session.apply((s) => S.startAuction(s, now()));
 ok(clean() && has('OVR', 'crediti'), 'la schermata d\'asta si disegna');
 ok(has('Realizzazione', 'Protezione ferro'), 'gli attributi del giocatore sono visibili');
-ok(has('Chiudi il lotto'), 'chi ospita vede i comandi del banditore');
+ok(has('Chiudi lotto') && has('Assegna a mano') && has('Salta'),
+  'i comandi del banditore stanno nel blocco del giocatore');
+ok(html().indexOf('Assegna a mano') < html().indexOf('class="card bidbox'),
+  'e stanno sotto le valutazioni, prima del riquadro offerte');
+ok(has('data-act="toggle-pause"'), 'c\'è il tasto per fermare il cronometro');
+ok(has('Rilancia a 1') && has('>+2<') && has('>+5<'),
+  'la barra dei rilanci ha il tasto dominante e le due scorciatoie');
+
+/* Squadra propria in evidenza — è il comportamento della modalità online */
+await F.session.apply((s) => S.takeSeat(s, 'local', 'Diego', 'agre'));
+ok(has('(tu)') && has('puoi arrivare a'), 'chi ha una squadra la vede in evidenza, con budget e tetto di spesa');
+ok(has('Gli avversari'), 'gli altri finiscono in un blocco separato, sotto');
+ok(html().indexOf('(tu)') < html().indexOf('Gli avversari'), 'e la propria viene prima');
+ok(has('class="chip'), 'la propria rosa è visibile a colpo d\'occhio');
+await F.session.apply((s) => S.leaveSeat(s, 'local'));
+
+/* Pausa: ferma il cronometro per tutti e blocca i rilanci */
+await F.session.apply((s) => S.pauseAuction(s, now()));
+ok(F.state.auction.paused, 'la pausa entra nello stato condiviso, non solo nel browser');
+ok(!S.canBid(F.state, TEAM_KEYS[0], 1), 'in pausa non si può rilanciare');
+ok(has('Cronometro fermo'), 'la barra dice chiaramente che è fermo');
+const rimasto = F.state.auction.remaining;
+ok(rimasto > 0 && rimasto <= 15000, 'il tempo residuo viene conservato', `${Math.round(rimasto / 1000)}s`);
+await F.session.apply((s) => S.resumeAuction(s, now()));
+ok(!F.state.auction.paused && S.canBid(F.state, TEAM_KEYS[0], 1), 'alla ripresa si torna a poter rilanciare');
 ok(els.topbar.innerHTML.includes('new-game'), 'la barra in alto ha il tasto per ricominciare');
 ok(has('Ricomincia da capo'), 'e c\'è anche in fondo alla schermata, dove si vede');
 

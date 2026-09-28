@@ -11,9 +11,10 @@ import { now } from './net.js';
 export const ui = {
   nickname: localStorage.getItem('nbaf:nick') || '',
   selSlot: null,      // { team, slot } in fase quintetti
-  selTeam: null,      // squadra mostrata nelle schermate per-squadra
   banner: null,
   manualOpen: false,
+  customFor: null,    // squadra per cui è aperto il selettore di importo
+  customBid: null,    // importo in corso di selezione
 };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -148,42 +149,46 @@ function viewAuction({ state: s, session }) {
     <div class="attr"><div class="lbl"><span>${lbl}</span><b>${p.attrs[k]}</b></div>
       <div class="bar"><i style="width:${p.attrs[k]}%"></i></div></div>`).join('');
 
-  // Le squadre che chi guarda puo far rilanciare: la sua, oppure tutte
-  // quelle senza nessuno seduto se e lui a ospitare.
+  const paused = !!s.auction.paused;
+
+  // Comandi del banditore: dentro il blocco del giocatore, subito sotto le
+  // valutazioni, cioè dove si sta già guardando mentre si decide.
+  const hostBar = !isHost ? '' : `
+    <div class="host-bar">
+      <button class="sm ${paused ? 'primary' : 'ghost'}" data-act="toggle-pause"
+              title="${paused ? 'Riprendi' : 'Ferma'} il cronometro">${paused ? '&#9654;' : '&#9632;'}</button>
+      <button class="sm" data-act="resolve">Chiudi lotto</button>
+      <button class="sm ghost" data-act="pass">Salta</button>
+      <button class="sm ghost" data-act="toggle-manual">${ui.manualOpen ? 'Annulla' : 'Assegna a mano'}</button>
+    </div>
+    ${ui.manualOpen ? `
+      <div class="manual">
+        <p class="tiny muted mb">Scavalca l'asta: ${esc(p.n)} al prezzo che decidi tu.</p>
+        <div class="row">
+          <select id="m-team" class="grow">${TEAM_KEYS.filter((k) => S.slotsLeft(s, k) > 0)
+            .map((k) => `<option value="${k}">${TEAM_NAMES[k]} — max ${S.maxBid(s, k)}</option>`).join('')}</select>
+          <input id="m-price" type="number" min="0" value="${bid?.amount || 1}" style="width:84px">
+          <button class="sm primary" data-act="manual-award">OK</button>
+        </div>
+      </div>` : ''}`;
+
+  // Le squadre che chi guarda può far rilanciare: la sua, oppure tutte
+  // quelle senza nessuno seduto se è lui a ospitare.
   const controllable = TEAM_KEYS.filter((k) => k === myTeam || (isHost && !S.seatTaken(s, k)));
   const bidders = controllable.filter((k) => S.slotsLeft(s, k) > 0);
 
-  const bidUi = bidders.map((k) => {
-    const min = bid ? bid.amount + 1 : 1;
-    const max = S.maxBid(s, k);
-    const steps = [min, min + 1, min + 3, max].filter((v, i, a) => v <= max && v >= min && a.indexOf(v) === i);
-    const isLeader = bid && bid.team === k;
-    return `
-      <div class="strip t-${k} ${isLeader ? 'leading' : ''}">
-        <span class="dot"></span>
-        <span class="nm">${TEAM_NAMES[k]}</span>
-        <span class="cr">${s.teams[k].credits}</span>
-        <span class="grow"></span>
-        ${isLeader ? '<span class="tag">in testa</span>' :
-          (max < min ? '<span class="tag">fuori budget</span>' :
-            steps.map((v) => `<button class="sm" data-act="bid" data-team="${k}" data-amt="${v}">${v}</button>`).join(''))}
-      </div>`;
-  }).join('');
-
-  const strips = TEAM_KEYS.map((k) => {
+  const compact = (k) => {
     const t = s.teams[k];
     const names = t.roster.map((id) => D.byId[id]?.n).filter(Boolean).join(' · ') || '—';
-    return `<div class="strip t-${k}">
+    const leader = bid && bid.team === k;
+    return `<div class="strip t-${k} ${leader ? 'leading' : ''}">
       <span class="dot"></span>
       <div class="grow" style="min-width:0">
         <div class="row spread"><span class="nm">${TEAM_NAMES[k]}</span>
           <span><span class="cr">${t.credits}</span> <span class="tiny muted">cr · ${t.roster.length}/${ROSTER_SIZE}</span></span></div>
         <div class="ros">${esc(names)}</div>
       </div></div>`;
-  }).join('');
-
-  const log = s.auction.log.slice().reverse().slice(0, 30).map((l) =>
-    `<div><span>${esc(D.byId[l.playerId]?.n || l.playerId)}</span><span class="muted">${TEAM_NAMES[l.team]} · ${l.price}</span></div>`).join('') || '<div class="muted">Nessun acquisto.</div>';
+  };
 
   return `
     <div class="card lot">
@@ -191,43 +196,112 @@ function viewAuction({ state: s, session }) {
       <div class="nm">${esc(p.n)}</div>
       <div class="meta">${p.pos}${p.alt?.length ? ' / ' + p.alt.join('/') : ''} · ${esc(arc?.label || p.arc)} · ${esc(p.tm)}, ${p.era}</div>
       <div class="attrs">${attrs}</div>
+      ${hostBar}
     </div>
 
-    <div class="card bidbox">
+    <div class="card bidbox ${paused ? 'paused' : ''}">
       <div class="bidnow">${bid ? bid.amount : 0}<small> crediti</small></div>
       <div class="bidder">${bid ? `offerta di <b>${TEAM_NAMES[bid.team]}</b>` : '<span class="muted">nessuna offerta</span>'}</div>
       <div class="clock" id="clock">--</div>
-      ${bidders.length ? `<div class="mt">${bidUi}</div>` : '<p class="small muted mt">Nessuna squadra che gestisci può rilanciare su questo lotto.</p>'}
     </div>
 
-    ${isHost ? `
-      <div class="card tight">
-        <div class="row wrap">
-          <button class="sm" data-act="resolve">Chiudi il lotto</button>
-          <button class="sm ghost" data-act="pass">Salta giocatore</button>
-          <button class="sm ghost" data-act="toggle-manual">${ui.manualOpen ? 'Chiudi' : 'Assegna a mano'}</button>
-        </div>
-        ${ui.manualOpen ? `
-          <div class="mt">
-            <p class="tiny muted mb">Scavalca l'asta: assegna ${esc(p.n)} al prezzo che decidi tu.</p>
-            <div class="row">
-              <select id="m-team" class="grow">${TEAM_KEYS.filter((k) => S.slotsLeft(s, k) > 0)
-                .map((k) => `<option value="${k}">${TEAM_NAMES[k]} (${s.teams[k].credits} cr)</option>`).join('')}</select>
-              <input id="m-price" type="number" min="1" value="${bid?.amount || 1}" style="width:88px">
-              <button class="sm primary" data-act="manual-award">OK</button>
-            </div>
-          </div>` : ''}
-      </div>` : ''}
+    ${myTeam ? myTeamCard(s, myTeam, bid) : ''}
 
-    <div class="card tight">${strips}</div>
-    <details class="card tight"><summary>Acquisti (${s.auction.log.length})</summary><div class="log mt">${log}</div></details>
+    <div class="card tight">
+      ${myTeam ? '<p class="tiny muted mb">Gli avversari</p>' : ''}
+      ${(myTeam ? TEAM_KEYS.filter((k) => k !== myTeam) : TEAM_KEYS).map(compact).join('')}
+    </div>
+
+    ${auctionLog(s, D)}
+    ${bidBar(s, bidders, bid, paused)}
   `;
+}
+
+// La tua squadra: crediti, slot, rosa e quanto puoi spingere. Sta sopra gli
+// avversari perché mentre decidi se puntare guardi il tuo budget, non il loro.
+function myTeamCard(s, k, bid) {
+  const D = db();
+  const t = s.teams[k];
+  const left = S.slotsLeft(s, k);
+  const max = S.maxBid(s, k);
+  const leader = bid && bid.team === k;
+  const chips = t.roster.map((id) => D.byId[id]).filter(Boolean)
+    .map((p) => `<span class="chip">${esc(p.n)} <b>${p.ovr}</b></span>`).join('')
+    + Array.from({ length: left }, () => '<span class="chip empty">libero</span>').join('');
+
+  return `<div class="card mine t-${k}">
+    <div class="row spread">
+      <h3><span class="dot" style="display:inline-block;margin-right:7px"></span>${TEAM_NAMES[k]} <span class="tiny muted">(tu)</span></h3>
+      ${leader ? '<span class="tag lead">sei in testa</span>' : ''}
+    </div>
+    <div class="mine-nums">
+      <div><b>${t.credits}</b><span>crediti</span></div>
+      <div><b>${t.roster.length}/${ROSTER_SIZE}</b><span>giocatori</span></div>
+      <div><b>${max}</b><span>puoi arrivare a</span></div>
+    </div>
+    <div class="chips">${chips}</div>
+    ${left > 0 && max < (bid ? bid.amount + 1 : 1)
+      ? '<p class="tiny warn-txt">Qui non puoi rilanciare: devi tenere crediti per gli slot che ti restano.</p>' : ''}
+  </div>`;
+}
+
+// Barra fissa in fondo: un tasto dominante per il rilancio minimo, due
+// scorciatoie relative all'offerta attuale, e il selettore per la cifra esatta.
+// I numeri sui tasti piccoli sono QUANTO SOPRA l'offerta corrente, non l'importo.
+function bidBar(s, bidders, bid, paused) {
+  if (!bidders.length) return '';
+  const cur = bid ? bid.amount : 0;
+  const minBid = cur + 1;
+
+  return `<div class="bidbar-spacer"></div><div class="bidbar">${bidders.map((k) => {
+    const max = S.maxBid(s, k);
+    const leader = bid && bid.team === k;
+    const tag = bidders.length > 1 ? `<span class="who t-${k}"><span class="dot"></span>${TEAM_NAMES[k]}</span>` : '';
+
+    if (paused) return `<div class="bidrow">${tag}<div class="flatnote">Cronometro fermo</div></div>`;
+    if (leader) return `<div class="bidrow">${tag}<div class="flatnote lead">Sei in testa a ${cur}</div></div>`;
+    if (max < minBid) return `<div class="bidrow">${tag}<div class="flatnote">Budget esaurito per questo lotto</div></div>`;
+
+    const step = (n) => (cur + n <= max
+      ? `<button class="sm" data-act="bid" data-team="${k}" data-amt="${cur + n}">+${n}</button>`
+      : `<button class="sm" disabled>+${n}</button>`);
+
+    const open = ui.customFor === k;
+    const val = Math.min(max, Math.max(minBid, ui.customBid ?? minBid));
+
+    return `<div class="bidrow">
+      ${tag}
+      <button class="primary grow" data-act="bid" data-team="${k}" data-amt="${minBid}">Rilancia a ${minBid}</button>
+      ${step(2)}${step(5)}
+      <button class="sm ${open ? 'primary' : 'ghost'}" data-act="toggle-custom" data-team="${k}">&#183;&#183;&#183;</button>
+      ${open ? `<div class="stepper">
+        <button class="sm" data-act="custom-minus">&minus;</button>
+        <div class="val">${val}</div>
+        <button class="sm" data-act="custom-plus">+</button>
+        <button class="sm primary grow" data-act="bid" data-team="${k}" data-amt="${val}">Offri ${val}</button>
+      </div>` : ''}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function auctionLog(s, D) {
+  const rows = s.auction.log.slice().reverse().slice(0, 30).map((l) =>
+    `<div><span>${esc(D.byId[l.playerId]?.n || l.playerId)}</span><span class="muted">${TEAM_NAMES[l.team]} · ${l.price}</span></div>`)
+    .join('') || '<div class="muted">Nessun acquisto.</div>';
+  return `<details class="card tight"><summary>Acquisti (${s.auction.log.length})</summary><div class="log mt">${rows}</div></details>`;
 }
 
 export function tickClock(s) {
   const el = document.getElementById('clock');
   if (!el) return null;
-  if (!s.auction.running || !s.auction.deadline) { el.textContent = 'in pausa'; return null; }
+  if (s.auction.paused) {
+    el.textContent = `fermo a ${Math.ceil((s.auction.remaining ?? 0) / 1000)}s`;
+    el.classList.remove('hot');
+    el.classList.add('frozen');
+    return null;
+  }
+  el.classList.remove('frozen');
+  if (!s.auction.running || !s.auction.deadline) { el.textContent = 'in attesa'; return null; }
   const left = Math.max(0, s.auction.deadline - now());
   const sec = Math.ceil(left / 1000);
   el.textContent = sec > 0 ? `${sec}s` : 'chiuso';

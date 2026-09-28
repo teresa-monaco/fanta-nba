@@ -11,6 +11,7 @@
   --accent-2: #ffb03a;
   --ok: #34d399;
   --bad: #f87171;
+  --warning: #fd9a00;
   --agre: #ef4444;
   --steve: #3b82f6;
   --diego: #22c55e;
@@ -136,7 +137,57 @@ label.field > span { display: block; font-size: 13px; color: var(--muted); margi
   display: inline-block; margin-top: 9px; border: 1px solid var(--line);
 }
 .clock.hot { background: var(--bad); border-color: var(--bad); color: #fff; }
-.bidgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+.clock.frozen { background: var(--warning, #fd9a00); border-color: #fd9a00; color: #1a1205; }
+.bidbox.paused { opacity: .75; }
+
+/* comandi del banditore, dentro il blocco del giocatore */
+.host-bar {
+  display: flex; gap: 7px; flex-wrap: wrap; justify-content: center;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line);
+}
+.manual { margin-top: 10px; text-align: left; }
+
+/* la tua squadra */
+.card.mine { border-left: 3px solid var(--tc); }
+.mine-nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 10px; }
+.mine-nums div { background: var(--surface-2); border-radius: 9px; padding: 9px 6px; text-align: center; }
+.mine-nums b { display: block; font: 800 21px/1 ui-monospace, Menlo, monospace; color: var(--accent-2); }
+.mine-nums span { display: block; font-size: 10.5px; color: var(--muted); margin-top: 3px; line-height: 1.25; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip {
+  font-size: 11.5px; padding: 4px 8px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--line);
+}
+.chip b { color: var(--accent-2); font-family: ui-monospace, Menlo, monospace; }
+.chip.empty { color: var(--muted); border-style: dashed; }
+.tag.lead { background: var(--accent); border-color: var(--accent); color: #12070a; }
+.warn-txt { color: var(--warning, #fd9a00); margin-top: 9px; }
+
+/* barra dei rilanci, fissa in fondo: non deve mai scrollare via */
+.bidbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, .45);
+}
+.bidrow { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; max-width: 700px; margin: 0 auto; }
+.bidrow + .bidrow { margin-top: 7px; }
+.bidrow .who { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 800; min-width: 62px; }
+.bidrow > button.primary { min-height: 46px; font-size: 16px; }
+.bidrow > button.sm { min-width: 46px; min-height: 46px; }
+.flatnote {
+  flex: 1; text-align: center; font-size: 13px; color: var(--muted);
+  padding: 13px 8px; background: var(--surface-2); border-radius: 10px;
+}
+.flatnote.lead { color: var(--accent-2); font-weight: 700; }
+.stepper { display: flex; align-items: center; gap: 7px; width: 100%; margin-top: 7px; }
+.stepper .val {
+  font: 800 19px/1 ui-monospace, Menlo, monospace; min-width: 52px; text-align: center;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; padding: 12px 6px;
+}
+.stepper button.sm { min-width: 46px; min-height: 46px; }
+/* la barra è fixed: senza questo spazio coprirebbe il fondo della pagina */
+.bidbar-spacer { height: 120px; }
 
 /* ---- team strips ---- */
 .strip {
