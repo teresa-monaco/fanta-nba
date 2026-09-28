@@ -5,7 +5,7 @@
 // ricalcola da solo esattamente le stesse gare. Lo stato condiviso resta di
 // pochi KB e non esiste il rischio che due schermi mostrino risultati diversi.
 
-import { TEAM_KEYS, TEAM_NAMES, SLOTS, START_CREDITS, ROSTER_SIZE, makeRng, shuffle, db } from './core.js';
+import { TEAM_KEYS, TEAM_NAMES, SLOTS, START_CREDITS, ROSTER_SIZE, NUMERI_SQUADRE, makeRng, shuffle, db } from './core.js';
 
 export const BID_SECONDS = 15;
 
@@ -52,10 +52,14 @@ export function hydrate(raw) {
   };
   s.albo = s.albo || [];
   if (s.po) {
-    s.po = { ...s.po, semis: s.po.semis || [], reasons: s.po.reasons || [] };
-    for (const w of ['s1', 's2', 'final', 'third']) {
-      if (s.po[w]) s.po[w] = { gamesPlayed: 0, ...s.po[w] };
-    }
+    s.po = {
+      ...s.po,
+      reasons: s.po.reasons || [],
+      ordine: s.po.ordine || [],
+      teste: s.po.teste ?? 0,
+      turni: (s.po.turni || []).map((round) => (round || []).map((m) => ({ gamesPlayed: 0, ...m }))),
+    };
+    if (s.po.third) s.po.third = { gamesPlayed: 0, ...s.po.third };
   }
   return s;
 }
@@ -72,6 +76,10 @@ export function attive(s) {
 }
 
 export const MIN_SQUADRE = 2;
+
+// Sopra i quattro solo pari: con 5, 7 o 9 meta del tabellone salterebbe il
+// primo turno e smetterebbe di somigliare a un torneo.
+export const numeroValido = (n) => NUMERI_SQUADRE.includes(n);
 
 /* ---------- Lobby ---------- */
 
@@ -136,7 +144,7 @@ export function startAuction(s, now, squadre) {
   const rng = makeRng(s.seed + ':pool');
   const order = shuffle(D.players.map((p) => p.id), rng);
   const inGioco = squadre?.length ? squadre : attive(s);
-  if (inGioco.length < MIN_SQUADRE) return undefined;
+  if (!numeroValido(inGioco.length)) return undefined;
   return openLot({
     ...s, phase: 'auction', attive: inGioco,
     auction: { ...s.auction, order, idx: -1 },
@@ -326,37 +334,44 @@ export function tacticsReady(s) {
 export const PASSO_SEMI = 2;
 export const PASSO_FINALE = 1;
 
-// Accetta il tabellone prodotto da componiTabellone(): la forma dipende da
-// quante squadre giocano, ma lo stato salvato resta lo stesso per tutte.
+// Nello stato finiscono solo l'ordine sorteggiato e, per ogni serie, quante
+// gare sono state scoperte. CHI gioca contro chi dal secondo turno in poi non
+// si salva: lo deduce costruisciBracket() dai risultati, uguali per tutti
+// perche il motore e deterministico.
 export function toPlayoffs(s, tab) {
-  const serie = (nome, a, b) => ({ a, b, seed: `${s.seed}:${nome}`, gamesPlayed: 0 });
-  const base = { tipo: tab.tipo, reasons: tab.reasons, s1: null, s2: null, final: null, third: null, bye: null };
-
-  if (tab.tipo === 'quattro') {
-    const [p1, p2] = tab.semis;
-    return { ...s, phase: 'playoffs', po: { ...base, semis: tab.semis, s1: serie('s1', p1[0], p1[1]), s2: serie('s2', p2[0], p2[1]) } };
-  }
-  if (tab.tipo === 'tre') {
-    return { ...s, phase: 'playoffs', po: { ...base, bye: tab.bye, s1: serie('s1', tab.semi[0], tab.semi[1]) } };
-  }
-  // due squadre: si parte direttamente dalle Finals
-  return { ...s, phase: 'playoffs', po: { ...base, final: serie('final', tab.finale[0], tab.finale[1]) } };
+  const turni = tab.serie.map((quante, r) =>
+    Array.from({ length: quante }, (_, i) => ({ seed: `${s.seed}:r${r}m${i}`, gamesPlayed: 0 })));
+  return {
+    ...s,
+    phase: 'playoffs',
+    po: {
+      n: tab.n, ordine: tab.ordine, teste: tab.teste,
+      reasons: tab.reasons, seedBase: s.seed,
+      turni,
+      third: null, // nasce solo se il penultimo turno aveva due serie
+    },
+  };
 }
 
 // Un solo percorso per tutte le serie: cambia solo di quanto si avanza.
-export function advanceSeries(s, which, passo) {
-  const ser = s.po?.[which];
-  if (!ser) return s;
-  return { ...s, po: { ...s.po, [which]: { ...ser, gamesPlayed: Math.min(7, ser.gamesPlayed + passo) } } };
+export function advanceSeries(s, r, i, passo) {
+  const turni = s.po?.turni;
+  if (!turni?.[r]?.[i]) return s;
+  const nuovi = turni.map((round, ri) => (ri !== r ? round
+    : round.map((m, mi) => (mi !== i ? m : { ...m, gamesPlayed: Math.min(7, m.gamesPlayed + passo) }))));
+  return { ...s, po: { ...s.po, turni: nuovi } };
 }
 
-// Con quattro squadre le Finals mettono le due vincenti e nasce la finalina.
-// Con tre, la finale e fra chi aveva il bye e chi ha vinto la semifinale: il
-// terzo posto e gia deciso da quella semifinale, niente finalina.
-export function openFinal(s, a, b, loser1, loser2) {
-  const po = { ...s.po, final: { a, b, seed: `${s.seed}:final`, gamesPlayed: 0 } };
-  if (loser1 && loser2) po.third = { a: loser1, b: loser2, seed: `${s.seed}:third`, gamesPlayed: 0 };
-  return { ...s, po };
+export function advanceThird(s, passo) {
+  const t = s.po?.third;
+  if (!t) return s;
+  return { ...s, po: { ...s.po, third: { ...t, gamesPlayed: Math.min(7, t.gamesPlayed + passo) } } };
+}
+
+// La finalina esiste solo se in semifinale ci sono davvero due eliminate.
+export function openThird(s, a, b) {
+  if (s.po?.third || !a || !b) return undefined;
+  return { ...s, po: { ...s.po, third: { a, b, seed: `${s.seed}:third`, gamesPlayed: 0 } } };
 }
 
 /* ---------- Albo d'oro ---------- */
@@ -398,4 +413,4 @@ export function nameOfSeat(s, teamKey) {
   const uid = Object.keys(s.seats).find((u) => s.seats[u] === teamKey);
   return uid ? s.names[uid] : null;
 }
-export { TEAM_KEYS, TEAM_NAMES, SLOTS, ROSTER_SIZE, START_CREDITS };
+export { TEAM_KEYS, TEAM_NAMES, SLOTS, ROSTER_SIZE, START_CREDITS, NUMERI_SQUADRE };

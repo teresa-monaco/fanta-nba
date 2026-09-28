@@ -11,8 +11,10 @@ ognuno sul proprio telefono.
 
 ## Come si gioca
 
-**0. Chi gioca.** Da **2 a 4 squadre**. Si scrive il nome e la squadra viene
-assegnata: non si sceglie, così non si perdono cinque minuti a contrattare i
+**0. Chi gioca.** Si gioca in **2, 3, 4, 6, 8 o 10**. Sopra i quattro solo
+numeri pari: con 5, 7 o 9 metà del tabellone salterebbe il primo turno e
+smetterebbe di somigliare a un torneo. Si scrive il nome e la squadra viene
+assegnata — non si sceglie, così non si perdono cinque minuti a contrattare i
 colori. Chi ospita fa partire con quanti ci sono.
 
 **1. Asta.** Ogni squadra parte con **50 crediti** e deve comprare **5 giocatori**.
@@ -33,18 +35,25 @@ decidere: sopra c'è il profilo in chiaro (*spacing totale, ferro scoperto,
 troppe stelle*). Se proprio vuoi correggerlo c'è "Modifica". Sotto scegli
 **primo violino**, **secondo violino** e una delle 11 **strategie offensive**.
 
-**3. Playoff.** Il tabellone cambia col numero di squadre:
+**3. Playoff.** Eliminazione diretta. Il tabellone si arrotonda alla potenza di
+due superiore e i posti che avanzano diventano **teste di serie sorteggiate**
+che saltano il primo turno:
 
-| Squadre | Formato |
-|---|---|
-| 4 | due semifinali → Finals → finalina 3°/4° |
-| 3 | il bye alla finale si **sorteggia**, gli altri due giocano la semifinale; chi la perde è terzo |
-| 2 | solo le Finals |
+| Squadre | Teste | Struttura | Serie | Durata |
+|---|---|---|---|---|
+| 2 | – | Finale | 1 | ~4 min |
+| 3 | 1 | Preliminare → Finale | 2 | ~7 min |
+| 4 | – | Semifinali → Finale | 3 | ~10 min |
+| 6 | 2 | Preliminare → Semifinali → Finale | 5 | ~15 min |
+| 8 | – | Quarti → Semifinali → Finale | 7 | ~20 min |
+| 10 | 6 | Preliminare → Quarti → Semifinali → Finale | 9 | ~25 min |
 
-Con quattro, le semifinali si accoppiano cercando il **contrasto stilistico
-massimo** e l'app spiega perché. Le serie si scoprono **due gare alla volta**;
-le **Finals una gara alla volta**, premendo "Vai" — così la tensione sale invece
-di restare piatta.
+La durata include l'asta, che cresce col numero di squadre (5 acquisti a testa).
+
+Le serie si scoprono **due gare alla volta**, la **finale una gara alla volta** —
+così la tensione sale invece di restare piatta. Chi gioca contro chi dal secondo
+turno in poi **non è salvato nel database**: viene dedotto dai risultati, che
+sono identici per tutti perché il motore è deterministico.
 
 **4. Albo d'oro.** Ogni partita conclusa resta: campione, quintetto, MVP. Più
 una classifica fra voi. Sopravvive a "Nuova partita".

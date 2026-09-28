@@ -29,6 +29,12 @@
   --t2: #3b82f6;
   --t3: #22c55e;
   --t4: #a855f7;
+  --t5: #f97316;
+  --t6: #06b6d4;
+  --t7: #ec4899;
+  --t8: #84cc16;
+  --t9: #eab308;
+  --t10: #8b93f8;
 
   --r: 3px;              /* angoli quasi vivi: è una grafica televisiva */
   --gap: 12px;
@@ -126,6 +132,12 @@ label.field > span {
 .t-t2 { --tc: var(--t2); }
 .t-t3 { --tc: var(--t3); }
 .t-t4 { --tc: var(--t4); }
+.t-t5 { --tc: var(--t5); }
+.t-t6 { --tc: var(--t6); }
+.t-t7 { --tc: var(--t7); }
+.t-t8 { --tc: var(--t8); }
+.t-t9 { --tc: var(--t9); }
+.t-t10 { --tc: var(--t10); }
 .dot { width: 9px; height: 9px; background: var(--tc); flex: none; }
 
 /* ---- sedie (lobby) ---- */

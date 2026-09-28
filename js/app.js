@@ -1,7 +1,7 @@
 // app.js — avvio, risoluzione della stanza, un solo handler per tutti i click.
 
 import { loadData, TEAM_KEYS, TEAM_NAMES } from './core.js';
-import { simSeriesUpTo, componiTabellone } from './engine.js';
+import { simSeriesUpTo, componiTabellone, costruisciBracket } from './engine.js';
 import * as S from './state.js';
 import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
 import { render, renderTopbar, tickClock, ui, teamsFromState, esc } from './ui.js';
@@ -34,7 +34,7 @@ async function boot() {
 function landing(errMsg) {
   root.innerHTML = `
     <h1>Fanta NBA</h1>
-    <p class="muted mb">Asta a crediti, quintetti, playoff simulati. Quattro squadre, 50 crediti, 5 giocatori a testa.</p>
+    <p class="muted mb">Asta a crediti, quintetti, playoff simulati. Da 2 a 10 squadre, 50 crediti, 5 giocatori a testa.</p>
     ${errMsg ? `<div class="banner err">${esc(errMsg)}</div>` : ''}
     <div class="card">
       <h3 class="mb">Crea una partita</h3>
@@ -78,14 +78,15 @@ function paint() {
 // Lo fa solo chi ospita, e l'inserimento e idempotente sul seed: qualunque
 // strada porti a questo punto, la partita finisce nell'albo una volta sola.
 async function registraAlbo() {
-  const f = state.po?.final;
-  if (!f || state.host !== session.uid) return;
-  if ((state.albo || []).some((e) => e.seed === f.seed)) return;
+  if (!state.po?.turni?.length || state.host !== session.uid) return;
   try {
     const T = teamsFromState(state);
-    const A = T[f.a], B = T[f.b];
-    const r = simSeriesUpTo(A, B, f.seed, f.gamesPlayed);
-    if (!r.done) return;
+    // La finale e l'unica serie dell'ultimo turno, qualunque sia il formato.
+    const turni = costruisciBracket(state.po, T);
+    const f = turni[turni.length - 1]?.[0];
+    const r = f?.res;
+    if (!r?.done) return;
+    if ((state.albo || []).some((e) => e.seed === f.seed)) return;
     const perdente = r.winner === f.a ? f.b : f.a;
     const voce = {
       seed: f.seed,
@@ -97,6 +98,7 @@ async function registraAlbo() {
       wins: `${Math.max(r.wins.a, r.wins.b)}-${Math.min(r.wins.a, r.wins.b)}`,
       mvp: r.mvp?.n || null,
       roster: T[r.winner].five.map((p) => p.n),
+      squadre: state.po.n,
     };
     await session.apply((s) => S.recordAlbo(s, voce));
   } catch (err) {
@@ -194,6 +196,15 @@ document.addEventListener('click', async (ev) => {
   ui.banner = null;
   sblocca(); // iOS tiene l'audio sospeso finché non c'è un gesto dell'utente
 
+  // "avanza:2:0" = turno 2, serie 0. I turni sono variabili, quindi la serie
+  // si indirizza con la posizione invece che con un nome fisso.
+  if (act.startsWith('avanza:')) {
+    const [, r, i] = act.split(':').map(Number);
+    const ultimo = r === (state.po?.turni?.length ?? 1) - 1;
+    await session.apply((s) => S.advanceSeries(s, r, i, ultimo ? S.PASSO_FINALE : S.PASSO_SEMI));
+    return;
+  }
+
   try {
     switch (act) {
       /* --- landing --- */
@@ -224,7 +235,7 @@ document.addEventListener('click', async (ev) => {
         ui.nickname = nick;
         localStorage.setItem('nbaf:nick', nick);
         const ok = await session.apply((s) => S.joinGame(s, session.uid, nick));
-        if (!ok) flash('Le quattro squadre sono gia assegnate.', true);
+        if (!ok) flash('Tutte le squadre sono gia assegnate.', true);
         break;
       }
 
@@ -239,7 +250,7 @@ document.addEventListener('click', async (ev) => {
           ? TEAM_KEYS.slice(0, ui.numSquadre || 4)
           : null;
         const ok = await session.apply((s) => (s.phase === 'lobby' ? S.startAuction(s, now(), inGioco) : undefined));
-        if (!ok) flash('Servono almeno due squadre.', true);
+        if (!ok) flash('Numero di squadre non ammesso: si gioca in 2, 3, 4, 6, 8 o 10.', true);
         break;
       }
 
@@ -345,25 +356,18 @@ document.addEventListener('click', async (ev) => {
         break;
       }
 
-      case 'avanza-s1': await session.apply((s) => S.advanceSeries(s, 's1', S.PASSO_SEMI)); break;
-      case 'avanza-s2': await session.apply((s) => S.advanceSeries(s, 's2', S.PASSO_SEMI)); break;
-      case 'avanza-third': await session.apply((s) => S.advanceSeries(s, 'third', S.PASSO_SEMI)); break;
-      case 'avanza-final': await session.apply((s) => S.advanceSeries(s, 'final', S.PASSO_FINALE)); break;
+      case 'avanza-third':
+        await session.apply((s) => S.advanceThird(s, S.PASSO_SEMI));
+        break;
 
-      case 'open-final': {
-        const T = teamsFromState(state);
-        const po = state.po;
-        const vinc = (m) => simSeriesUpTo(T[m.a], T[m.b], m.seed, 7);
-        if (po.tipo === 'tre') {
-          // Chi aveva il bye contro chi ha vinto l'unica semifinale.
-          const r1 = vinc(po.s1);
-          await session.apply((s) => S.openFinal(s, po.bye, r1.winner, null, null));
-        } else {
-          const r1 = vinc(po.s1), r2 = vinc(po.s2);
-          const l1 = r1.winner === po.s1.a ? po.s1.b : po.s1.a;
-          const l2 = r2.winner === po.s2.a ? po.s2.b : po.s2.a;
-          await session.apply((s) => S.openFinal(s, r1.winner, r2.winner, l1, l2));
-        }
+      // Il tabellone ha un numero variabile di turni: la serie si identifica
+      // con turno e posizione, non con un nome fisso.
+      case 'open-third': {
+        const turni = costruisciBracket(state.po, teamsFromState(state));
+        const semi = turni[turni.length - 2];
+        if (!semi || semi.length !== 2) break;
+        const perdenti = semi.map((m) => (m.res.winner === m.a ? m.b : m.a));
+        await session.apply((s) => S.openThird(s, perdenti[0], perdenti[1]));
         break;
       }
 
@@ -380,9 +384,6 @@ document.addEventListener('click', async (ev) => {
         break;
       }
 
-      case 'next-final-game':
-        await session.apply((s) => (s.po?.final && s.po.final.gamesPlayed < 7 ? S.advanceFinal(s) : undefined));
-        break;
 
       default: break;
     }

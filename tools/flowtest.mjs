@@ -13,7 +13,7 @@ const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
 
 const { installData, makeRng, TEAM_KEYS, SLOTS, STRATEGIES, START_CREDITS, ROSTER_SIZE } = await import('../js/core.js');
 const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'));
-const { buildTeam, simSeriesUpTo, componiTabellone } = await import('../js/engine.js');
+const { buildTeam, simSeriesUpTo, componiTabellone, costruisciBracket, formaTabellone } = await import('../js/engine.js');
 const S = await import('../js/state.js');
 
 let fails = 0;
@@ -38,7 +38,7 @@ function playFullGame(seed, quante = 4) {
   if (Object.keys(s.seats).length !== quante) bad('non entrano tutti', `${Object.keys(s.seats).length} di ${quante}`);
   if (new Set(Object.values(s.seats)).size !== quante) bad('due giocatori hanno avuto la stessa squadra');
   // Quando sono tutte assegnate non si entra piu.
-  if (quante === 4 && S.joinGame(s, 'intruso', 'X') !== undefined) bad('si entra anche a squadre esaurite');
+  if (quante === TEAM_KEYS.length && S.joinGame(s, 'intruso', 'X') !== undefined) bad('si entra anche a squadre esaurite');
 
   s = S.startAuction(s, tick());
   if (s.phase !== 'auction') bad('l\'asta non parte');
@@ -120,86 +120,82 @@ function playFullGame(seed, quante = 4) {
   const v1 = s.tactics[IN_GIOCO[0]].v1;
   if (S.setTactics(s, IN_GIOCO[0], { v2: v1 }) !== s) bad('accettati due violini identici');
 
-  // Playoff: la forma del tabellone dipende da quante squadre giocano.
+  // Playoff: il tabellone e generico, cambia solo il numero di turni.
   const T = {};
   for (const k of IN_GIOCO) T[k] = buildTeam(k, s.lineups[k], s.tactics[k]);
   const tab = componiTabellone(T, seed);
-  const atteso = { 4: 'quattro', 3: 'tre', 2: 'due' }[quante];
-  if (tab.tipo !== atteso) bad('tabellone sbagliato per il numero di squadre', `${tab.tipo} con ${quante}`);
+  const atteso = formaTabellone(quante);
+  if (tab.serie.join(',') !== atteso.serie.join(',')) bad('forma del tabellone sbagliata', `${quante}: ${tab.serie}`);
   if (!tab.reasons?.length) bad('motivazioni mancanti');
+  if (new Set(tab.ordine).size !== quante) bad('ordine del tabellone con ripetizioni');
   s = S.toPlayoffs(s, tab);
 
-  // Ogni serie va avanti finche non si chiude, col suo passo.
-  const chiudi = (which, passo) => {
-    const m0 = s.po[which];
-    if (!m0) return null;
-    let r = null;
-    for (let i = 0; i < 10; i++) {
-      s = S.advanceSeries(s, which, passo);
-      r = simSeriesUpTo(T[s.po[which].a], T[s.po[which].b], s.po[which].seed, s.po[which].gamesPlayed);
-      if (r.done) break;
+  // Si scopre turno per turno: ogni serie fino in fondo, poi il turno dopo.
+  const totTurni = s.po.turni.length;
+  let ultimo = null;
+  for (let r = 0; r < totTurni; r++) {
+    const passo = r === totTurni - 1 ? S.PASSO_FINALE : S.PASSO_SEMI;
+    for (let i = 0; i < s.po.turni[r].length; i++) {
+      let res = null;
+      for (let k = 0; k < 10; k++) {
+        s = S.advanceSeries(s, r, i, passo);
+        const b = costruisciBracket(s.po, T);
+        res = b[r][i].res;
+        if (res?.done) break;
+      }
+      if (!res?.done) { bad('serie che non si chiude', `turno ${r} serie ${i}`); return null; }
+      if (Math.max(res.wins.a, res.wins.b) !== 4) bad('serie non chiusa a 4 vittorie');
+      if (res.games.length < 4 || res.games.length > 7) bad('numero di gare fuori range', String(res.games.length));
+      if (!res.mvp) bad('MVP mancante');
+      if (r === totTurni - 1 && i === 0) ultimo = res;
     }
-    if (!r?.done) bad('serie che non si chiude', which);
-    else {
-      if (Math.max(r.wins.a, r.wins.b) !== 4) bad('serie non chiusa a 4 vittorie', which);
-      if (r.games.length < 4 || r.games.length > 7) bad('numero di gare fuori range', `${which}: ${r.games.length}`);
-      if (!r.mvp) bad('MVP mancante', which);
+  }
+
+  const bracket = costruisciBracket(s.po, T);
+  // Nessuno gioca contro se stesso, e nessuno compare due volte nello stesso turno.
+  for (const round of bracket) {
+    const visti = new Set();
+    for (const m of round) {
+      if (m.a === m.b) bad('una squadra gioca contro se stessa');
+      for (const x of [m.a, m.b]) {
+        if (visti.has(x)) bad('una squadra gioca due serie nello stesso turno');
+        visti.add(x);
+      }
     }
-    return r;
-  };
-
-  const r1 = chiudi('s1', S.PASSO_SEMI);
-  const r2 = chiudi('s2', S.PASSO_SEMI);
-
-  if (quante === 4) {
-    const l1 = r1.winner === s.po.s1.a ? s.po.s1.b : s.po.s1.a;
-    const l2 = r2.winner === s.po.s2.a ? s.po.s2.b : s.po.s2.a;
-    s = S.openFinal(s, r1.winner, r2.winner, l1, l2);
-  } else if (quante === 3) {
-    if (!s.po.bye) bad('con tre squadre manca il bye');
-    if (s.po.s2) bad('con tre squadre non ci devono essere due semifinali');
-    s = S.openFinal(s, s.po.bye, r1.winner, null, null);
-    if (s.po.third) bad('con tre squadre non ci deve essere la finalina');
   }
-  // con due squadre la finale esiste gia da toPlayoffs
+  // Ogni squadra entra nel tabellone una volta sola.
+  const primoTurno = new Set(bracket[0].flatMap((m) => [m.a, m.b]));
+  const teste = new Set(s.po.ordine.slice(0, s.po.teste));
+  if (primoTurno.size + teste.size !== quante) bad('qualcuno manca dal tabellone o e contato due volte');
+  if (bracket[bracket.length - 1].length !== 1) bad('l\'ultimo turno non e una finale sola');
 
-  const f = chiudi('final', S.PASSO_FINALE);
-  if (f && f.games.length !== s.po.final.gamesPlayed) bad('gare simulate e contatore fuori sincrono');
-
-  // Nessuna squadra puo giocare contro se stessa, mai.
-  for (const w of ['s1', 's2', 'final', 'third']) {
-    if (s.po[w] && s.po[w].a === s.po[w].b) bad('una squadra gioca contro se stessa', w);
-  }
-  if (quante === 4) {
-    const finalisti = new Set([s.po.final.a, s.po.final.b]);
-    if (finalisti.has(s.po.third.a) || finalisti.has(s.po.third.b)) bad('finalina con una finalista');
-  }
-
-  return { champion: f.winner, games: f.games.length, quante };
+  return { champion: ultimo.winner, games: ultimo.games.length, quante, turni: totTurni };
 }
 
 /* ---------- Esecuzione ---------- */
 
 // Si gioca in 2, 3 o 4: ogni formato ha un tabellone diverso e va provato.
-const PER_FORMATO = 80;
+const PER_FORMATO = 40;
 const champs = {};
 const gareFinali = {};
 const contate = {};
+const turniPer = {};
 
-for (const quante of [4, 3, 2]) {
+for (const quante of [2, 3, 4, 6, 8, 10]) {
   for (let i = 0; i < PER_FORMATO; i++) {
     const r = playFullGame(`flow${quante}-${i}`, quante);
     if (!r) continue;
     champs[r.champion] = (champs[r.champion] || 0) + 1;
     gareFinali[quante] = (gareFinali[quante] || 0) + r.games;
     contate[quante] = (contate[quante] || 0) + 1;
+    turniPer[quante] = r.turni;
   }
 }
 
 const totali = Object.values(contate).reduce((a, b) => a + b, 0);
 console.log(`\n${totali} partite intere giocate (lobby → asta → squadre → playoff → campione)\n`);
-for (const q of [4, 3, 2]) {
-  console.log(`  con ${q} squadre: ${contate[q] || 0} partite, Finals da ${((gareFinali[q] || 0) / (contate[q] || 1)).toFixed(1)} gare di media`);
+for (const q of [2, 3, 4, 6, 8, 10]) {
+  console.log(`  con ${String(q).padStart(2)} squadre: ${String(contate[q] || 0).padStart(3)} partite, ${turniPer[q] || 0} turni, Finals da ${((gareFinali[q] || 0) / (contate[q] || 1)).toFixed(1)} gare`);
 }
 console.log('\n  Titoli vinti:', TEAM_KEYS.map((k) => `${k} ${champs[k] || 0}`).join('  '));
 

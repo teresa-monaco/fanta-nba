@@ -526,41 +526,107 @@ function contrast(t1, t2) {
 
 const potenza = (t) => t.off + t.def;
 
-// Il tabellone cambia forma col numero di squadre:
-//   4 -> due semifinali, poi finale e finalina
-//   3 -> la migliore sulla carta va dritta in finale, le altre due si giocano
-//        la semifinale; chi la perde e terzo e non serve una finalina
-//   2 -> solo le Finals
+/* ==========================================================
+   5b. TABELLONE — da 2 a 10 squadre, un solo algoritmo
+   ========================================================== */
+
+// Eliminazione diretta. Si arrotonda alla potenza di due superiore e i posti
+// che avanzano diventano teste di serie che saltano il primo turno. Le teste
+// di serie si SORTEGGIANO, non si danno alle migliori: misurato su 800 tornei
+// (tools/bye.mjs), darle al piu forte gli regala +10 punti di titoli, a sorte
+// ne aggiunge 3.
+export function formaTabellone(n) {
+  let p = 2;
+  while (p < n) p *= 2;
+  const teste = p - n;          // quante saltano il primo turno
+  const giocano = n - teste;    // quante scendono in campo subito (sempre pari)
+  const serie = [giocano / 2];
+  let campo = teste + giocano / 2;
+  while (campo > 1) { serie.push(campo / 2); campo /= 2; }
+  return { teste, giocano, serie };            // serie = quante partite per turno
+}
+
+// "Finale", "Semifinale", "Quarti"... contati dalla fine. Il primo turno,
+// quando ci sono teste di serie, e un preliminare e si chiama cosi.
+export function nomeTurno(r, totTurni, conTeste) {
+  if (r === 0 && conTeste && totTurni > 1) return 'Turno preliminare';
+  const daFondo = totTurni - 1 - r;
+  return ['Finale', 'Semifinale', 'Quarti di finale', 'Ottavi di finale'][daFondo] || `Turno ${r + 1}`;
+}
+
 export function componiTabellone(teams, seed = 'bye') {
   const k = Object.keys(teams);
-  if (k.length >= 4) return { tipo: 'quattro', ...pickBracket(teams) };
+  const { teste, giocano, serie } = formaTabellone(k.length);
 
-  if (k.length === 3) {
-    // Il bye si SORTEGGIA, non si assegna al piu forte. Misurato su 800 tornei
-    // (tools/bye.mjs): darlo alla migliore le regala +9 punti di titoli e uno
-    // dei tre resta tagliato fuori; a sorte ne aggiunge 2, cioe quasi niente.
-    const rng = makeRng(seed + ':bye');
-    const fortunato = k[Math.floor(rng() * k.length)];
-    const [s2, s3] = k.filter((x) => x !== fortunato);
-    const c = contrast(teams[s2], teams[s3]);
-    const asse = AXES.slice().sort((x, y) => c.per[y.key] - c.per[x.key])[0];
-    return {
-      tipo: 'tre',
-      bye: fortunato,
-      semi: [s2, s3],
-      reasons: [
-        `Il sorteggio manda ${teams[fortunato].name} direttamente in finale: salta la semifinale e aspetta.`,
-        `${teams[s2].name} contro ${teams[s3].name} per il posto in finale: si decide sull'asse "${asse.label}". Chi perde è terzo.`,
-      ],
-    };
+  // Ordine sorteggiato: i primi "teste" saltano il primo turno, gli altri
+  // si accoppiano a due a due nell'ordine in cui escono.
+  const ordine = shuffleDet(k, makeRng(seed + ':tabellone'));
+  const inTesta = ordine.slice(0, teste);
+  const subito = ordine.slice(teste);
+
+  const reasons = [];
+  if (k.length === 2) {
+    reasons.push(`Solo due squadre: si va dritti alle Finals, ${teams[ordine[0]].name} contro ${teams[ordine[1]].name}.`);
+  } else {
+    if (inTesta.length) {
+      reasons.push(inTesta.length === 1
+        ? `Il sorteggio manda ${teams[inTesta[0]].name} direttamente al turno successivo: salta il preliminare.`
+        : `Il sorteggio fa saltare il preliminare a ${inTesta.map((x) => teams[x].name).join(', ')}.`);
+    }
+    // Sul primo accoppiamento diciamo su quale asse si gioca: da qualche parte
+    // bisogna pur cominciare a raccontare il torneo.
+    if (subito.length >= 2) {
+      const [x, y] = subito;
+      const c = contrast(teams[x], teams[y]);
+      const asse = AXES.slice().sort((u, v) => c.per[v.key] - c.per[u.key])[0];
+      reasons.push(`Si apre con ${teams[x].name} contro ${teams[y].name}: è sull'asse "${asse.label}" che sono più lontane.`);
+    }
   }
 
-  const [a, b] = k;
-  return {
-    tipo: 'due',
-    finale: [a, b],
-    reasons: [`Solo due squadre: si va dritti alle Finals, ${teams[a].name} contro ${teams[b].name}.`],
-  };
+  return { n: k.length, ordine, teste, giocano, serie, reasons };
+}
+
+// Shuffle deterministico locale: qui serve con un rng gia seminato.
+function shuffleDet(arr, rng) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Ricostruisce il tabellone completo dallo stato: chi gioca contro chi in ogni
+// turno NON e salvato, viene dedotto dai risultati dei turni precedenti. Il
+// motore e deterministico, quindi ogni client arriva alle stesse conclusioni.
+export function costruisciBracket(po, T) {
+  const turni = [];
+  let campo = null;
+
+  for (let r = 0; r < po.turni.length; r++) {
+    let concorrenti;
+    if (r === 0) {
+      concorrenti = po.ordine.slice(po.teste);
+    } else if (r === 1) {
+      concorrenti = [...po.ordine.slice(0, po.teste), ...campo];
+    } else {
+      concorrenti = campo;
+    }
+
+    const round = [];
+    for (let i = 0; i * 2 < concorrenti.length; i++) {
+      const a = concorrenti[i * 2], b = concorrenti[i * 2 + 1];
+      const meta = po.turni[r]?.[i] || { seed: `${po.seedBase}:r${r}m${i}`, gamesPlayed: 0 };
+      const pronti = a && b && T[a] && T[b];
+      round.push({
+        r, i, a, b, seed: meta.seed, gamesPlayed: meta.gamesPlayed,
+        res: pronti ? simSeriesUpTo(T[a], T[b], meta.seed, meta.gamesPlayed) : null,
+      });
+    }
+    turni.push(round);
+    campo = round.map((m) => (m.res?.done ? m.res.winner : null));
+  }
+  return turni;
 }
 
 // Delle 3 partizioni possibili di 4 squadre sceglie quella che massimizza il

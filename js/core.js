@@ -118,13 +118,24 @@ export function deriveAttrs(p, archetypes) {
 // Le chiavi sono POSIZIONI fisse (t1..t4), non nomi: reggono i colori in CSS
 // (.t-t1 … .t-t4) e le partite già salvate. Per rinominare le squadre si
 // cambia solo TEAM_NAMES, qui sotto, e non si tocca nient'altro.
-export const TEAM_KEYS = ['t1', 't2', 't3', 't4'];
+export const TEAM_KEYS = ['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10'];
 export const TEAM_NAMES = {
   t1: 'USZ',
   t2: 'FollowTheLeader',
   t3: 'Volta Reno',
   t4: 'R4cist',
+  t5: 'Squadra 5',
+  t6: 'Squadra 6',
+  t7: 'Squadra 7',
+  t8: 'Squadra 8',
+  t9: 'Squadra 9',
+  t10: 'Squadra 10',
 };
+
+// Quanti si puo essere. Sopra i quattro solo numeri pari: con 5, 7 o 9 il
+// tabellone si riempie di teste di serie che saltano il primo turno (con 9
+// sarebbero sette su nove) e smette di somigliare a un torneo.
+export const NUMERI_SQUADRE = [2, 3, 4, 6, 8, 10];
 export const SLOTS = ['PG', 'SG', 'SF', 'PF', 'C'];
 export const SLOT_LABEL = {
   PG: 'Playmaker',

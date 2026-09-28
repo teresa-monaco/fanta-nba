@@ -86,6 +86,10 @@ console.log('  24 coppie di rose diverse, 6 serie per casella: 17.424 serie.\n')
 
 const vittorie = {};
 for (const a of STRAT) { vittorie[a] = {}; for (const b of STRAT) vittorie[a][b] = 0; }
+// Durata delle serie, sul totale e per strategia di chi attacca.
+const durate = { 4: 0, 5: 0, 6: 0, 7: 0 };
+const durataPerStrat = {};
+for (const a of STRAT) durataPerStrat[a] = { 4: 0, 5: 0, 6: 0, 7: 0 };
 
 // Su PIU coppie di rose: con una sola, si misura cosa piace a quelle due
 // squadre, non quanto vale la strategia in generale.
@@ -101,6 +105,8 @@ const COPPIE = 24, PER_CASELLA = 6;
         for (let i = 0; i < PER_CASELLA; i++) {
           const r = simSeriesUpTo(A, B, `m:${c}:${sa}:${sb}:${i}`, 7);
           if (r.winner === A.key) vittorie[sa][sb]++;
+          durate[r.games.length]++;
+          durataPerStrat[sa][r.games.length]++;
           if (c === 0 && i === 0) {
             controllaSerie(A, B, r, `${sa} vs ${sb}`);
             r.games.forEach((g, j) => controllaGara(A, B, g, `${sa}/${sb} g${j + 1}`));
@@ -138,6 +144,25 @@ for (const a of STRAT) for (const b of STRAT) for (const c of STRAT) {
   if (vittorie[a][b] > PROVE * 0.58 && vittorie[b][c] > PROVE * 0.58 && vittorie[c][a] > PROVE * 0.58) cicli++;
 }
 console.log(`  Triangoli "morra cinese" (A batte B batte C batte A): ${cicli}`);
+
+const totSerie = Object.values(durate).reduce((a, b) => a + b, 0);
+console.log(`\n  DURATA DELLE ${totSerie.toLocaleString('it-IT')} SERIE\n`);
+for (const d of [4, 5, 6, 7]) {
+  const n = durate[d];
+  const q = (n / totSerie) * 100;
+  console.log(`    ${d} gare (4-${d - 4})  ${String(n).padStart(6)}   ${q.toFixed(1).padStart(5)}%  ${'#'.repeat(Math.round(q))}`);
+}
+const mediaGare = [4, 5, 6, 7].reduce((s, d) => s + d * durate[d], 0) / totSerie;
+console.log(`\n    gare per serie, in media: ${mediaGare.toFixed(2)}`);
+console.log(`    serie lunghe (6 o 7 gare): ${(((durate[6] + durate[7]) / totSerie) * 100).toFixed(1)}%`);
+
+console.log(`\n  La strategia cambia la DURATA? (quota di serie da 7 gare)\n`);
+STRAT.map((a) => {
+  const t = Object.values(durataPerStrat[a]).reduce((x, y) => x + y, 0);
+  return [a, durataPerStrat[a][7] / t, durataPerStrat[a][4] / t];
+}).sort((x, y) => y[1] - x[1]).forEach(([a, sette, quattro]) => {
+  console.log(`    ${STRATEGIES[a].label.padEnd(24)} 7 gare ${(sette * 100).toFixed(1).padStart(5)}%   sweep ${(quattro * 100).toFixed(1).padStart(5)}%`);
+});
 
 /* ==========================================================
    2. UNA PARTITA 1v1 PER INTERO, COME LA VEDE UN GIOCATORE

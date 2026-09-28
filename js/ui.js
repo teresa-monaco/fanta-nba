@@ -3,7 +3,7 @@
 // slot selezionato per lo scambio) vive qui, fuori dallo stato condiviso.
 
 import { db, SLOTS, SLOT_LABEL, TEAM_KEYS, TEAM_NAMES, STRATEGIES, ROSTER_SIZE, START_CREDITS } from './core.js';
-import { buildTeam, simSeriesUpTo } from './engine.js';
+import { buildTeam, simSeriesUpTo, costruisciBracket, nomeTurno } from './engine.js';
 import { narrateGame, explainSeries, teamIdentity } from './narrator.js';
 import * as S from './state.js';
 import { now } from './net.js';
@@ -52,7 +52,8 @@ export function render(root, ctx) {
 // e grigio fra un'etichetta e un codice non lo trova nessuno.
 function resetZone({ state: s, session }) {
   if (!s || s.host !== session.uid || s.phase === 'lobby') return '';
-  const finita = (s.po?.final?.gamesPlayed ?? 0) >= 4;
+  const ultimo = s.po?.turni?.[s.po.turni.length - 1]?.[0];
+  const finita = (ultimo?.gamesPlayed ?? 0) >= 4;
   return `<div class="reset-zone">
     <button class="${finita ? 'primary' : 'ghost'} wide" data-act="new-game">
       ${finita ? 'Nuova partita' : 'Ricomincia da capo'}
@@ -107,13 +108,13 @@ function viewLobby({ state: s, session }) {
       <h3 class="mb">Quante squadre</h3>
       <p class="small muted mb">Su questo schermo le gestisci tutte tu.</p>
       <div class="row">
-        ${[2, 3, 4].map((v) => `<button class="${n === v ? 'primary' : ''} grow" data-act="num-squadre" data-n="${v}">${v}</button>`).join('')}
+        ${S.NUMERI_SQUADRE.map((v) => `<button class="${n === v ? 'primary' : ''} grow" data-act="num-squadre" data-n="${v}">${v}</button>`).join('')}
       </div>
     </div>`;
 
   return `
     <h1>Fanta NBA</h1>
-    <p class="muted mb">Asta a crediti, quintetti, playoff simulati. Da 2 a 4 squadre, 50 crediti a testa, 5 giocatori ciascuna.</p>
+    <p class="muted mb">Asta a crediti, quintetti, playoff simulati. Da 2 a 10 squadre, 50 crediti a testa, 5 giocatori ciascuna.</p>
 
     ${local ? `
       <div class="card">
@@ -124,7 +125,7 @@ function viewLobby({ state: s, session }) {
       ${sceltaLocale}` : `
       <div class="card">
         <h3>Codice stanza: <span class="code-pill">${esc(session.code)}</span></h3>
-        <p class="small muted mt">Gli altri aprono lo stesso link e inseriscono questo codice. Si gioca da 2 a 4: si parte con chi c'è.</p>
+        <p class="small muted mt">Gli altri aprono lo stesso link e inseriscono questo codice. Si gioca in 2, 3, 4, 6, 8 o 10: si parte con chi c'è.</p>
         <button class="sm ghost mt" data-act="copy-link">Copia il link della stanza</button>
       </div>
 
@@ -137,7 +138,7 @@ function viewLobby({ state: s, session }) {
             <input id="nick" value="${esc(ui.nickname)}" placeholder="il tuo nome" maxlength="14" autocomplete="off">
           </label>
           ${pieno
-            ? '<p class="small muted">Le quattro squadre sono già assegnate: puoi guardare.</p>'
+            ? '<p class="small muted">Tutte le squadre sono già assegnate: puoi guardare.</p>'
             : '<button class="primary wide" data-act="join">Entra in partita</button>'}
         `}
       </div>
@@ -147,10 +148,10 @@ function viewLobby({ state: s, session }) {
       </div>` : '<p class="small muted center mb">Ancora nessuno dentro.</p>'}`}
 
     ${isHost ? `
-      <button class="primary wide" data-act="start-auction" ${n >= S.MIN_SQUADRE ? '' : 'disabled'}>
-        Inizia l'asta${n >= S.MIN_SQUADRE ? ` con ${n} squadre` : ''}
+      <button class="primary wide" data-act="start-auction" ${S.numeroValido(n) ? '' : 'disabled'}>
+        Inizia l'asta${S.numeroValido(n) ? ` con ${n} squadre` : ''}
       </button>
-      ${n < S.MIN_SQUADRE ? '<p class="small muted center mt">Servono almeno due squadre.</p>' : ''}
+      ${S.numeroValido(n) ? '' : `<p class="small muted center mt">Siete in ${n}: si gioca in 2, 3, 4, 6, 8 o 10. Sopra i quattro servono numeri pari, altrimenti mezzo tabellone salta il primo turno.</p>`}
     ` : `<p class="small muted center">In attesa che ${esc(s.names[s.host] || 'chi ospita')} avvii l'asta...</p>`}
     ${alboCard(s)}
   `;
@@ -435,52 +436,68 @@ function viewPlayoffs({ state: s, session }) {
   const isHost = s.host === session.uid;
   const T = teamsFromState(s);
   const po = s.po;
-
-  const gioca = (m) => simSeriesUpTo(T[m.a], T[m.b], m.seed, m.gamesPlayed);
-  const s1 = po.s1 ? gioca(po.s1) : null;
-  const s2 = po.s2 ? gioca(po.s2) : null;
+  const turni = costruisciBracket(po, T);
+  const tot = turni.length;
+  const conTeste = po.teste > 0;
 
   let out = `<h2>Playoff</h2>
-    <div class="card tight">${po.reasons.map((r) => `<p class="small muted" style="margin-bottom:6px">${esc(r)}</p>`).join('')}</div>`;
+    <div class="card tight">
+      <p class="tiny muted mb">${po.n} squadre · ${turni.reduce((a, r) => a + r.length, 0)} serie</p>
+      ${po.reasons.map((r) => `<p class="small muted" style="margin-bottom:6px">${esc(r)}</p>`).join('')}
+    </div>`;
 
-  if (po.bye) {
+  // Chi salta il primo turno, detto una volta e chiaramente.
+  if (conTeste) {
     out += `<div class="card tight center"><p class="small">
-      <b>${esc(TEAM_NAMES[po.bye])}</b> <span class="muted">aspetta in finale</span></p></div>`;
-  }
-  if (s1) out += serieCard(po.s2 ? 'Semifinale 1' : 'Semifinale', T[po.s1.a], T[po.s1.b], s1, po.s1, S.PASSO_SEMI, isHost, 'avanza-s1');
-  if (s2) out += serieCard('Semifinale 2', T[po.s2.a], T[po.s2.b], s2, po.s2, S.PASSO_SEMI, isHost, 'avanza-s2');
-
-  const semiFinite = (!po.s1 || s1.done) && (!po.s2 || s2.done);
-  if (semiFinite && !po.final) {
-    out += isHost
-      ? `<button class="primary wide" data-act="open-final">Apri le Finals</button>`
-      : `<p class="small muted center">In attesa di chi ospita.</p>`;
+      <span class="muted">Salta${po.teste > 1 ? 'no' : ''} il preliminare:</span>
+      <b>${po.ordine.slice(0, po.teste).map((k) => esc(TEAM_NAMES[k])).join(', ')}</b></p></div>`;
   }
 
-  if (po.final) {
-    const A = T[po.final.a], B = T[po.final.b];
-    const f = simSeriesUpTo(A, B, po.final.seed, po.final.gamesPlayed);
-    if (f.done) {
-      const W = f.winner === A.key ? A : B;
+  let campione = null;
+  for (let r = 0; r < tot; r++) {
+    const ultimo = r === tot - 1;
+    const passo = ultimo ? S.PASSO_FINALE : S.PASSO_SEMI;
+    const nome = nomeTurno(r, tot, conTeste);
+    const round = turni[r];
+
+    // Un turno si apre solo quando il precedente e chiuso: senza, mostrerebbe
+    // caselle vuote e il tasto "Vai" su una serie senza partecipanti.
+    const precedenteChiuso = r === 0 || turni[r - 1].every((m) => m.res?.done);
+    if (!precedenteChiuso) break;
+
+    if (ultimo && round[0]?.res?.done) {
+      const m = round[0];
+      const W = m.res.winner === m.a ? T[m.a] : T[m.b];
+      campione = m.res;
       out += `<div class="champ"><div class="t">Campione</div><div class="n">${esc(W.name)}</div>
-        <div class="small" style="font-weight:700">${f.wins.a}-${f.wins.b} nella serie</div></div>`;
+        <div class="small" style="font-weight:700">${Math.max(m.res.wins.a, m.res.wins.b)}-${Math.min(m.res.wins.a, m.res.wins.b)} nella serie</div></div>`;
     }
-    out += serieCard('Finals', A, B, f, po.final, S.PASSO_FINALE, isHost, 'avanza-final');
 
-    if (f.done) {
+    round.forEach((m, i) => {
+      const titolo = round.length > 1 ? `${nome} ${i + 1}` : nome;
+      out += serieCard(titolo, T[m.a], T[m.b], m.res, m, passo, isHost, `avanza:${r}:${i}`);
+    });
+  }
+
+  // Finalina: solo se il penultimo turno aveva due serie, cioe due eliminate.
+  if (campione) {
+    const semi = turni[tot - 2];
+    if (semi && semi.length === 2) {
       if (po.third) {
-        const t3 = gioca(po.third);
+        const t3 = simSeriesUpTo(T[po.third.a], T[po.third.b], po.third.seed, po.third.gamesPlayed);
         out += serieCard('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], t3, po.third, S.PASSO_SEMI, isHost, 'avanza-third');
-      } else if (po.tipo === 'tre' && s1) {
-        // Con tre squadre il terzo posto lo decide la semifinale: nessuna finalina.
-        const terzo = s1.winner === po.s1.a ? po.s1.b : po.s1.a;
-        out += `<div class="card tight center"><p class="small">
-          <span class="muted">Terzo posto:</span> <b>${esc(TEAM_NAMES[terzo])}</b>,
-          <span class="muted">eliminato in semifinale.</span></p></div>`;
+      } else if (isHost) {
+        out += `<button class="wide ghost" data-act="open-third">Giocare anche la finale 3°/4° posto?</button>`;
       }
-      out += alboCard(s);
-      // Il tasto per ricominciare lo mette resetZone(), in fondo a ogni schermata.
+    } else if (semi && semi.length === 1) {
+      const p = semi[0];
+      const terzo = p.res.winner === p.a ? p.b : p.a;
+      out += `<div class="card tight center"><p class="small">
+        <span class="muted">Terzo posto:</span> <b>${esc(TEAM_NAMES[terzo])}</b>,
+        <span class="muted">eliminato in semifinale.</span></p></div>`;
     }
+    out += alboCard(s);
+    // Il tasto per ricominciare lo mette resetZone(), in fondo a ogni schermata.
   }
   return out;
 }
@@ -488,6 +505,11 @@ function viewPlayoffs({ state: s, session }) {
 // Una sola carta per tutte le serie: cambia solo di quante gare si avanza
 // a ogni tocco. Semifinali e finalina due, Finals una.
 function serieCard(titolo, A, B, f, meta, passo, isHost, act) {
+  if (!A || !B || !f) {
+    return `<div class="card"><div class="series-hdr"><div>
+      <div class="tiny muted" style="text-transform:uppercase;letter-spacing:.08em;font-weight:800">${esc(titolo)}</div>
+      <div class="vs muted">in attesa del turno precedente</div></div></div></div>`;
+  }
   const n = meta.gamesPlayed;
   const etichetta = passo === 1
     ? `Vai — Gara ${n + 1}`
