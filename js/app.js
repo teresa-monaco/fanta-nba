@@ -234,6 +234,19 @@ document.addEventListener('click', async (ev) => {
         break;
       }
 
+      case 'new-game': {
+        if (!confirm('Ricominciare da capo?\n\nLa partita in corso viene cancellata: asta, quintetti e playoff.')) break;
+        if (session.mode === 'local') {
+          // In locale lo stato vive in localStorage: si cancella e si ricarica.
+          session.reset();
+          location.reload();
+        } else {
+          // In stanza l'azzeramento vale per tutti, ma le sedie restano assegnate.
+          await session.apply((s) => (s.host === session.uid ? S.resetGame(s, `${session.code}-${Date.now()}`) : undefined));
+        }
+        break;
+      }
+
       case 'next-final-game':
         await session.apply((s) => (s.po?.final && s.po.final.gamesPlayed < 7 ? S.advanceFinal(s) : undefined));
         break;

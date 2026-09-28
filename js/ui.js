@@ -43,11 +43,14 @@ export function render(root, ctx) {
 }
 
 export function renderTopbar(el, ctx) {
-  const { session } = ctx;
+  const { session, state: s } = ctx;
+  // Solo chi ospita puo azzerare, e mai dalla lobby (non c'e niente da azzerare).
+  const canReset = s && s.host === session.uid && s.phase !== 'lobby';
   el.innerHTML = `
     <div class="brand">FANTA<span>NBA</span></div>
     <div class="row">
       ${session.mode === 'local' ? '<span class="tag">modalità locale</span>' : ''}
+      ${canReset ? '<button class="sm ghost" data-act="new-game">Nuova</button>' : ''}
       <span class="code-pill">${esc(session.code)}</span>
     </div>`;
 }
@@ -330,6 +333,7 @@ function viewPlayoffs({ state: s, session }) {
       const third = po.third.revealed
         ? simSeries(T[po.third.a], T[po.third.b], po.third.seed) : null;
       out += seriesCard('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], third, isHost, 'reveal-third');
+      if (isHost) out += `<button class="primary wide" data-act="new-game">Nuova partita</button>`;
     }
   }
   return out;

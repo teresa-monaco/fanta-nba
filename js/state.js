@@ -303,6 +303,15 @@ export function revealThird(s) {
   return { ...s, po: { ...s.po, third: { ...s.po.third, revealed: true } } };
 }
 
+/* ---------- Ricominciare ---------- */
+
+// Nuova partita da zero, ma tenendo chi e seduto dove: nessuno deve
+// riscegliere la squadra fra un'asta e l'altra.
+export function resetGame(s, seed) {
+  const fresh = newGame(seed, s.host);
+  return { ...fresh, seats: s.seats, names: s.names };
+}
+
 /* ---------- Utility di presentazione ---------- */
 
 export function teamOf(s, uid) { return s.seats[uid] || null; }

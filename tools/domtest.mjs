@@ -34,7 +34,9 @@ globalThis.document = {
 };
 // ?local=1 tiene il test in modalità locale anche ora che Firebase è configurato:
 // senza, proverebbe a scaricare l'SDK dalla rete e a connettersi davvero.
-globalThis.location = { search: '?local=1', origin: 'https://example.test', pathname: '/' };
+let reloaded = false;
+globalThis.location = { search: '?local=1', origin: 'https://example.test', pathname: '/', reload() { reloaded = true; } };
+globalThis.confirm = () => true;
 globalThis.history = { replaceState() {} };
 globalThis.window = globalThis;
 // In Node 24 navigator esiste gia ed e in sola lettura: aggiungo solo il pezzo che manca.
@@ -84,6 +86,7 @@ await F.session.apply((s) => S.startAuction(s, now()));
 ok(clean() && has('OVR', 'crediti'), 'la schermata d\'asta si disegna');
 ok(has('Realizzazione', 'Protezione ferro'), 'gli attributi del giocatore sono visibili');
 ok(has('Chiudi il lotto'), 'chi ospita vede i comandi del banditore');
+ok(els.topbar.innerHTML.includes('new-game'), 'a partita iniziata compare il tasto per ricominciare');
 
 // Compra 20 giocatori tirando a sorte fra le squadre che hanno ancora posto.
 let guard = 0;
@@ -140,6 +143,19 @@ ok(clean() && has('MVP delle Finals'), 'l\'MVP delle Finals viene assegnato');
 ok(has('Finale 3° / 4° posto'), 'compare la finalina fra le due eliminate');
 await F.session.apply((s) => S.revealThird(s));
 ok(clean() && has('MVP della serie'), 'la finalina si simula');
+ok(has('Nuova partita'), 'a fine partita si può ricominciare senza toccare la console');
+
+/* 6. Ricominciare */
+{
+  const prima = F.state;
+  const dopo = S.resetGame(prima, 'seed-nuovo');
+  ok(dopo.phase === 'lobby' && !dopo.po, 'azzerare riporta alla lobby e cancella i playoff');
+  ok(TEAM_KEYS.every((k) => dopo.teams[k].roster.length === 0 && dopo.teams[k].credits === 50),
+    'azzerare restituisce 50 crediti e rose vuote');
+  ok(JSON.stringify(dopo.seats) === JSON.stringify(prima.seats),
+    'azzerare NON fa riscegliere la squadra a nessuno');
+  ok(dopo.seed !== prima.seed, 'la nuova partita ha un seed diverso (asta diversa)');
+}
 
 /* Controlli finali */
 ok(!uncaught, 'nessuna eccezione non gestita', uncaught ? String(uncaught) : '');
