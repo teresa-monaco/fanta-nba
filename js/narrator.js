@@ -8,7 +8,7 @@
 // Tono: roasting. Si prende in giro la squadra, la scelta tattica e la
 // prestazione in campo — mai la persona.
 
-import { makeRng } from './core.js';
+import { makeRng, hashStr } from './core.js';
 
 const pick = (arr, rng) => arr[Math.floor(rng() * arr.length)];
 
@@ -180,6 +180,8 @@ const OPEN_THRILLER = [
   'Un finale così bello che quasi dispiace per chi ha perso. Quasi.',
   'Poteva finire in entrambi i modi. È finita nel modo peggiore per uno dei due.',
   'Due punti di scarto e una notte insonne in omaggio.',
+  'Si decide su un possesso, e il possesso va storto a uno solo dei due.',
+  'Di quelle che si rivedono, se si ha il coraggio.',
 ];
 const OPEN_OT = [
   'Supplementare, perché nessuno dei due era capace di chiuderla.',
@@ -197,44 +199,80 @@ const LOSER_WITH_STAR = [
   'A {L} non basta un {p} da {n} punti, e fa quasi tenerezza.',
   '{p} ne mette {n} e {L} perde lo stesso: quando si dice sprecare una serata.',
   '{n} punti di {p} buttati nel cestino insieme al resto della prestazione di {L}.',
+  '{p} fa la sua parte con {n} punti, gli altri quattro di {L} un po\' meno.',
+  '{n} di {p}: a {L} serviva un secondo uomo, e non si è presentato.',
 ];
 const LOSER_FLAT = [
   '{L} non ha mai trovato il possesso buono. Forse perché in rosa non ce l\'ha.',
   '{L} ha provato tutto. Tutto, in questo caso, era poco.',
   'Di {L} si ricorderà soprattutto il silenzio in panchina.',
   '{L} non è mai stata in partita, e verso metà terzo quarto ha smesso di fingere.',
+  'A {L} è mancato tutto, a partire dalle idee.',
+  '{L} ha giocato come se il risultato fosse già stato deciso altrove.',
 ];
+
+/* ---------- Frasi intermedie: anche queste con varianti ---------- */
+
+const PUNTI = [
+  '{p} ne mette {n} per {T}',
+  '{n} punti di {p} per {T}',
+  '{p} chiude a quota {n} per {T}',
+  '{T} si aggrappa ai {n} punti di {p}',
+  '{T} passa con i {n} punti di {p}',
+  '{p} timbra {n} punti e {T} ringrazia',
+];
+const ASSIST = [
+  '{p} smista {n} assist',
+  '{p} serve {n} assist a gente che non se li meritava',
+  '{n} assist di {p}, con la palla che gira come si deve',
+  '{p} apparecchia {n} volte',
+  '{n} assist di {p}, che vede cose che gli altri non vedono',
+];
+const RIMBALZI = [
+  '{p} prende {n} rimbalzi',
+  '{p} si prende {n} rimbalzi senza trovare opposizione',
+  '{n} rimbalzi di {p}, praticamente da solo',
+  '{p} ripulisce i tabelloni: {n} rimbalzi',
+  '{n} rimbalzi di {p}, che sotto canestro decide lui',
+];
+
+// Dentro una serie le varianti RUOTANO invece di essere pescate a caso:
+// pescando, la stessa frase usciva tre volte su sette e si notava subito.
+const ruota = (arr, n, off = 0) => arr[(n + off) % arr.length];
 
 /* ---------- Cronaca di una singola gara ---------- */
 
 export function narrateGame(A, B, g) {
-  const rng = makeRng(`${A.key}-${B.key}-g${g.n}-${g.scoreA}-${g.scoreB}`);
   const aWon = g.scoreA > g.scoreB;
   const W = aWon ? A : B, L = aWon ? B : A;
   const wBox = aWon ? g.boxA : g.boxB;
   const lBox = aWon ? g.boxB : g.boxA;
+  // Sfasamento stabile per serie: due serie diverse non partono dalla stessa frase.
+  const off = hashStr(A.key + B.key + A.tactics.strategy) % 7;
+  const n = g.n ?? 1;
 
   let opener;
-  if (g.ot >= 2) opener = pick(OPEN_2OT, rng);
-  else if (g.ot) opener = pick(OPEN_OT, rng);
-  else if (g.margin >= 16) opener = pick(OPEN_BLOWOUT, rng);
-  else if (g.margin >= 9) opener = pick(OPEN_CONTROL, rng);
-  else if (g.margin >= 4) opener = pick(OPEN_CLOSE, rng);
-  else opener = pick(OPEN_THRILLER, rng);
+  if (g.ot >= 2) opener = ruota(OPEN_2OT, n, off);
+  else if (g.ot) opener = ruota(OPEN_OT, n, off);
+  else if (g.margin >= 16) opener = ruota(OPEN_BLOWOUT, n, off);
+  else if (g.margin >= 9) opener = ruota(OPEN_CONTROL, n, off);
+  else if (g.margin >= 4) opener = ruota(OPEN_CLOSE, n, off);
+  else opener = ruota(OPEN_THRILLER, n, off);
 
   const top = wBox.slice().sort((x, y) => y.pts - x.pts)[0];
   const topL = lBox.slice().sort((x, y) => y.pts - x.pts)[0];
   const dime = wBox.slice().sort((x, y) => y.ast - x.ast)[0];
   const glass = wBox.slice().sort((x, y) => y.reb - x.reb)[0];
 
-  const bits = [`${top.n} ne mette ${top.pts} per ${W.name}`];
-  if (dime.id !== top.id && dime.ast >= 7) bits.push(`${dime.n} serve ${dime.ast} assist a gente che non se li meritava`);
-  if (glass.id !== top.id && glass.reb >= 11) bits.push(`${glass.n} si prende ${glass.reb} rimbalzi senza trovare opposizione`);
+  const riempi = (t, p, num) => t.replaceAll('{p}', p).replaceAll('{n}', String(num)).replaceAll('{T}', W.name);
+  const bits = [riempi(ruota(PUNTI, n, off), top.n, top.pts)];
+  if (dime.id !== top.id && dime.ast >= 7) bits.push(riempi(ruota(ASSIST, n, off + 1), dime.n, dime.ast));
+  if (glass.id !== top.id && glass.reb >= 11) bits.push(riempi(ruota(RIMBALZI, n, off + 2), glass.n, glass.reb));
   const second = `${bits.join(', ')}.`;
 
   const third = topL.pts >= 28
-    ? pick(LOSER_WITH_STAR, rng).replaceAll('{L}', L.name).replaceAll('{p}', topL.n).replaceAll('{n}', String(topL.pts))
-    : pick(LOSER_FLAT, rng).replaceAll('{L}', L.name);
+    ? ruota(LOSER_WITH_STAR, n, off).replaceAll('{L}', L.name).replaceAll('{p}', topL.n).replaceAll('{n}', String(topL.pts))
+    : ruota(LOSER_FLAT, n, off).replaceAll('{L}', L.name);
 
   return `${opener} ${second} ${third}`;
 }
@@ -255,26 +293,43 @@ export function explainSeries(A, B, series) {
     .filter((f) => Math.abs(f.delta) > 0.4 && !f.varianceOnly)
     .sort((x, y) => y.weight - x.weight);
 
-  const out = [];
-  const used = new Set();
-  for (const f of scored) {
-    if (out.length >= 5) break;
-    if (used.has(f.key)) continue;
+  const rendi = (f) => {
     const pool = FACTOR_LINES[f.key];
-    if (!pool) continue;
-    used.add(f.key);
+    if (!pool) return null;
     const subject = f.side === A.key ? A : B;
     const other = f.side === A.key ? B : A;
     let line = pick(pool, rng).replaceAll('{T}', subject.name).replaceAll('{O}', other.name);
     for (const [k, v] of Object.entries(f.data || {})) {
       line = line.replaceAll(`{${k}}`, Array.isArray(v) ? v.join(', ') : String(v));
     }
+    return line;
+  };
+
+  // Sotto il titolo "perche ha vinto X" possono stare SOLO i motivi che hanno
+  // aiutato X. Prima ci finivano anche i vantaggi dello sconfitto e i difetti
+  // del vincitore, senza avversativa: sembrava che il testo si contraddicesse.
+  const out = [];
+  const used = new Set();
+  for (const f of scored.filter((x) => x.helpsWinner)) {
+    if (out.length >= 4) break;
+    if (used.has(f.key)) continue;
+    const line = rendi(f);
+    if (!line) continue;
+    used.add(f.key);
     out.push(line);
+  }
+
+  // Un solo motivo CONTRARIO, e solo se marcato come tale: "ha vinto nonostante".
+  // Detto cosi aggiunge, invece di contraddire.
+  const contro = scored.find((x) => !x.helpsWinner && !used.has(x.key) && FACTOR_LINES[x.key] && Math.abs(x.delta) > 1.5);
+  if (contro) {
+    const line = rendi(contro);
+    if (line) out.push(`${pick(['E ha vinto lo stesso:', 'Nonostante tutto questo:', 'Il bello è che non è bastato:'], rng)} ${line.charAt(0).toLowerCase()}${line.slice(1)}`);
   }
 
   if (!out.length) {
     out.push(pick([
-      `${W.name} è più forte praticamente ovunque. Non serve una spiegazione tattica, serve un\'asta migliore.`,
+      `${W.name} è più forte praticamente ovunque. Non serve una spiegazione tattica, serve un'asta migliore.`,
       `Nessun dettaglio da analizzare: ${W.name} ha semplicemente più giocatori bravi. Succede.`,
     ], rng));
   }

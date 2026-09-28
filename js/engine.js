@@ -157,9 +157,9 @@ const STRAT = {
   'palla-star': { pace: 0, variance: 0.90, fx(t, o) {
     const f = [];
     const v1 = t.byId(t.tactics.v1) || t.five[0];
-    const lift = (v1.attrs.sco - t.avgSco) * 0.36;
+    const lift = (v1.attrs.sco - t.avgSco) * 0.22;
     f.push({ key: 'star-usage', delta: lift, label: `${v1.n} con la palla in mano`, data: { player: v1.n } });
-    const pressure = -Math.max(0, o.perimD - 62) * 0.38;
+    const pressure = -Math.max(0, o.perimD - 54) * 0.42;
     if (pressure < -0.6) f.push({ key: 'star-contenuta', delta: pressure, label: 'Attacco prevedibile contro una difesa perimetrale forte', data: { oppPerimD: Math.round(o.perimD) } });
     return f;
   }},
@@ -167,7 +167,7 @@ const STRAT = {
     const f = [];
     const v1 = t.byId(t.tactics.v1) || t.five[0];
     const v2 = t.byId(t.tactics.v2) || t.five[1];
-    f.push({ key: 'iso-talento', delta: ((v1.attrs.sco + v2.attrs.sco) / 2 - t.avgSco) * 0.34, label: 'Uno contro uno per i due violini', data: { player: v1.n } });
+    f.push({ key: 'iso-talento', delta: ((v1.attrs.sco + v2.attrs.sco) / 2 - t.avgSco) * 0.22, label: 'Uno contro uno per i due violini', data: { player: v1.n } });
     f.push({ key: 'iso-ritmo', delta: -Math.max(0, o.perimD - 60) * 0.30, label: 'Ritmo bloccato dalla difesa individuale avversaria', data: {} });
     return f;
   }},
@@ -193,9 +193,9 @@ const STRAT = {
     f.push({ key: 'ferro-muro', delta: -Math.max(0, o.rimProtect - 72) * 0.36, label: 'Protezione del ferro avversaria', data: { oppRim: Math.round(o.rimProtect) } });
     return f;
   }},
-  'tiro-3': { pace: 4, variance: 1.48, fx(t, o) {
+  'tiro-3': { pace: 4, variance: 1.34, fx(t, o) {
     const f = [];
-    f.push({ key: 'tre-volume', delta: (t.spacing - 76) * 0.32, label: 'Volume e qualita dal perimetro', data: { spacing: Math.round(t.spacing) } });
+    f.push({ key: 'tre-volume', delta: 2.6 + (t.spacing - 72) * 0.34, label: 'Volume e qualita dal perimetro', data: { spacing: Math.round(t.spacing) } });
     f.push({ key: 'tre-varianza', delta: 0, label: 'Serata al tiro', data: {}, varianceOnly: true });
     return f;
   }},
@@ -220,14 +220,14 @@ const STRAT = {
   }},
   'dentro-fuori': { pace: 0, variance: 1.04, fx(t, o) {
     const f = [];
-    f.push({ key: 'df-lungo', delta: (t.bigScoring - 80) * 0.24, label: 'Il lungo attira la difesa', data: {} });
+    f.push({ key: 'df-lungo', delta: 1.4 + (t.bigScoring - 78) * 0.26, label: 'Il lungo attira la difesa', data: {} });
     f.push({ key: 'df-tiro', delta: (t.spacing - 76) * 0.20, label: 'Tiratori pronti sugli scarichi', data: {} });
     if (t.shooters < 2 || t.bigScoring < 80) f.push({ key: 'df-incompleto', delta: -3.0, label: 'Manca meta del meccanismo dentro-fuori', data: {} });
     return f;
   }},
   'handoff': { pace: 2, variance: 1.00, fx(t, o) {
     const f = [];
-    f.push({ key: 'ho-tiro', delta: (t.spacing - 76) * 0.18, label: 'Tiratori liberati in movimento', data: {} });
+    f.push({ key: 'ho-tiro', delta: 1.4 + (t.spacing - 74) * 0.20, label: 'Tiratori liberati in movimento', data: {} });
     f.push({ key: 'ho-lettura', delta: (t.playmaking - 74) * 0.16 + (t.bigPlay - 66) * 0.12, label: 'Consegne e letture dei lunghi', data: {} });
     return f;
   }},
