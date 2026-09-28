@@ -79,7 +79,7 @@ const clean = () => !html().includes('Errore di rendering') && !html().includes(
 const F = globalThis.FANTA;
 const S = await import('../js/state.js');
 const { ui, render } = await import('../js/ui.js');
-const { buildTeam, pickBracket, simSeries } = await import('../js/engine.js');
+const { buildTeam, componiTabellone, simSeriesUpTo } = await import('../js/engine.js');
 const { TEAM_KEYS, STRATEGIES } = await import('../js/core.js');
 
 console.log('\nCollaudo interfaccia (modalita locale, DOM simulato)\n');
@@ -122,7 +122,7 @@ ok(has('+1<small>4'), 'i rilanci ripartono dall\'offerta corrente, non da zero')
 }
 
 /* Squadra propria in evidenza — è il comportamento della modalità online */
-await F.session.apply((s) => S.takeSeat(s, 'local', 'Diego', TEAM_KEYS[0]));
+await F.session.apply((s) => S.joinGame(s, 'local', 'Diego'));
 ok(has('(tu)') && has('puoi arrivare a'), 'chi ha una squadra la vede in evidenza, con budget e tetto di spesa');
 ok(has('Gli avversari'), 'gli altri finiscono in un blocco separato, sotto');
 ok(html().indexOf('(tu)') < html().indexOf('Gli avversari'), 'e la propria viene prima');
@@ -151,53 +151,75 @@ while (F.state.phase === 'auction' && guard++ < 400) {
   await F.session.apply((s) => S.placeBid(s, k, Math.max(1, price), now()));
   await F.session.apply((s) => S.resolveLot(s, now()));
 }
-ok(F.state.phase === 'lineups', 'l\'asta si chiude e passa ai quintetti', `${guard} lotti`);
+ok(F.state.phase === 'squadra', 'l\'asta si chiude e passa alle squadre', `${guard} lotti`);
 ok(TEAM_KEYS.every((k) => F.state.teams[k].roster.length === 5), 'tutte le rose sono da 5');
 
-/* 3. Quintetti */
-ok(clean() && has('Quintetti', 'Ricalcola'), 'la schermata quintetti si disegna');
+/* 3. Le squadre: quintetto spiegato e tattica, in una schermata sola */
+ok(clean() && has('Le squadre', 'Primo violino', 'Strategia offensiva'),
+  'quintetto e tattica stanno nella stessa schermata');
 ok(['PG', 'SG', 'SF', 'PF', 'C'].every((p) => has(`>${p}<`)), 'tutti e cinque i ruoli compaiono');
-
-/* 4. Tattica */
-await F.session.apply((s) => S.toTactics(s));
-ok(clean() && has('Impostazioni tattiche', 'Primo violino', 'Strategia offensiva'), 'la schermata tattica si disegna');
+ok(has('class="identita"'), 'il profilo del quintetto viene spiegato, non solo mostrato');
+ok(has('data-act="toggle-lineup"'), 'il quintetto si puo comunque sbloccare e correggere');
+ok(!has('data-act="pick-slot"'), 'ma di partenza e in sola lettura: non e una decisione finta');
 ok(Object.values(STRATEGIES).every((v) => has(v.label)), 'tutte le strategie sono selezionabili');
 for (const k of TEAM_KEYS) await F.session.apply((s) => S.setTactics(s, k, { strategy: 'pick-roll' }));
 ok(clean(), 'cambiare strategia non rompe il rendering');
 
 /* 5. Playoff */
 const T = {};
-for (const k of TEAM_KEYS) T[k] = buildTeam(k, F.state.lineups[k], F.state.tactics[k]);
-const { semis, reasons } = pickBracket(T);
-await F.session.apply((s) => S.toPlayoffs(s, semis, reasons));
+for (const k of S.attive(F.state)) T[k] = buildTeam(k, F.state.lineups[k], F.state.tactics[k]);
+const tab = componiTabellone(T, F.state.seed);
+ok(tab.tipo === 'quattro', 'con quattro squadre il tabellone ha due semifinali');
+await F.session.apply((s) => S.toPlayoffs(s, tab));
 ok(clean() && has('Playoff', 'Semifinale 1', 'Semifinale 2'), 'il tabellone si disegna');
-ok(has('Simula la serie'), 'le semifinali sono avviabili');
+ok(has('Vai — le prime due gare'), 'le semifinali partono a due gare per volta');
+ok(!has('Vai — Gara'), 'in semifinale non si va una gara alla volta: quello e riservato alle Finals');
 
-await F.session.apply((s) => S.revealSemi(s, 's1'));
-await F.session.apply((s) => S.revealSemi(s, 's2'));
+// Semifinali: due gare a tocco, finché entrambe non sono chiuse.
+for (let i = 0; i < 5; i++) {
+  await F.session.apply((s) => S.advanceSeries(s, 's1', S.PASSO_SEMI));
+  await F.session.apply((s) => S.advanceSeries(s, 's2', S.PASSO_SEMI));
+}
 ok(clean() && has('Gara 1', 'MVP della serie', 'Perché ha vinto'), 'le semifinali mostrano gare, MVP e spiegazione');
 ok(has('Box score'), 'il box score e consultabile');
 ok(has('Apri le Finals'), 'le Finals si possono aprire');
 
 const po = F.state.po;
-const r1 = simSeries(T[po.s1.a], T[po.s1.b], po.s1.seed);
-const r2 = simSeries(T[po.s2.a], T[po.s2.b], po.s2.seed);
+const r1 = simSeriesUpTo(T[po.s1.a], T[po.s1.b], po.s1.seed, 7);
+const r2 = simSeriesUpTo(T[po.s2.a], T[po.s2.b], po.s2.seed, 7);
 const l1 = r1.winner === po.s1.a ? po.s1.b : po.s1.a;
 const l2 = r2.winner === po.s2.a ? po.s2.b : po.s2.a;
 await F.session.apply((s) => S.openFinal(s, r1.winner, r2.winner, l1, l2));
-ok(clean() && has('Finals', 'Vai — Gara 1'), 'le Finals partono da gara 1, non simulate in blocco');
+ok(has('Finals'), 'le Finals si aprono con le due vincenti');
+ok(clean() && has('Finals', 'Vai — Gara 1'), 'le Finals partono da gara 1, una alla volta');
 
 // Una gara alla volta, come chiedono le regole.
 let steps = 0, sawStop = false;
 while (steps++ < 8) {
-  await F.session.apply((s) => S.advanceFinal(s));
+  await F.session.apply((s) => S.advanceSeries(s, 'final', S.PASSO_FINALE));
   if (html().includes('Campione')) { sawStop = true; break; }
 }
 ok(sawStop, 'le Finals si chiudono e proclamano il campione', `${steps} gare`);
-ok(clean() && has('MVP delle Finals'), 'l\'MVP delle Finals viene assegnato');
+ok(clean() && has('MVP delle Finals') || has('MVP della serie'), 'l\'MVP delle Finals viene assegnato');
 ok(has('Finale 3° / 4° posto'), 'compare la finalina fra le due eliminate');
-await F.session.apply((s) => S.revealThird(s));
+for (let i = 0; i < 5; i++) await F.session.apply((s) => S.advanceSeries(s, 'third', S.PASSO_SEMI));
 ok(clean() && has('MVP della serie'), 'la finalina si simula');
+
+/* Albo d'oro: si scrive da solo e sopravvive all'azzeramento */
+await new Promise((r) => setTimeout(r, 30));
+ok((F.state.albo || []).length === 1, 'la partita finisce nell\'albo d\'oro da sola',
+  `${(F.state.albo || []).length} voci`);
+ok(has('Albo d\'oro'), 'l\'albo compare a fine partita');
+{
+  const voce = F.state.albo[0];
+  ok(!!voce.championName && !!voce.mvp && Array.isArray(voce.roster) && voce.roster.length === 5,
+    'la voce ha campione, MVP e quintetto', `${voce.championName} b. ${voce.runnerUpName} ${voce.wins}`);
+  const doppio = S.recordAlbo(F.state, voce);
+  ok(doppio === undefined, 'registrarla due volte non fa niente');
+  const dopoReset = S.resetGame(F.state, 'altro-seed');
+  ok((dopoReset.albo || []).length === 1, 'l\'albo sopravvive a "Nuova partita"');
+  ok(S.classifica(F.state).some((t) => t.titoli === 1), 'la classifica conta il titolo');
+}
 ok(has('Nuova partita'), 'a fine partita il tasto diventa in evidenza');
 ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
 

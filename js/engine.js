@@ -17,7 +17,10 @@
 
 import { db, makeRng, gauss, clamp, SLOTS, TEAM_NAMES } from './core.js';
 
-const W_SCORING = [0.30, 0.24, 0.19, 0.15, 0.12]; // peso per rango di realizzazione
+// Peso per rango di realizzazione. Piu i pesi sono piatti, piu conta il quinto
+// uomo e meno paga comprare una sola superstar circondata da gregari.
+// Verificabile con: node tools/audit-gioco.mjs, sezione 3.
+const W_SCORING = [0.25, 0.22, 0.20, 0.17, 0.16];
 
 /* ==========================================================
    1. PROFILO SQUADRA
@@ -106,6 +109,18 @@ export function buildTeam(key, lineup, tactics) {
     const d = -(58 - rimProtect) * 0.55;
     def += d;
     factors.push({ key: 'ferro-scoperto', side: key, delta: d, label: 'Ferro scoperto', data: { rim: Math.round(rimProtect) } });
+  }
+
+  // Il quinto uomo gioca gli stessi minuti della stella. Senza questo, il
+  // modello premiava solo i picchi e comprare una superstar circondata da
+  // gregari era sempre la mossa giusta: una risposta giusta uccide l'asta.
+  const sottoMedia = five.reduce((s, p) => s + Math.max(0, 89 - p.ovr), 0);
+  if (sottoMedia > 6) {
+    const d = -(sottoMedia - 6) * 0.60;
+    off += d * 0.55; def += d * 0.45;
+    const peggiore = five.slice().sort((x, y) => x.ovr - y.ovr)[0];
+    factors.push({ key: 'anello-debole', side: key, delta: d, label: 'Anello debole',
+      data: { worst: peggiore.n, n: five.filter((p) => p.ovr < 89).length } });
   }
 
   if (size < 13) {
@@ -507,6 +522,45 @@ function contrast(t1, t2) {
     sum += d * d;
   }
   return { total: Math.sqrt(sum), per };
+}
+
+const potenza = (t) => t.off + t.def;
+
+// Il tabellone cambia forma col numero di squadre:
+//   4 -> due semifinali, poi finale e finalina
+//   3 -> la migliore sulla carta va dritta in finale, le altre due si giocano
+//        la semifinale; chi la perde e terzo e non serve una finalina
+//   2 -> solo le Finals
+export function componiTabellone(teams, seed = 'bye') {
+  const k = Object.keys(teams);
+  if (k.length >= 4) return { tipo: 'quattro', ...pickBracket(teams) };
+
+  if (k.length === 3) {
+    // Il bye si SORTEGGIA, non si assegna al piu forte. Misurato su 800 tornei
+    // (tools/bye.mjs): darlo alla migliore le regala +9 punti di titoli e uno
+    // dei tre resta tagliato fuori; a sorte ne aggiunge 2, cioe quasi niente.
+    const rng = makeRng(seed + ':bye');
+    const fortunato = k[Math.floor(rng() * k.length)];
+    const [s2, s3] = k.filter((x) => x !== fortunato);
+    const c = contrast(teams[s2], teams[s3]);
+    const asse = AXES.slice().sort((x, y) => c.per[y.key] - c.per[x.key])[0];
+    return {
+      tipo: 'tre',
+      bye: fortunato,
+      semi: [s2, s3],
+      reasons: [
+        `Il sorteggio manda ${teams[fortunato].name} direttamente in finale: salta la semifinale e aspetta.`,
+        `${teams[s2].name} contro ${teams[s3].name} per il posto in finale: si decide sull'asse "${asse.label}". Chi perde è terzo.`,
+      ],
+    };
+  }
+
+  const [a, b] = k;
+  return {
+    tipo: 'due',
+    finale: [a, b],
+    reasons: [`Solo due squadre: si va dritti alle Finals, ${teams[a].name} contro ${teams[b].name}.`],
+  };
 }
 
 // Delle 3 partizioni possibili di 4 squadre sceglie quella che massimizza il

@@ -241,6 +241,15 @@ label.field > span {
 .strip .ros { font-size: 11px; color: var(--muted); line-height: 1.35; }
 .strip.leading { box-shadow: inset 0 0 0 1px var(--red); }
 
+/* ---- "Le squadre": il profilo è il motivo per cui la schermata esiste ---- */
+.identita {
+  font: 700 12.5px var(--cond); letter-spacing: 1.4px; text-transform: uppercase;
+  color: var(--gold); margin-top: 6px; line-height: 1.45;
+}
+.tattica { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.tattica .row { align-items: flex-start; }
+.tattica .field { margin-bottom: 8px; }
+
 /* ---- quintetti ---- */
 .slots { display: flex; flex-direction: column; gap: 3px; }
 .slot {
@@ -312,6 +321,16 @@ details summary {
 }
 
 .reset-zone { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); }
+
+/* ---- albo d'oro ---- */
+.albo { display: flex; flex-direction: column; gap: 3px; }
+.albo-riga {
+  display: flex; align-items: baseline; gap: 7px; padding: 8px 11px;
+  background: var(--surface-2); border-left: 4px solid var(--tc);
+}
+.albo-riga .nm { font: 700 15px var(--cond); letter-spacing: 1.2px; text-transform: uppercase; }
+.albo-riga .dot { align-self: center; }
+.albo-riga b { font: 800 19px var(--cond); color: var(--gold); }
 
 /* ---- barra dei rilanci, fissa in fondo ---- */
 /* --vv-bottom lo calcola app.js dal viewport VISIVO: su iOS il viewport di

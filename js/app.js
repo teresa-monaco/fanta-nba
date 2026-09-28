@@ -1,10 +1,11 @@
 // app.js — avvio, risoluzione della stanza, un solo handler per tutti i click.
 
-import { loadData, TEAM_KEYS } from './core.js';
-import { simSeries } from './engine.js';
+import { loadData, TEAM_KEYS, TEAM_NAMES } from './core.js';
+import { simSeriesUpTo, componiTabellone } from './engine.js';
 import * as S from './state.js';
 import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
-import { render, renderTopbar, tickClock, ui, teamsFromState, pickBracket, esc } from './ui.js';
+import { render, renderTopbar, tickClock, ui, teamsFromState, esc } from './ui.js';
+import { sblocca, commutaAudio, tic, martelletto, nuovoLotto } from './suono.js';
 
 const root = document.getElementById('app');
 const topbar = document.getElementById('topbar');
@@ -68,6 +69,39 @@ function paint() {
   renderTopbar(topbar, ctx);
   render(root, ctx);
   tickClock(state);
+  suoniDiStato();
+  registraAlbo();
+}
+
+// L'albo si scrive da se quando le Finals si chiudono. Il risultato non sta
+// nel database (c'e solo il seed), quindi va ricalcolato qui e poi salvato.
+// Lo fa solo chi ospita, e l'inserimento e idempotente sul seed: qualunque
+// strada porti a questo punto, la partita finisce nell'albo una volta sola.
+async function registraAlbo() {
+  const f = state.po?.final;
+  if (!f || state.host !== session.uid) return;
+  if ((state.albo || []).some((e) => e.seed === f.seed)) return;
+  try {
+    const T = teamsFromState(state);
+    const A = T[f.a], B = T[f.b];
+    const r = simSeriesUpTo(A, B, f.seed, f.gamesPlayed);
+    if (!r.done) return;
+    const perdente = r.winner === f.a ? f.b : f.a;
+    const voce = {
+      seed: f.seed,
+      quando: Date.now(),
+      champion: r.winner,
+      championName: TEAM_NAMES[r.winner],
+      runnerUp: perdente,
+      runnerUpName: TEAM_NAMES[perdente],
+      wins: `${Math.max(r.wins.a, r.wins.b)}-${Math.min(r.wins.a, r.wins.b)}`,
+      mvp: r.mvp?.n || null,
+      roster: T[r.winner].five.map((p) => p.n),
+    };
+    await session.apply((s) => S.recordAlbo(s, voce));
+  } catch (err) {
+    console.error('albo:', err);
+  }
 }
 
 function fatal(err) {
@@ -103,18 +137,49 @@ if (typeof window !== 'undefined' && window.visualViewport) {
    Cronometro dell'asta
    ========================================================== */
 
+let ultimoTic = null;   // secondo su cui abbiamo gia suonato
+let ultimoLotto = null; // indice del lotto gia annunciato
+
 function startClock() {
   if (clockTimer) clearInterval(clockTimer);
   clockTimer = setInterval(() => {
-    if (!state || state.phase !== 'auction') return;
+    if (!state || state.phase !== 'auction') { ultimoTic = null; return; }
     const left = tickClock(state);
+    if (state.auction.paused) return; // il cronometro è fermo per tutti
+
+    // Un tic per ogni secondo degli ultimi cinque, una volta sola.
+    if (left !== null && left > 0) {
+      const sec = Math.ceil(left / 1000);
+      if (sec <= 5 && sec !== ultimoTic) { ultimoTic = sec; tic(sec); }
+    }
+
     // Solo chi ospita chiude il lotto: se lo facessero tutti, quattro
     // transazioni contemporanee proverebbero ad assegnare lo stesso giocatore.
-    if (state.auction.paused) return; // il cronometro è fermo per tutti
     if (left !== null && left <= 0 && state.host === session.uid) {
       session.apply((s) => (s.auction.running && s.auction.deadline <= now() ? S.resolveLot(s, now()) : undefined));
     }
   }, 250);
+}
+
+// Il suono segue lo STATO, non il click: cosi lo sentono tutti e quattro,
+// non solo chi ha premuto il tasto.
+let ultimiAcquisti = null;
+
+function suoniDiStato() {
+  if (!state || state.phase !== 'auction') { ultimoLotto = null; ultimiAcquisti = null; return; }
+  const idx = state.auction.idx;
+  const acquisti = state.auction.log.length;
+  if (ultimoLotto === null) { ultimoLotto = idx; ultimiAcquisti = acquisti; return; } // muti all'ingresso
+
+  if (idx !== ultimoLotto) {
+    // Se il registro degli acquisti e cresciuto il lotto e stato aggiudicato,
+    // altrimenti e stato saltato e il martelletto non ha senso.
+    if (acquisti > ultimiAcquisti) martelletto();
+    ultimoLotto = idx;
+    ultimiAcquisti = acquisti;
+    ultimoTic = null;
+    setTimeout(() => nuovoLotto(), 430);
+  }
 }
 
 /* ==========================================================
@@ -127,6 +192,7 @@ document.addEventListener('click', async (ev) => {
   const act = el.dataset.act;
   const team = el.dataset.team;
   ui.banner = null;
+  sblocca(); // iOS tiene l'audio sospeso finché non c'è un gesto dell'utente
 
   try {
     switch (act) {
@@ -151,21 +217,31 @@ document.addEventListener('click', async (ev) => {
         break;
 
       /* --- lobby --- */
-      case 'seat': {
+      // Non si sceglie la squadra: si entra e te ne viene data una.
+      case 'join': {
         const nick = (document.getElementById('nick')?.value || '').trim();
-        if (!nick) return flash('Scrivi il tuo nome prima di scegliere la squadra.', true);
+        if (!nick) return flash('Scrivi il tuo nome per entrare.', true);
         ui.nickname = nick;
         localStorage.setItem('nbaf:nick', nick);
-        await session.apply((s) => {
-          if (S.seatTaken(s, team) && s.seats[session.uid] !== team) return undefined;
-          return S.takeSeat(S.leaveSeat(s, session.uid), session.uid, nick, team);
-        });
+        const ok = await session.apply((s) => S.joinGame(s, session.uid, nick));
+        if (!ok) flash('Le quattro squadre sono gia assegnate.', true);
         break;
       }
 
-      case 'start-auction':
-        await session.apply((s) => (s.phase === 'lobby' ? S.startAuction(s, now()) : undefined));
+      case 'num-squadre':
+        ui.numSquadre = Number(el.dataset.n);
+        paint();
         break;
+
+      case 'start-auction': {
+        // In locale le squadre le sceglie chi ospita; in stanza sono quelle sedute.
+        const inGioco = session.mode === 'local'
+          ? TEAM_KEYS.slice(0, ui.numSquadre || 4)
+          : null;
+        const ok = await session.apply((s) => (s.phase === 'lobby' ? S.startAuction(s, now(), inGioco) : undefined));
+        if (!ok) flash('Servono almeno due squadre.', true);
+        break;
+      }
 
       /* --- asta --- */
       case 'bid': {
@@ -183,6 +259,11 @@ document.addEventListener('click', async (ev) => {
       // qualcun altro rilancia, così non offri alla cieca su un prezzo vecchio.
       case 'arm-allin':
         ui.allIn = { team, at: state.auction.bid ? state.auction.bid.amount : 0 };
+        paint();
+        break;
+
+      case 'toggle-audio':
+        commutaAudio();
         paint();
         break;
 
@@ -223,8 +304,15 @@ document.addEventListener('click', async (ev) => {
         break;
       }
 
-      case 'to-lineups':
-        await session.apply((s) => S.toLineups(s));
+      case 'to-squadra':
+        await session.apply((s) => S.toSquadra(s));
+        break;
+
+      // Il quintetto e in sola lettura: si sblocca solo se lo si chiede.
+      case 'toggle-lineup':
+        ui.editLineup = ui.editLineup === team ? null : team;
+        ui.selSlot = null;
+        paint();
         break;
 
       /* --- quintetti --- */
@@ -248,31 +336,34 @@ document.addEventListener('click', async (ev) => {
         }));
         break;
 
-      case 'to-tactics':
-        await session.apply((s) => (S.lineupsReady(s) ? S.toTactics(s) : undefined));
-        break;
 
       /* --- playoff --- */
       case 'to-playoffs': {
-        if (!S.tacticsReady(state)) return flash('Servono primo violino, secondo violino e strategia per tutte e quattro.', true);
-        const T = teamsFromState(state);
-        const { semis, reasons } = pickBracket(T);
-        await session.apply((s) => S.toPlayoffs(s, semis, reasons));
+        if (!S.squadraReady(state)) return flash('Servono primo violino, secondo violino e strategia per ogni squadra.', true);
+        const tab = componiTabellone(teamsFromState(state), state.seed);
+        await session.apply((s) => S.toPlayoffs(s, tab));
         break;
       }
 
-      case 'reveal-s1': await session.apply((s) => S.revealSemi(s, 's1')); break;
-      case 'reveal-s2': await session.apply((s) => S.revealSemi(s, 's2')); break;
-      case 'reveal-third': await session.apply((s) => S.revealThird(s)); break;
+      case 'avanza-s1': await session.apply((s) => S.advanceSeries(s, 's1', S.PASSO_SEMI)); break;
+      case 'avanza-s2': await session.apply((s) => S.advanceSeries(s, 's2', S.PASSO_SEMI)); break;
+      case 'avanza-third': await session.apply((s) => S.advanceSeries(s, 'third', S.PASSO_SEMI)); break;
+      case 'avanza-final': await session.apply((s) => S.advanceSeries(s, 'final', S.PASSO_FINALE)); break;
 
       case 'open-final': {
         const T = teamsFromState(state);
         const po = state.po;
-        const r1 = simSeries(T[po.s1.a], T[po.s1.b], po.s1.seed);
-        const r2 = simSeries(T[po.s2.a], T[po.s2.b], po.s2.seed);
-        const l1 = r1.winner === po.s1.a ? po.s1.b : po.s1.a;
-        const l2 = r2.winner === po.s2.a ? po.s2.b : po.s2.a;
-        await session.apply((s) => S.openFinal(s, r1.winner, r2.winner, l1, l2));
+        const vinc = (m) => simSeriesUpTo(T[m.a], T[m.b], m.seed, 7);
+        if (po.tipo === 'tre') {
+          // Chi aveva il bye contro chi ha vinto l'unica semifinale.
+          const r1 = vinc(po.s1);
+          await session.apply((s) => S.openFinal(s, po.bye, r1.winner, null, null));
+        } else {
+          const r1 = vinc(po.s1), r2 = vinc(po.s2);
+          const l1 = r1.winner === po.s1.a ? po.s1.b : po.s1.a;
+          const l2 = r2.winner === po.s2.a ? po.s2.b : po.s2.a;
+          await session.apply((s) => S.openFinal(s, r1.winner, r2.winner, l1, l2));
+        }
         break;
       }
 

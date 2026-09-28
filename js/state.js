@@ -50,25 +50,46 @@ export function hydrate(raw) {
     paused: !!a.paused, remaining: a.remaining ?? null,
     log: a.log || [], unsold: a.unsold || [],
   };
+  s.albo = s.albo || [];
   if (s.po) {
     s.po = { ...s.po, semis: s.po.semis || [], reasons: s.po.reasons || [] };
+    for (const w of ['s1', 's2', 'final', 'third']) {
+      if (s.po[w]) s.po[w] = { gamesPlayed: 0, ...s.po[w] };
+    }
   }
   return s;
 }
 
+/* ---------- Squadre in gioco ---------- */
+
+// Si puo giocare in 2, 3 o 4. Le squadre in gioco vengono fissate quando parte
+// l'asta; prima di allora sono quelle con qualcuno seduto. Tutto il resto del
+// gioco cicla su QUESTE, mai su TEAM_KEYS.
+export function attive(s) {
+  if (s.attive?.length) return s.attive;
+  const sedute = TEAM_KEYS.filter((k) => Object.values(s.seats || {}).includes(k));
+  return sedute.length ? sedute : TEAM_KEYS;
+}
+
+export const MIN_SQUADRE = 2;
+
 /* ---------- Lobby ---------- */
 
-export function takeSeat(s, uid, nickname, teamKey) {
-  const seats = { ...s.seats };
-  for (const [u, t] of Object.entries(seats)) if (t === teamKey && u !== uid) return s; // gia occupata
-  seats[uid] = teamKey;
-  return { ...s, seats, names: { ...s.names, [uid]: nickname } };
+// Non si sceglie la squadra: si scrive il nome e te ne viene assegnata una.
+// Toglie il momento morto in cui quattro persone discutono su chi prende cosa.
+export function joinGame(s, uid, nickname) {
+  if (s.seats[uid]) return { ...s, names: { ...s.names, [uid]: nickname } }; // gia dentro, solo rinomina
+  const libera = TEAM_KEYS.find((k) => !Object.values(s.seats).includes(k));
+  if (!libera) return undefined; // tutte occupate
+  return { ...s, seats: { ...s.seats, [uid]: libera }, names: { ...s.names, [uid]: nickname } };
 }
 
 export function leaveSeat(s, uid) {
   const seats = { ...s.seats };
+  const names = { ...s.names };
   delete seats[uid];
-  return { ...s, seats };
+  delete names[uid];
+  return { ...s, seats, names };
 }
 
 /* ---------- Asta ---------- */
@@ -108,11 +129,18 @@ export function canBid(s, teamKey, amount) {
   return amount >= min && amount <= maxBid(s, teamKey);
 }
 
-export function startAuction(s, now) {
+// Le squadre in gioco si fissano QUI e non cambiano piu: da questo momento
+// ogni ciclo del gioco usa s.attive, non tutte e quattro.
+export function startAuction(s, now, squadre) {
   const D = db();
   const rng = makeRng(s.seed + ':pool');
   const order = shuffle(D.players.map((p) => p.id), rng);
-  return openLot({ ...s, phase: 'auction', auction: { ...s.auction, order, idx: -1 } }, now);
+  const inGioco = squadre?.length ? squadre : attive(s);
+  if (inGioco.length < MIN_SQUADRE) return undefined;
+  return openLot({
+    ...s, phase: 'auction', attive: inGioco,
+    auction: { ...s.auction, order, idx: -1 },
+  }, now);
 }
 
 // Passa al lotto successivo. Salta chi e gia stato comprato e, se il mazzo
@@ -122,12 +150,12 @@ export function openLot(s, now) {
   const a = s.auction;
   // Un lotto nuovo riparte sempre spausato: la pausa vale per il lotto in corso.
   const fresh = { ...a, bid: null, paused: false, remaining: null };
-  const stillBuying = TEAM_KEYS.some((k) => slotsLeft(s, k) > 0 && maxBid(s, k) >= 1);
+  const stillBuying = attive(s).some((k) => slotsLeft(s, k) > 0 && maxBid(s, k) >= 1);
   if (!stillBuying || !a.order?.length) {
     return { ...s, auction: { ...fresh, running: false, deadline: null } };
   }
 
-  const owned = new Set(TEAM_KEYS.flatMap((k) => s.teams[k].roster));
+  const owned = new Set(attive(s).flatMap((k) => s.teams[k].roster));
   let idx = a.idx;
   for (let step = 0; step < a.order.length; step++) {
     idx = (idx + 1) % a.order.length;
@@ -171,8 +199,8 @@ export function award(s, playerId, teamKey, price, now) {
   const log = [...s.auction.log, { playerId, team: teamKey, price }];
   let next = { ...s, teams, auction: { ...s.auction, log } };
 
-  if (TEAM_KEYS.every((k) => next.teams[k].roster.length >= ROSTER_SIZE)) {
-    return toLineups(next);
+  if (attive(next).every((k) => next.teams[k].roster.length >= ROSTER_SIZE)) {
+    return toSquadra(next);
   }
   return openLot(next, now);
 }
@@ -198,12 +226,35 @@ export function currentPlayerId(s) {
   return a.order[a.idx];
 }
 
-/* ---------- Quintetti ---------- */
+/* ---------- "La tua squadra": quintetto + tattica in un passaggio ---------- */
 
-export function toLineups(s) {
+// Quintetto e impostazioni tattiche stavano su due schermate separate. Il
+// quintetto pero lo assegna l'app in modo ottimo: era una decisione finta,
+// dove si poteva solo peggiorare. Ora e una schermata sola, dove il quintetto
+// si legge (e si corregge solo se si vuole davvero) e si sceglie la tattica.
+export function toSquadra(s) {
+  const D = db();
   const lineups = {};
-  for (const k of TEAM_KEYS) lineups[k] = autoLineup(s.teams[k].roster);
-  return { ...s, phase: 'lineups', lineups, auction: { ...s.auction, running: false, bid: null, deadline: null } };
+  const tactics = { ...s.tactics };
+  for (const k of TEAM_KEYS) {
+    lineups[k] = autoLineup(s.teams[k].roster);
+    if (tactics[k].v1 && tactics[k].v2) continue;
+    const sorted = s.teams[k].roster.map((id) => D.byId[id]).filter(Boolean)
+      .sort((x, y) => y.attrs.sco - x.attrs.sco);
+    tactics[k] = {
+      v1: sorted[0]?.id ?? null,
+      v2: sorted[1]?.id ?? null,
+      strategy: tactics[k].strategy || 'equilibrato',
+    };
+  }
+  return {
+    ...s, phase: 'squadra', lineups, tactics,
+    auction: { ...s.auction, running: false, bid: null, deadline: null, paused: false, remaining: null },
+  };
+}
+
+export function squadraReady(s) {
+  return lineupsReady(s) && tacticsReady(s);
 }
 
 // Assegnazione automatica: minimizza il costo totale di "fuori ruolo"
@@ -249,22 +300,10 @@ export function swapSlots(s, teamKey, slotA, slotB) {
 }
 
 export function lineupsReady(s) {
-  return TEAM_KEYS.every((k) => SLOTS.every((sl) => !!s.lineups[k][sl]));
+  return attive(s).every((k) => SLOTS.every((sl) => !!s.lineups[k][sl]));
 }
 
 /* ---------- Impostazioni tattiche ---------- */
-
-export function toTactics(s) {
-  const D = db();
-  const tactics = { ...s.tactics };
-  for (const k of TEAM_KEYS) {
-    if (tactics[k].v1 && tactics[k].v2) continue;
-    const sorted = s.teams[k].roster.map((id) => D.byId[id]).filter(Boolean)
-      .sort((x, y) => y.attrs.sco - x.attrs.sco);
-    tactics[k] = { v1: sorted[0]?.id ?? null, v2: sorted[1]?.id ?? null, strategy: tactics[k].strategy || 'equilibrato' };
-  }
-  return { ...s, phase: 'tactics', tactics };
-}
 
 export function setTactics(s, teamKey, patch) {
   const cur = { ...s.tactics[teamKey], ...patch };
@@ -273,7 +312,7 @@ export function setTactics(s, teamKey, patch) {
 }
 
 export function tacticsReady(s) {
-  return TEAM_KEYS.every((k) => {
+  return attive(s).every((k) => {
     const t = s.tactics[k];
     return t.v1 && t.v2 && t.v1 !== t.v2 && t.strategy;
   });
@@ -281,43 +320,64 @@ export function tacticsReady(s) {
 
 /* ---------- Playoff ---------- */
 
-export function toPlayoffs(s, semis, reasons) {
-  const [p1, p2] = semis;
-  return {
-    ...s,
-    phase: 'playoffs',
-    po: {
-      semis, reasons,
-      s1: { a: p1[0], b: p1[1], seed: `${s.seed}:s1`, revealed: false },
-      s2: { a: p2[0], b: p2[1], seed: `${s.seed}:s2`, revealed: false },
-      final: null,
-      third: null,
-    },
-  };
+// Ogni serie si scopre un pezzo alla volta. Le semifinali vanno a due gare per
+// volta, le Finals a una: cosi la tensione sale invece di restare piatta, e il
+// momento piu importante della serata e anche il piu lento.
+export const PASSO_SEMI = 2;
+export const PASSO_FINALE = 1;
+
+// Accetta il tabellone prodotto da componiTabellone(): la forma dipende da
+// quante squadre giocano, ma lo stato salvato resta lo stesso per tutte.
+export function toPlayoffs(s, tab) {
+  const serie = (nome, a, b) => ({ a, b, seed: `${s.seed}:${nome}`, gamesPlayed: 0 });
+  const base = { tipo: tab.tipo, reasons: tab.reasons, s1: null, s2: null, final: null, third: null, bye: null };
+
+  if (tab.tipo === 'quattro') {
+    const [p1, p2] = tab.semis;
+    return { ...s, phase: 'playoffs', po: { ...base, semis: tab.semis, s1: serie('s1', p1[0], p1[1]), s2: serie('s2', p2[0], p2[1]) } };
+  }
+  if (tab.tipo === 'tre') {
+    return { ...s, phase: 'playoffs', po: { ...base, bye: tab.bye, s1: serie('s1', tab.semi[0], tab.semi[1]) } };
+  }
+  // due squadre: si parte direttamente dalle Finals
+  return { ...s, phase: 'playoffs', po: { ...base, final: serie('final', tab.finale[0], tab.finale[1]) } };
 }
 
-export function revealSemi(s, which) {
-  const po = { ...s.po, [which]: { ...s.po[which], revealed: true } };
+// Un solo percorso per tutte le serie: cambia solo di quanto si avanza.
+export function advanceSeries(s, which, passo) {
+  const ser = s.po?.[which];
+  if (!ser) return s;
+  return { ...s, po: { ...s.po, [which]: { ...ser, gamesPlayed: Math.min(7, ser.gamesPlayed + passo) } } };
+}
+
+// Con quattro squadre le Finals mettono le due vincenti e nasce la finalina.
+// Con tre, la finale e fra chi aveva il bye e chi ha vinto la semifinale: il
+// terzo posto e gia deciso da quella semifinale, niente finalina.
+export function openFinal(s, a, b, loser1, loser2) {
+  const po = { ...s.po, final: { a, b, seed: `${s.seed}:final`, gamesPlayed: 0 } };
+  if (loser1 && loser2) po.third = { a: loser1, b: loser2, seed: `${s.seed}:third`, gamesPlayed: 0 };
   return { ...s, po };
 }
 
-export function openFinal(s, winner1, winner2, loser1, loser2) {
-  const po = {
-    ...s.po,
-    final: { a: winner1, b: winner2, seed: `${s.seed}:final`, gamesPlayed: 0 },
-    third: { a: loser1, b: loser2, seed: `${s.seed}:third`, revealed: false },
-  };
-  return { ...s, po };
+/* ---------- Albo d'oro ---------- */
+
+// Sopravvive all'azzeramento: e la memoria della stanza. L'inserimento e
+// idempotente sul seed, cosi non importa quante volte lo si tenta.
+export function recordAlbo(s, entry) {
+  const albo = s.albo || [];
+  if (albo.some((e) => e.seed === entry.seed)) return undefined;
+  return { ...s, albo: [...albo, entry] };
 }
 
-export function advanceFinal(s) {
-  const f = s.po.final;
-  if (!f) return s;
-  return { ...s, po: { ...s.po, final: { ...f, gamesPlayed: f.gamesPlayed + 1 } } };
-}
-
-export function revealThird(s) {
-  return { ...s, po: { ...s.po, third: { ...s.po.third, revealed: true } } };
+export function classifica(s) {
+  const albo = s.albo || [];
+  const t = {};
+  for (const k of TEAM_KEYS) t[k] = { key: k, nome: TEAM_NAMES[k], titoli: 0, finali: 0, mvp: [] };
+  for (const e of albo) {
+    if (t[e.champion]) { t[e.champion].titoli++; t[e.champion].finali++; if (e.mvp) t[e.champion].mvp.push(e.mvp); }
+    if (t[e.runnerUp]) t[e.runnerUp].finali++;
+  }
+  return Object.values(t).sort((a, b) => b.titoli - a.titoli || b.finali - a.finali);
 }
 
 /* ---------- Ricominciare ---------- */
@@ -326,7 +386,8 @@ export function revealThird(s) {
 // riscegliere la squadra fra un'asta e l'altra.
 export function resetGame(s, seed) {
   const fresh = newGame(seed, s.host);
-  return { ...fresh, seats: s.seats, names: s.names };
+  // L'albo d'oro e le sedie sopravvivono: e il motivo per cui si rigioca.
+  return { ...fresh, seats: s.seats, names: s.names, albo: s.albo || [] };
 }
 
 /* ---------- Utility di presentazione ---------- */

@@ -45,6 +45,11 @@ const FACTOR_LINES = {
     'In area {T} offre servizio al tavolo. Gli avversari ordinano, {T} serve.',
     '{T} protegge il canestro con l\'entusiasmo di chi ha già finito il turno.',
   ],
+  'anello-debole': [
+    'Gli avversari hanno capito subito chi era il punto debole di {T} e hanno passato la serie ad attaccare {worst}.',
+    '{T} ha una stella e poi il vuoto: {n} giocatori sotto il livello, e in campo ci vanno tutti e cinque.',
+    'In {T} la difesa avversaria sceglie dove andare: sceglie {worst}, ogni volta.',
+  ],
   'quintetto-piccolo': [
     '{T} è talmente piccola che a rimbalzo si organizza per collette.',
     'Il quintetto di {T} vince ogni sfida di velocità e perde tutto quello che si svolge sopra i tre metri.',

@@ -3,16 +3,19 @@
 // slot selezionato per lo scambio) vive qui, fuori dallo stato condiviso.
 
 import { db, SLOTS, SLOT_LABEL, TEAM_KEYS, TEAM_NAMES, STRATEGIES, ROSTER_SIZE, START_CREDITS } from './core.js';
-import { buildTeam, simSeries, simSeriesUpTo, pickBracket } from './engine.js';
+import { buildTeam, simSeriesUpTo } from './engine.js';
 import { narrateGame, explainSeries, teamIdentity } from './narrator.js';
 import * as S from './state.js';
 import { now } from './net.js';
+import { audioAcceso } from './suono.js';
 
 export const ui = {
   nickname: localStorage.getItem('nbaf:nick') || '',
   selSlot: null,      // { team, slot } in fase quintetti
   banner: null,
   manualOpen: false,
+  numSquadre: 4,      // solo in modalita locale: quante squadre gioca chi ospita
+  editLineup: null,   // squadra con il quintetto sbloccato per la modifica
   allIn: null,        // { team, at } — All in armato, valido finché l'offerta non cambia
 };
 
@@ -30,8 +33,7 @@ export function render(root, ctx) {
     switch (s.phase) {
       case 'lobby': body = viewLobby(ctx); break;
       case 'auction': body = viewAuction(ctx); break;
-      case 'lineups': body = viewLineups(ctx); break;
-      case 'tactics': body = viewTactics(ctx); break;
+      case 'squadra': body = viewSquadra(ctx); break;
       case 'playoffs': body = viewPlayoffs(ctx); break;
       default: body = `<div class="card">Fase sconosciuta: ${esc(s.phase)}</div>`;
     }
@@ -69,6 +71,8 @@ export function renderTopbar(el, ctx) {
     <div class="brand">FANTA<span>NBA</span></div>
     <div class="row">
       ${session.mode === 'local' ? '<span class="tag">modalità locale</span>' : ''}
+      <button class="sm ghost" data-act="toggle-audio" aria-label="${audioAcceso() ? 'Disattiva' : 'Attiva'} i suoni"
+              title="${audioAcceso() ? 'Suoni attivi' : 'Suoni spenti'}">${audioAcceso() ? '&#9834;' : '&#9834;&#822;'}</button>
       ${canReset ? '<button class="sm ghost" data-act="new-game">Nuova</button>' : ''}
       <span class="code-pill">${esc(session.code)}</span>
     </div>`;
@@ -82,45 +86,73 @@ function viewLobby({ state: s, session }) {
   const isHost = s.host === session.uid;
   const local = session.mode === 'local';
 
-  const seats = TEAM_KEYS.map((k) => {
-    const who = S.nameOfSeat(s, k);
+  // Chi e dentro, nell'ordine in cui e arrivato. La squadra non si sceglie:
+  // viene assegnata, cosi non si perdono cinque minuti a contrattare i colori.
+  const dentro = TEAM_KEYS.filter((k) => S.seatTaken(s, k)).map((k) => {
     const mine = s.seats[session.uid] === k;
-    return `
-      <button class="seat t-${k} ${who ? 'taken' : ''}" data-act="seat" data-team="${k}">
-        <div class="nm"><span class="dot"></span>${TEAM_NAMES[k]}</div>
-        <div class="who">${who ? esc(who) + (mine ? ' (tu)' : '') : 'libera'}</div>
-      </button>`;
+    return `<div class="strip t-${k}">
+      <span class="dot"></span>
+      <span class="nm">${TEAM_NAMES[k]}</span>
+      <span class="grow"></span>
+      <span class="small">${esc(S.nameOfSeat(s, k))}${mine ? ' <span class="tiny muted">(tu)</span>' : ''}</span>
+    </div>`;
   }).join('');
 
-  const taken = Object.keys(s.seats).length;
+  const n = local ? (ui.numSquadre || 4) : Object.keys(s.seats).length;
+  const sonoDentro = !!s.seats[session.uid];
+  const pieno = Object.keys(s.seats).length >= TEAM_KEYS.length;
+
+  const sceltaLocale = !local ? '' : `
+    <div class="card">
+      <h3 class="mb">Quante squadre</h3>
+      <p class="small muted mb">Su questo schermo le gestisci tutte tu.</p>
+      <div class="row">
+        ${[2, 3, 4].map((v) => `<button class="${n === v ? 'primary' : ''} grow" data-act="num-squadre" data-n="${v}">${v}</button>`).join('')}
+      </div>
+    </div>`;
 
   return `
     <h1>Fanta NBA</h1>
-    <p class="muted mb">Asta a crediti, quintetti, playoff simulati. Quattro squadre, 50 crediti a testa, 5 giocatori ciascuna.</p>
+    <p class="muted mb">Asta a crediti, quintetti, playoff simulati. Da 2 a 4 squadre, 50 crediti a testa, 5 giocatori ciascuna.</p>
 
     ${local ? `
       <div class="card">
         <h3 class="mb">Modalità locale</h3>
-        <p class="small muted">Firebase non è configurato, quindi la partita gira su questo solo schermo: gestisci tu tutte e quattro le squadre.
+        <p class="small muted">Firebase non è configurato: la partita gira su questo solo schermo.
         Per giocare ognuno dal proprio telefono servono 3 minuti di setup — vedi SETUP.md.</p>
-      </div>` : `
+      </div>
+      ${sceltaLocale}` : `
       <div class="card">
         <h3>Codice stanza: <span class="code-pill">${esc(session.code)}</span></h3>
-        <p class="small muted mt">Gli altri aprono lo stesso link e inseriscono questo codice. Chi non prende posto guarda e basta; le squadre senza nessuno seduto le gestisce chi ospita.</p>
+        <p class="small muted mt">Gli altri aprono lo stesso link e inseriscono questo codice. Si gioca da 2 a 4: si parte con chi c'è.</p>
         <button class="sm ghost mt" data-act="copy-link">Copia il link della stanza</button>
       </div>
+
       <div class="card">
-        <label class="field"><span>Il tuo nome</span>
-          <input id="nick" value="${esc(ui.nickname)}" placeholder="il tuo nome" maxlength="14" autocomplete="off">
-        </label>
-        <p class="small muted mb">Scegli la tua squadra:</p>
-        <div class="seats">${seats}</div>
-      </div>`}
+        ${sonoDentro ? `
+          <h3 class="mb">Sei dentro</h3>
+          <p class="small muted">Ti è stata assegnata <b>${TEAM_NAMES[s.seats[session.uid]]}</b>.</p>
+        ` : `
+          <label class="field"><span>Il tuo nome</span>
+            <input id="nick" value="${esc(ui.nickname)}" placeholder="il tuo nome" maxlength="14" autocomplete="off">
+          </label>
+          ${pieno
+            ? '<p class="small muted">Le quattro squadre sono già assegnate: puoi guardare.</p>'
+            : '<button class="primary wide" data-act="join">Entra in partita</button>'}
+        `}
+      </div>
+
+      ${dentro ? `<div class="card tight">
+        <p class="tiny muted mb">In partita (${n})</p>${dentro}
+      </div>` : '<p class="small muted center mb">Ancora nessuno dentro.</p>'}`}
 
     ${isHost ? `
-      <button class="primary wide" data-act="start-auction">Inizia l'asta</button>
-      ${!local && taken < 4 ? `<p class="small muted center mt">${taken} squadre su 4 hanno un giocatore seduto. Puoi iniziare comunque: le altre le gestisci tu.</p>` : ''}
+      <button class="primary wide" data-act="start-auction" ${n >= S.MIN_SQUADRE ? '' : 'disabled'}>
+        Inizia l'asta${n >= S.MIN_SQUADRE ? ` con ${n} squadre` : ''}
+      </button>
+      ${n < S.MIN_SQUADRE ? '<p class="small muted center mt">Servono almeno due squadre.</p>' : ''}
     ` : `<p class="small muted center">In attesa che ${esc(s.names[s.host] || 'chi ospita')} avvii l'asta...</p>`}
+    ${alboCard(s)}
   `;
 }
 
@@ -138,7 +170,7 @@ function viewAuction({ state: s, session }) {
   if (!p) {
     return `<div class="card center"><h2>Asta conclusa</h2>
       <p class="muted small">Non ci sono più lotti disponibili.</p>
-      ${isHost ? '<button class="primary wide mt" data-act="to-lineups">Vai ai quintetti</button>' : ''}</div>`;
+      ${isHost ? '<button class="primary wide mt" data-act="to-squadra">Vai alle squadre</button>' : ''}</div>`;
   }
 
   const arc = D.archetypes[p.arc];
@@ -167,7 +199,7 @@ function viewAuction({ state: s, session }) {
       <div class="manual">
         <p class="tiny muted mb">Scavalca l'asta: ${esc(p.n)} al prezzo che decidi tu.</p>
         <div class="row">
-          <select id="m-team" class="grow">${TEAM_KEYS.filter((k) => S.slotsLeft(s, k) > 0)
+          <select id="m-team" class="grow">${S.attive(s).filter((k) => S.slotsLeft(s, k) > 0)
             .map((k) => `<option value="${k}">${TEAM_NAMES[k]} — max ${S.maxBid(s, k)}</option>`).join('')}</select>
           <input id="m-price" type="number" min="0" value="${bid?.amount || 1}" style="width:84px">
           <button class="sm primary" data-act="manual-award">OK</button>
@@ -176,7 +208,7 @@ function viewAuction({ state: s, session }) {
 
   // Le squadre che chi guarda può far rilanciare: la sua, oppure tutte
   // quelle senza nessuno seduto se è lui a ospitare.
-  const controllable = TEAM_KEYS.filter((k) => k === myTeam || (isHost && !S.seatTaken(s, k)));
+  const controllable = S.attive(s).filter((k) => k === myTeam || (isHost && !S.seatTaken(s, k)));
   const bidders = controllable.filter((k) => S.slotsLeft(s, k) > 0);
 
   const compact = (k) => {
@@ -218,7 +250,7 @@ function viewAuction({ state: s, session }) {
 
     <div class="card tight">
       ${myTeam ? '<p class="tiny muted mb">Gli avversari</p>' : ''}
-      ${(myTeam ? TEAM_KEYS.filter((k) => k !== myTeam) : TEAM_KEYS).map(compact).join('')}
+      ${S.attive(s).filter((k) => k !== myTeam).map(compact).join('')}
     </div>
 
     ${auctionLog(s, D)}
@@ -316,80 +348,76 @@ export function tickClock(s) {
 }
 
 /* ==========================================================
-   3. Quintetti
+   3. La tua squadra — quintetto (spiegato) + tattica, in un passaggio
    ========================================================== */
 
-function viewLineups({ state: s, session }) {
+function viewSquadra({ state: s, session }) {
   const D = db();
   const isHost = s.host === session.uid;
-  const cards = TEAM_KEYS.map((k) => {
-    const canEdit = s.seats[session.uid] === k || (isHost && !S.seatTaken(s, k));
+  const myTeam = s.seats[session.uid] || null;
+  // La propria squadra per prima: e quella su cui si deve decidere.
+  const ordine = myTeam ? [myTeam, ...S.attive(s).filter((k) => k !== myTeam)] : S.attive(s);
+
+  const cards = ordine.map((k) => {
+    const mia = k === myTeam;
+    const canEdit = mia || (isHost && !S.seatTaken(s, k));
+    const t = s.tactics[k];
+    const editLineup = ui.editLineup === k;
+
+    // Il profilo del quintetto: e questo il motivo per cui la schermata esiste.
+    let identity = '';
+    let prof = null;
+    try {
+      prof = buildTeam(k, s.lineups[k], t);
+      identity = teamIdentity(prof);
+    } catch { /* quintetto non ancora valido */ }
+
     const slots = SLOTS.map((sl) => {
       const p = D.byId[s.lineups[k][sl]];
       if (!p) return `<div class="slot"><span class="pos">${sl}</span><span class="nm muted">vuoto</span></div>`;
       const off = p.pos !== sl && !(p.alt || []).includes(sl);
       const sel = ui.selSlot && ui.selSlot.team === k && ui.selSlot.slot === sl;
-      return `<button class="slot ${sel ? 'sel' : ''}" ${canEdit ? `data-act="pick-slot" data-team="${k}" data-slot="${sl}"` : 'disabled'}>
+      const attivo = editLineup && canEdit;
+      return `<button class="slot ${sel ? 'sel' : ''}" ${attivo ? `data-act="pick-slot" data-team="${k}" data-slot="${sl}"` : 'disabled'}>
         <span class="pos">${sl}</span>
         <span class="nm">${esc(p.n)}${off ? ' <span class="warn">fuori ruolo</span>' : ''}</span>
         <span class="ov">${p.ovr}</span>
       </button>`;
     }).join('');
-    return `<div class="card t-${k}">
-      <div class="row spread mb"><h3><span class="dot" style="display:inline-block;margin-right:6px"></span>${TEAM_NAMES[k]}</h3>
-        ${canEdit ? '<button class="sm ghost" data-act="auto-lineup" data-team="' + k + '">Ricalcola</button>' : ''}</div>
-      <div class="slots">${slots}</div>
-    </div>`;
-  }).join('');
 
-  return `
-    <h2>Quintetti</h2>
-    <p class="muted small mb">Assegnati in automatico cercando il minor numero di adattamenti. Tocca due caselle per scambiarle. "Fuori ruolo" significa che quel giocatore gioca in un posto che non sa fare: costa in attacco e in difesa.</p>
-    ${cards}
-    ${isHost ? `<button class="primary wide" data-act="to-tactics" ${S.lineupsReady(s) ? '' : 'disabled'}>Passa alle impostazioni tattiche</button>` : '<p class="small muted center">In attesa di chi ospita.</p>'}
-  `;
-}
-
-/* ==========================================================
-   4. Tattica
-   ========================================================== */
-
-function viewTactics({ state: s, session }) {
-  const D = db();
-  const isHost = s.host === session.uid;
-
-  const cards = TEAM_KEYS.map((k) => {
-    const canEdit = s.seats[session.uid] === k || (isHost && !S.seatTaken(s, k));
-    const t = s.tactics[k];
     const roster = s.teams[k].roster.map((id) => D.byId[id]).filter(Boolean);
     const opt = (sel, exclude) => roster.filter((p) => p.id !== exclude)
       .map((p) => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(p.n)} (${p.ovr})</option>`).join('');
 
-    let identity = '';
-    try {
-      if (S.lineupsReady(s) && t.v1 && t.v2) identity = teamIdentity(buildTeam(k, s.lineups[k], t));
-    } catch { /* quintetto non ancora valido */ }
-
-    return `<div class="card t-${k}">
-      <h3 class="mb"><span class="dot" style="display:inline-block;margin-right:6px"></span>${TEAM_NAMES[k]}</h3>
-      ${identity ? `<p class="tiny muted mb">${esc(identity)}</p>` : ''}
-      <label class="field"><span>Primo violino</span>
-        <select data-act="set-v1" data-team="${k}" ${canEdit ? '' : 'disabled'}>${opt(t.v1, t.v2)}</select></label>
-      <label class="field"><span>Secondo violino</span>
-        <select data-act="set-v2" data-team="${k}" ${canEdit ? '' : 'disabled'}>${opt(t.v2, t.v1)}</select></label>
-      <label class="field"><span>Strategia offensiva</span>
-        <select data-act="set-strat" data-team="${k}" ${canEdit ? '' : 'disabled'}>
-          ${Object.entries(STRATEGIES).map(([id, v]) => `<option value="${id}" ${t.strategy === id ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}
-        </select></label>
-      <p class="tiny muted">${esc(STRATEGIES[t.strategy]?.desc || '')}</p>
+    return `<div class="card t-${k} ${mia ? 'mine' : ''}">
+      <div class="row spread">
+        <h3><span class="dot" style="display:inline-block;margin-right:7px"></span>${TEAM_NAMES[k]}${mia ? ' <span class="tiny muted">(tu)</span>' : ''}</h3>
+        ${canEdit ? `<button class="sm ghost" data-act="toggle-lineup" data-team="${k}">${editLineup ? 'Fatto' : 'Modifica'}</button>` : ''}
+      </div>
+      ${identity ? `<p class="identita">${esc(identity)}</p>` : ''}
+      <div class="slots mt">${slots}</div>
+      ${editLineup ? '<p class="tiny muted mt">Tocca due caselle per scambiarle.</p>' : ''}
+      <div class="tattica">
+        <div class="row">
+          <label class="field grow"><span>Primo violino</span>
+            <select data-act="set-v1" data-team="${k}" ${canEdit ? '' : 'disabled'}>${opt(t.v1, t.v2)}</select></label>
+          <label class="field grow"><span>Secondo violino</span>
+            <select data-act="set-v2" data-team="${k}" ${canEdit ? '' : 'disabled'}>${opt(t.v2, t.v1)}</select></label>
+        </div>
+        <label class="field"><span>Strategia offensiva</span>
+          <select data-act="set-strat" data-team="${k}" ${canEdit ? '' : 'disabled'}>
+            ${Object.entries(STRATEGIES).map(([id, v]) => `<option value="${id}" ${t.strategy === id ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}
+          </select></label>
+        <p class="tiny muted">${esc(STRATEGIES[t.strategy]?.desc || '')}</p>
+      </div>
     </div>`;
   }).join('');
 
   return `
-    <h2>Impostazioni tattiche</h2>
-    <p class="muted small mb">Queste scelte pesano davvero: la strategia cambia chi prende i tiri, quanto è imprevedibile la squadra e quali difese la mettono in crisi.</p>
+    <h2>Le squadre</h2>
+    <p class="muted small mb">Il quintetto lo assegna l'app cercando il minor numero di adattamenti: qui serve a capire cosa hai comprato. La strategia invece la scegli tu, e pesa: cambia chi prende i tiri e quali difese ti mettono in crisi.</p>
     ${cards}
-    ${isHost ? `<button class="primary wide" data-act="to-playoffs" ${S.tacticsReady(s) ? '' : 'disabled'}>Componi le semifinali</button>` : '<p class="small muted center">In attesa di chi ospita.</p>'}
+    ${isHost ? `<button class="primary wide" data-act="to-playoffs" ${S.squadraReady(s) ? '' : 'disabled'}>Componi le semifinali</button>` : '<p class="small muted center">In attesa di chi ospita.</p>'}
   `;
 }
 
@@ -399,7 +427,7 @@ function viewTactics({ state: s, session }) {
 
 export function teamsFromState(s) {
   const out = {};
-  for (const k of TEAM_KEYS) out[k] = buildTeam(k, s.lineups[k], s.tactics[k]);
+  for (const k of S.attive(s)) out[k] = buildTeam(k, s.lineups[k], s.tactics[k]);
   return out;
 }
 
@@ -408,16 +436,22 @@ function viewPlayoffs({ state: s, session }) {
   const T = teamsFromState(s);
   const po = s.po;
 
-  const s1 = po.s1.revealed ? simSeries(T[po.s1.a], T[po.s1.b], po.s1.seed) : null;
-  const s2 = po.s2.revealed ? simSeries(T[po.s2.a], T[po.s2.b], po.s2.seed) : null;
+  const gioca = (m) => simSeriesUpTo(T[m.a], T[m.b], m.seed, m.gamesPlayed);
+  const s1 = po.s1 ? gioca(po.s1) : null;
+  const s2 = po.s2 ? gioca(po.s2) : null;
 
   let out = `<h2>Playoff</h2>
     <div class="card tight">${po.reasons.map((r) => `<p class="small muted" style="margin-bottom:6px">${esc(r)}</p>`).join('')}</div>`;
 
-  out += seriesCard('Semifinale 1', T[po.s1.a], T[po.s1.b], s1, isHost, 'reveal-s1');
-  out += seriesCard('Semifinale 2', T[po.s2.a], T[po.s2.b], s2, isHost, 'reveal-s2');
+  if (po.bye) {
+    out += `<div class="card tight center"><p class="small">
+      <b>${esc(TEAM_NAMES[po.bye])}</b> <span class="muted">aspetta in finale</span></p></div>`;
+  }
+  if (s1) out += serieCard(po.s2 ? 'Semifinale 1' : 'Semifinale', T[po.s1.a], T[po.s1.b], s1, po.s1, S.PASSO_SEMI, isHost, 'avanza-s1');
+  if (s2) out += serieCard('Semifinale 2', T[po.s2.a], T[po.s2.b], s2, po.s2, S.PASSO_SEMI, isHost, 'avanza-s2');
 
-  if (s1 && s2 && !po.final) {
+  const semiFinite = (!po.s1 || s1.done) && (!po.s2 || s2.done);
+  if (semiFinite && !po.final) {
     out += isHost
       ? `<button class="primary wide" data-act="open-final">Apri le Finals</button>`
       : `<p class="small muted center">In attesa di chi ospita.</p>`;
@@ -426,74 +460,90 @@ function viewPlayoffs({ state: s, session }) {
   if (po.final) {
     const A = T[po.final.a], B = T[po.final.b];
     const f = simSeriesUpTo(A, B, po.final.seed, po.final.gamesPlayed);
-    out += finalCard(A, B, f, po.final, isHost);
+    if (f.done) {
+      const W = f.winner === A.key ? A : B;
+      out += `<div class="champ"><div class="t">Campione</div><div class="n">${esc(W.name)}</div>
+        <div class="small" style="font-weight:700">${f.wins.a}-${f.wins.b} nella serie</div></div>`;
+    }
+    out += serieCard('Finals', A, B, f, po.final, S.PASSO_FINALE, isHost, 'avanza-final');
 
     if (f.done) {
-      const third = po.third.revealed
-        ? simSeries(T[po.third.a], T[po.third.b], po.third.seed) : null;
-      out += seriesCard('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], third, isHost, 'reveal-third');
+      if (po.third) {
+        const t3 = gioca(po.third);
+        out += serieCard('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], t3, po.third, S.PASSO_SEMI, isHost, 'avanza-third');
+      } else if (po.tipo === 'tre' && s1) {
+        // Con tre squadre il terzo posto lo decide la semifinale: nessuna finalina.
+        const terzo = s1.winner === po.s1.a ? po.s1.b : po.s1.a;
+        out += `<div class="card tight center"><p class="small">
+          <span class="muted">Terzo posto:</span> <b>${esc(TEAM_NAMES[terzo])}</b>,
+          <span class="muted">eliminato in semifinale.</span></p></div>`;
+      }
+      out += alboCard(s);
       // Il tasto per ricominciare lo mette resetZone(), in fondo a ogni schermata.
     }
   }
   return out;
 }
 
-function seriesCard(title, A, B, series, isHost, act) {
-  const head = `<div class="series-hdr mb">
-      <div><div class="tiny muted" style="text-transform:uppercase;letter-spacing:.08em;font-weight:800">${esc(title)}</div>
-        <div class="vs">${A.name} <span class="muted">vs</span> ${B.name}</div></div>
-      ${series ? `<div class="score-big">${series.wins.a}-${series.wins.b}</div>` : ''}
-    </div>
-    <p class="tiny muted mb">${esc(teamIdentity(A))} &nbsp;·&nbsp; ${esc(teamIdentity(B))}</p>`;
+// Una sola carta per tutte le serie: cambia solo di quante gare si avanza
+// a ogni tocco. Semifinali e finalina due, Finals una.
+function serieCard(titolo, A, B, f, meta, passo, isHost, act) {
+  const n = meta.gamesPlayed;
+  const etichetta = passo === 1
+    ? `Vai — Gara ${n + 1}`
+    : (n === 0 ? 'Vai — le prime due gare' : `Vai — Gare ${n + 1} e ${n + 2}`);
 
-  if (!series) {
-    return `<div class="card">${head}
-      ${isHost ? `<button class="primary wide" data-act="${act}">Simula la serie</button>`
-        : '<p class="small muted center">In attesa di chi ospita.</p>'}</div>`;
-  }
+  const games = f.games.map((g) => gameBlock(A, B, g)).join('')
+    || '<p class="small muted center" style="padding:12px 0">Non è ancora iniziata.</p>';
 
-  const games = series.games.map((g) => gameBlock(A, B, g)).join('');
-  const W = series.winner === A.key ? A : B;
-  const why = explainSeries(A, B, series);
+  const coda = f.done
+    ? `<div class="mvp"><div class="t">MVP della serie</div>
+         <div class="n">${esc(f.mvp.n)}</div>
+         <div class="small muted">${f.mvp.ppg.toFixed(1)} punti · ${f.mvp.rpg.toFixed(1)} rimbalzi · ${f.mvp.apg.toFixed(1)} assist di media</div></div>
+       <div class="why"><h3 style="margin:14px 0 8px">Perché ha vinto ${esc(f.winner === A.key ? A.name : B.name)}</h3>
+         <ul>${explainSeries(A, B, f).map((w) => `<li>${esc(w)}</li>`).join('')}</ul></div>`
+    : (isHost
+      ? `<button class="primary wide mt" data-act="${act}">${etichetta}</button>`
+      : '<p class="small muted center mt">In attesa di chi ospita.</p>');
 
-  return `<div class="card">${head}
-    ${games}
-    <div class="mvp"><div class="t">MVP della serie</div>
-      <div class="n">${esc(series.mvp.n)}</div>
-      <div class="small muted">${series.mvp.ppg.toFixed(1)} punti · ${series.mvp.rpg.toFixed(1)} rimbalzi · ${series.mvp.apg.toFixed(1)} assist di media</div></div>
-    <div class="why"><h3 style="margin:14px 0 8px">Perché ha vinto ${esc(W.name)}</h3>
-      <ul>${why.map((w) => `<li>${esc(w)}</li>`).join('')}</ul></div>
-  </div>`;
-}
-
-function finalCard(A, B, f, meta, isHost) {
-  let out = '';
-  if (f.done) {
-    const W = f.winner === A.key ? A : B;
-    out += `<div class="champ"><div class="t">Campione</div><div class="n">${esc(W.name)}</div>
-      <div class="small" style="font-weight:700">${f.wins.a}-${f.wins.b} nella serie</div></div>`;
-  }
-
-  const games = f.games.map((g) => gameBlock(A, B, g)).join('') ||
-    '<p class="small muted center" style="padding:14px 0">Le Finals non sono ancora iniziate.</p>';
-
-  out += `<div class="card">
+  return `<div class="card">
     <div class="series-hdr mb">
-      <div><div class="tiny muted" style="text-transform:uppercase;letter-spacing:.08em;font-weight:800">Finals</div>
+      <div><div class="tiny muted" style="text-transform:uppercase;letter-spacing:.08em;font-weight:800">${esc(titolo)}</div>
         <div class="vs">${A.name} <span class="muted">vs</span> ${B.name}</div></div>
       <div class="score-big">${f.wins.a}-${f.wins.b}</div>
     </div>
+    <p class="tiny muted mb">${esc(teamIdentity(A))} &nbsp;·&nbsp; ${esc(teamIdentity(B))}</p>
     ${games}
-    ${f.done ? `
-      <div class="mvp"><div class="t">MVP delle Finals</div>
-        <div class="n">${esc(f.mvp.n)}</div>
-        <div class="small muted">${f.mvp.ppg.toFixed(1)} punti · ${f.mvp.rpg.toFixed(1)} rimbalzi · ${f.mvp.apg.toFixed(1)} assist di media</div></div>
-      <div class="why"><h3 style="margin:14px 0 8px">Perché ha vinto ${esc(f.winner === A.key ? A.name : B.name)}</h3>
-        <ul>${explainSeries(A, B, f).map((w) => `<li>${esc(w)}</li>`).join('')}</ul></div>`
-      : (isHost ? `<button class="primary wide mt" data-act="next-final-game">Vai — ${meta.gamesPlayed === 0 ? 'Gara 1' : 'Gara ' + (meta.gamesPlayed + 1)}</button>`
-        : '<p class="small muted center mt">In attesa di chi ospita.</p>')}
+    ${coda}
   </div>`;
-  return out;
+}
+
+/* ---------- Albo d'oro ---------- */
+
+export function alboCard(s) {
+  const albo = (s.albo || []).slice().reverse();
+  if (!albo.length) return '';
+  const cl = S.classifica(s).filter((t) => t.titoli || t.finali);
+
+  const righe = cl.map((t) => `<div class="albo-riga t-${t.key}">
+      <span class="dot"></span>
+      <span class="nm">${esc(t.nome)}</span>
+      <span class="grow"></span>
+      <b>${t.titoli}</b><span class="tiny muted">${t.titoli === 1 ? 'titolo' : 'titoli'}</span>
+      <span class="tiny muted">· ${t.finali} final${t.finali === 1 ? 'e' : 'i'}</span>
+    </div>`).join('');
+
+  const storia = albo.slice(0, 8).map((e) => `<div>
+      <span>${esc(e.championName)} <span class="muted">b. ${esc(e.runnerUpName)} ${e.wins}</span></span>
+      <span class="muted tiny">${esc(e.mvp || '')}</span>
+    </div>`).join('');
+
+  return `<div class="card">
+    <h3 class="mb">Albo d'oro</h3>
+    <div class="albo">${righe}</div>
+    <details class="mt"><summary>Le ${albo.length} partite giocate</summary>
+      <div class="log mt">${storia}</div></details>
+  </div>`;
 }
 
 function gameBlock(A, B, g) {
@@ -514,4 +564,4 @@ function gameBlock(A, B, g) {
   </div>`;
 }
 
-export { pickBracket, esc };
+export { esc };

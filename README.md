@@ -11,6 +11,10 @@ ognuno sul proprio telefono.
 
 ## Come si gioca
 
+**0. Chi gioca.** Da **2 a 4 squadre**. Si scrive il nome e la squadra viene
+assegnata: non si sceglie, così non si perdono cinque minuti a contrattare i
+colori. Chi ospita fa partire con quanti ci sono.
+
 **1. Asta.** Ogni squadra parte con **50 crediti** e deve comprare **5 giocatori**.
 Il sistema estrae un giocatore dal pool (260 nomi, picco NBA 2K fra 85 e 100),
 parte un cronometro e si rilancia. Ogni rilancio rimette il timer a 8 secondi:
@@ -23,19 +27,27 @@ almeno 3 crediti restano bloccati. Nessuno rimane a secco.
 Chi ospita può sempre scavalcare l'asta e assegnare un giocatore a mano al
 prezzo che decide — utile se vi mettete d'accordo a voce.
 
-**2. Quintetti.** I 5 acquisti vengono assegnati ai ruoli PG/SG/SF/PF/C
-minimizzando gli adattamenti. Tocca due caselle per scambiarle. Un giocatore
-in un ruolo che non sa fare è marcato **fuori ruolo** e costa in attacco e in difesa.
+**2. Le squadre.** Una schermata sola. Il quintetto lo assegna l'app
+minimizzando gli adattamenti — serve a **capire cosa hai comprato**, non a
+decidere: sopra c'è il profilo in chiaro (*spacing totale, ferro scoperto,
+troppe stelle*). Se proprio vuoi correggerlo c'è "Modifica". Sotto scegli
+**primo violino**, **secondo violino** e una delle 11 **strategie offensive**.
 
-**3. Tattica.** Per ogni squadra scegli **primo violino**, **secondo violino** e
-una delle 11 **strategie offensive**. Non è decorazione: la strategia cambia chi
-prende i tiri, quanto è prevedibile la squadra e quali difese la mettono in crisi.
+**3. Playoff.** Il tabellone cambia col numero di squadre:
 
-**4. Playoff.** L'app accoppia le semifinali cercando il **contrasto stilistico
-massimo** fra le quattro squadre e spiega perché. Le semifinali si simulano per
-intero; le **Finals si giocano una gara alla volta**, premendo "Vai". Alla quarta
-vittoria la serie si chiude e viene proclamato il campione. Poi, se volete, la
-finalina 3°/4° posto.
+| Squadre | Formato |
+|---|---|
+| 4 | due semifinali → Finals → finalina 3°/4° |
+| 3 | il bye alla finale si **sorteggia**, gli altri due giocano la semifinale; chi la perde è terzo |
+| 2 | solo le Finals |
+
+Con quattro, le semifinali si accoppiano cercando il **contrasto stilistico
+massimo** e l'app spiega perché. Le serie si scoprono **due gare alla volta**;
+le **Finals una gara alla volta**, premendo "Vai" — così la tensione sale invece
+di restare piatta.
+
+**4. Albo d'oro.** Ogni partita conclusa resta: campione, quintetto, MVP. Più
+una classifica fra voi. Sopravvive a "Nuova partita".
 
 ---
 
@@ -184,6 +196,8 @@ node tools/balance.mjs     # diagnostica di taratura (non fallisce mai)
 node tools/fairness.mjs    # le quattro sedie valgono uguale? (non fallisce mai)
 node tools/spread.mjs      # quanto sono varie le valutazioni
 node tools/calibra.mjs     # dove cadono i valori, per scegliere le soglie del motore
+node tools/audit-gioco.mjs # le scelte che il gioco chiede contano davvero?
+node tools/bye.mjs         # con tre squadre, quanto vale saltare la semifinale
 
 node tools/checkfirebase.mjs   # parla col progetto vero: login anonimo, regole, scrittura
 ```
