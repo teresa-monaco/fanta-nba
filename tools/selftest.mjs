@@ -49,7 +49,7 @@ console.log('\n1. Integrita dei dati');
   const perSlot = SLOTS.map((s) => `${s}:${D.players.filter((p) => p.pos === s).length}`);
   ok(SLOTS.every((s) => D.players.filter((p) => p.pos === s).length >= 25),
     'copertura per ruolo', perSlot.join(' '));
-  ok(D.players.every((p) => Object.values(p.attrs).every((v) => v >= 35 && v <= 99)),
+  ok(D.players.every((p) => Object.values(p.attrs).every((v) => v >= 20 && v <= 99)),
     'attributi derivati nel range');
 }
 

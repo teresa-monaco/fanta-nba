@@ -80,17 +80,30 @@ export function db() {
 
 const ATTR_KEYS = ['sco', 'tre', 'pla', 'reb', 'dif', 'dpe', 'atl', 'usg'];
 
-// L'archetipo da la forma, l'overall da il livello, un jitter deterministico
-// (stabile per giocatore+attributo) evita che due pari-overall dello stesso
-// archetipo siano cloni perfetti.
+// Come in 2K: l'ARCHETIPO dice che giocatore e (il profilo, 0-100 assoluto),
+// l'OVERALL dice quanto e bravo (scala il profilo). Il modello additivo di
+// prima — overall + scostamento — schiacciava un valore su quattro contro il
+// tetto di 99 e non lasciava nessuno davvero scarso in niente.
+//
+// OVR_MIN..OVR_MAX mappano su SCALA_MIN..SCALA_MAX: un 85 tiene il 90% del
+// suo profilo, un 100 lo supera dell'8%. Allargare la forbice rende i
+// giocatori scarsi piu scarsi; alzarla tutta gonfia i numeri.
+const OVR_MIN = 85, OVR_MAX = 100;
+const SCALA_MIN = 0.90, SCALA_MAX = 1.08;
+
 export function deriveAttrs(p, archetypes) {
   const arc = archetypes[p.arc];
   if (!arc) throw new Error(`Archetipo sconosciuto: ${p.arc} (${p.n})`);
+  const livello = clamp((p.ovr - OVR_MIN) / (OVR_MAX - OVR_MIN), 0, 1);
+  const scala = SCALA_MIN + (SCALA_MAX - SCALA_MIN) * livello;
+
   const out = {};
   for (const k of ATTR_KEYS) {
-    const jitter = (hashStr(p.id + ':' + k) % 1000) / 1000; // 0..1 stabile
+    // Scostamento stabile per giocatore+attributo: due pari-overall dello
+    // stesso archetipo non devono essere cloni perfetti.
+    const jitter = (hashStr(p.id + ':' + k) % 1000) / 1000;
     const nudge = (jitter - 0.5) * 6; // -3 .. +3
-    out[k] = Math.round(clamp(p.ovr + arc.d[k] + nudge, 35, 99));
+    out[k] = Math.round(clamp(arc.p[k] * scala + nudge, 20, 99));
   }
   return out;
 }

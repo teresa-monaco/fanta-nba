@@ -284,11 +284,11 @@ export function teamIdentity(T) {
   else if (T.shooters <= 1) tags.push('campo chiuso');
   if (T.size >= 18) tags.push('quintetto pesante');
   else if (T.size <= 12) tags.push('small ball');
-  if (T.rimProtect >= 88) tags.push('ferro blindato');
-  else if (T.rimProtect < 76) tags.push('ferro scoperto');
-  if (T.perimD >= 82) tags.push('difesa perimetrale d\'élite');
+  if (T.rimProtect >= 85) tags.push('ferro blindato');
+  else if (T.rimProtect < 55) tags.push('ferro scoperto');
+  if (T.perimD >= 72) tags.push('difesa perimetrale d\'élite');
   if (T.playmaking >= 86) tags.push('regia di alto livello');
-  else if (T.playmaking < 72) tags.push('poca regia');
-  if (T.usageTotal > 355) tags.push('troppe stelle');
+  else if (T.playmaking < 64) tags.push('poca regia');
+  if (T.usageTotal > 390) tags.push('troppe stelle');
   return tags.length ? tags.join(' · ') : 'profilo equilibrato';
 }

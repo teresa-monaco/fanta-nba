@@ -61,8 +61,12 @@ export function buildTeam(key, lineup, tactics) {
   const bigPlay = Math.max(...bigs.map((p) => a(p).pla));
 
   // --- base ---
+  // Attacco e difesa devono avere centro e dispersione paragonabili, altrimenti
+  // il lato piu "largo" decide le partite da solo. Con la scala degli attributi
+  // attuale entrambi stanno attorno a 70-75 con una forbice di circa 20 punti.
+  // Verificabile con: node tools/calibra.mjs
   let off = teamScoring * 0.62 + spacing * 0.20 + playmaking * 0.18;
-  let def = perimD * 0.42 + rimProtect * 0.36 + rebounding * 0.12 + (size / 15) * 80 * 0.10;
+  let def = 26 + perimD * 0.30 + rimProtect * 0.22 + rebounding * 0.10 + (size / 15) * 80 * 0.06;
 
   // --- penalita di fit (le stesse cose che guarderebbe un allenatore) ---
 
@@ -90,7 +94,7 @@ export function buildTeam(key, lineup, tactics) {
     factors.push({ key: 'no-playmaker', side: key, delta: d, label: 'Nessun vero regista', data: { best: Math.round(plaSorted[0]) } });
   }
 
-  const usageOver = usageTotal - 340;
+  const usageOver = usageTotal - 372;
   let usageClashDelta = 0;
   if (usageOver > 0) {
     usageClashDelta = -usageOver * 0.105;
@@ -98,8 +102,8 @@ export function buildTeam(key, lineup, tactics) {
       data: { over: Math.round(usageOver) } });
   }
 
-  if (rimProtect < 76) {
-    const d = -(76 - rimProtect) * 0.50;
+  if (rimProtect < 58) {
+    const d = -(58 - rimProtect) * 0.55;
     def += d;
     factors.push({ key: 'ferro-scoperto', side: key, delta: d, label: 'Ferro scoperto', data: { rim: Math.round(rimProtect) } });
   }
@@ -140,7 +144,7 @@ const STRAT = {
     const v1 = t.byId(t.tactics.v1) || t.five[0];
     const lift = (v1.attrs.sco - t.avgSco) * 0.36;
     f.push({ key: 'star-usage', delta: lift, label: `${v1.n} con la palla in mano`, data: { player: v1.n } });
-    const pressure = -Math.max(0, o.perimD - 76) * 0.38;
+    const pressure = -Math.max(0, o.perimD - 62) * 0.38;
     if (pressure < -0.6) f.push({ key: 'star-contenuta', delta: pressure, label: 'Attacco prevedibile contro una difesa perimetrale forte', data: { oppPerimD: Math.round(o.perimD) } });
     return f;
   }},
@@ -149,29 +153,29 @@ const STRAT = {
     const v1 = t.byId(t.tactics.v1) || t.five[0];
     const v2 = t.byId(t.tactics.v2) || t.five[1];
     f.push({ key: 'iso-talento', delta: ((v1.attrs.sco + v2.attrs.sco) / 2 - t.avgSco) * 0.34, label: 'Uno contro uno per i due violini', data: { player: v1.n } });
-    f.push({ key: 'iso-ritmo', delta: -Math.max(0, o.perimD - 74) * 0.30, label: 'Ritmo bloccato dalla difesa individuale avversaria', data: {} });
+    f.push({ key: 'iso-ritmo', delta: -Math.max(0, o.perimD - 60) * 0.30, label: 'Ritmo bloccato dalla difesa individuale avversaria', data: {} });
     return f;
   }},
   'pick-roll': { pace: 2, variance: 0.98, fx(t, o) {
     const f = [];
-    const quality = (Math.max(t.playmaking, 60) - 70) * 0.30 + (t.bigScoring - 78) * 0.22;
+    const quality = (Math.max(t.playmaking, 60) - 74) * 0.30 + (t.bigScoring - 78) * 0.22;
     f.push({ key: 'pnr-coppia', delta: quality, label: 'Qualita della coppia nel pick and roll', data: {} });
-    const slow = Math.max(0, 80 - o.athleticism) * 0.16;
+    const slow = Math.max(0, 67 - o.athleticism) * 0.20;
     if (slow > 0.5) f.push({ key: 'pnr-difesa-lenta', delta: slow, label: 'Difesa avversaria lenta nei cambi', data: {} });
     return f;
   }},
   'post-up': { pace: -3, variance: 0.92, fx(t, o) {
     const f = [];
     f.push({ key: 'post-peso', delta: (t.bigScoring - 80) * 0.40, label: 'Peso offensivo nel pitturato', data: {} });
-    const wall = -Math.max(0, o.rimProtect - 80) * 0.42;
+    const wall = -Math.max(0, o.rimProtect - 72) * 0.42;
     if (wall < -0.6) f.push({ key: 'post-muro', delta: wall, label: 'Il ferro avversario e protetto', data: { oppRim: Math.round(o.rimProtect) } });
     f.push({ key: 'post-scarichi', delta: (t.shooters - 2) * 1.8, label: 'Scarichi sui tiratori dopo il raddoppio', data: { shooters: t.shooters } });
     return f;
   }},
   'attacco-ferro': { pace: 3, variance: 1.02, fx(t, o) {
     const f = [];
-    f.push({ key: 'ferro-atletismo', delta: (t.athleticism - 78) * 0.24, label: 'Pressione atletica sul canestro', data: {} });
-    f.push({ key: 'ferro-muro', delta: -Math.max(0, o.rimProtect - 80) * 0.36, label: 'Protezione del ferro avversaria', data: { oppRim: Math.round(o.rimProtect) } });
+    f.push({ key: 'ferro-atletismo', delta: (t.athleticism - 67) * 0.24, label: 'Pressione atletica sul canestro', data: {} });
+    f.push({ key: 'ferro-muro', delta: -Math.max(0, o.rimProtect - 72) * 0.36, label: 'Protezione del ferro avversaria', data: { oppRim: Math.round(o.rimProtect) } });
     return f;
   }},
   'tiro-3': { pace: 4, variance: 1.48, fx(t, o) {
@@ -182,7 +186,7 @@ const STRAT = {
   }},
   'transizione': { pace: 7, variance: 1.12, fx(t, o) {
     const f = [];
-    f.push({ key: 'tr-atletismo', delta: (t.athleticism - 78) * 0.26, label: 'Gambe e campo aperto', data: {} });
+    f.push({ key: 'tr-atletismo', delta: (t.athleticism - 67) * 0.26, label: 'Gambe e campo aperto', data: {} });
     const heavy = Math.max(0, o.size - 15) * 1.4;
     if (heavy > 0.5) f.push({ key: 'tr-pesantezza', delta: heavy, label: 'Quintetto avversario troppo pesante per correre', data: { oppSize: o.size } });
     return f;
@@ -271,7 +275,7 @@ export function simGame(A, B, m, rng, opts = {}) {
   // distribuzione di serie vicina a quella dei playoff veri. Alzare il
   // coefficiente rende il gioco piu prevedibile, alzare la sigma piu casuale.
   // Verificabile con: node tools/balance.mjs
-  const RATING_WEIGHT = 0.0047;
+  const RATING_WEIGHT = 0.0030;
   const GAME_SIGMA = 8.5;
 
   // La normale pura ha code infinite: senza un taglio esce ogni tanto una gara
@@ -310,8 +314,12 @@ export function simGame(A, B, m, rng, opts = {}) {
 
 // Ripartisce il punteggio di squadra fra i cinque secondo usage e strategia.
 function boxScore(T, teamPts, rng) {
+  // Gli esponenti sotto 1 COMPRIMONO le differenze. Servono perche gli
+  // attributi ora spaziano da 20 a 99: usati grezzi, un usage 99 accanto a
+  // quattro usage 20 si prendeva il 55% dei punti di squadra (uscivano gare
+  // da 67 punti individuali). Alzarli concentra di piu su una stella sola.
   const mult = usageMultipliers(T);
-  const raw = T.five.map((p, i) => Math.max(4, p.attrs.usg * mult[i] * (0.86 + rng() * 0.28)));
+  const raw = T.five.map((p, i) => Math.max(3, Math.pow(p.attrs.usg, 0.75) * mult[i] * (0.88 + rng() * 0.24)));
   const tot = raw.reduce((s, v) => s + v, 0);
 
   let lines = T.five.map((p, i) => ({
@@ -330,11 +338,11 @@ function boxScore(T, teamPts, rng) {
   }
 
   const teamReb = Math.round(42 + gauss(rng) * 3.4);
-  const rebW = T.five.map((p) => Math.pow(p.attrs.reb / 50, 2.3));
+  const rebW = T.five.map((p) => Math.pow(p.attrs.reb / 50, 1.5));
   const rebTot = rebW.reduce((s, v) => s + v, 0);
 
   const teamAst = Math.round(26 + gauss(rng) * 3.4);
-  const astW = T.five.map((p) => Math.pow(p.attrs.pla / 50, 2.6));
+  const astW = T.five.map((p) => Math.pow(p.attrs.pla / 50, 1.8));
   const astTot = astW.reduce((s, v) => s + v, 0);
 
   lines.forEach((l, i) => {

@@ -136,10 +136,20 @@ Le chiavi `t1…t4` sono **posizioni**, non nomi: reggono i colori in CSS
   "alt": ["SF"], "arc": "all-around-star", "era": "1990s", "tm": "Bulls" }
 ```
 
-Gli attributi non si scrivono a mano: nascono dall'**archetipo** più l'overall,
-più uno scostamento deterministico che evita i cloni. Se un giocatore ti sembra
-sbagliato, cambia `ovr` o `arc` — gli archetipi disponibili sono in
-`data/archetypes.json`, con la descrizione di cosa fanno.
+Gli otto attributi **non si scrivono a mano**. Funziona come in 2K: l'**archetipo**
+dice *che giocatore è* (un profilo assoluto 0-100 in `data/archetypes.json`),
+l'**overall** dice *quanto è bravo* e scala quel profilo. Un'ancora difensiva
+ha davvero 20 di tiro da 3 e 97 di protezione del ferro; un tiratore ha l'opposto.
+
+Se un giocatore ti sembra sbagliato, cambia il suo `ovr` o il suo `arc`. Se
+sbagliata ti sembra un'intera *categoria* di giocatori, correggi il profilo
+dell'archetipo: cambia tutti quelli che lo usano in un colpo solo.
+
+> Attenzione: cambiare i profili sposta le soglie interne del motore
+> (cosa conta come "tiratore", quando scatta "ferro scoperto"). Dopo una
+> modifica sostanziale lancia `node tools/calibra.mjs` per vedere dove cadono
+> i valori e `node tools/balance.mjs` per controllare che le serie restino
+> plausibili.
 
 > **Onestà sui dati:** gli overall sono **ricostruzioni plausibili**, non i
 > rating ufficiali 2K. Non esiste una fonte gratuita e scaricabile di quei dati.
@@ -155,6 +165,8 @@ node tools/flowtest.mjs    # 200 partite intere: nessuna regola deve rompersi
 node tools/domtest.mjs     # l'app vera attraverso tutte e cinque le schermate
 node tools/balance.mjs     # diagnostica di taratura (non fallisce mai)
 node tools/fairness.mjs    # le quattro sedie valgono uguale? (non fallisce mai)
+node tools/spread.mjs      # quanto sono varie le valutazioni
+node tools/calibra.mjs     # dove cadono i valori, per scegliere le soglie del motore
 
 node tools/checkfirebase.mjs   # parla col progetto vero: login anonimo, regole, scrittura
 ```
