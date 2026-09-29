@@ -6,6 +6,7 @@
 // pochi KB e non esiste il rischio che due schermi mostrino risultati diversi.
 
 import { TEAM_KEYS, TEAM_NAMES, SLOTS, START_CREDITS, ROSTER_SIZE, NUMERI_SQUADRE, makeRng, shuffle, db, allenatoriDi } from './core.js';
+import { BOT, prossimoBot, uidBot, eBot } from './bot.js';
 
 export const BID_SECONDS = 15;
 
@@ -22,6 +23,7 @@ export function newGame(seed, hostUid) {
     seats: {}, // uid -> teamKey
     names: {}, // uid -> nickname
     teams, lineups, tactics,
+    bots: {},           // teamKey -> quale bot la occupa
     conStagione: false, // si sceglie in lobby: solo playoff, o stagione + playoff
     stagione: null,     // fotografia di quintetti e tattiche con cui si e giocata
     auction: { order: null, idx: 0, bid: null, deadline: null, running: false, log: [], unsold: [] },
@@ -53,6 +55,7 @@ export function hydrate(raw) {
     log: a.log || [], unsold: a.unsold || [],
   };
   s.albo = s.albo || [];
+  s.bots = s.bots || {};
   s.conStagione = !!s.conStagione;
   if (s.stagione) {
     // Anche qui il database toglie i null: lo scheletro va ricostruito o
@@ -110,9 +113,41 @@ export function joinGame(s, uid, nickname) {
 export function leaveSeat(s, uid) {
   const seats = { ...s.seats };
   const names = { ...s.names };
+  const bots = { ...(s.bots || {}) };
+  const k = seats[uid];
   delete seats[uid];
   delete names[uid];
-  return { ...s, seats, names };
+  if (k) delete bots[k];
+  return { ...s, seats, names, bots };
+}
+
+/* ---------- Bot ---------- */
+
+// Un bot e una sedia occupata da nessuno. Serve quando siete in tre e volete
+// giocare in quattro: se ne aggiunge uno e il tabellone torna pari. Li guida
+// chi ospita, come gia fa per la chiusura dei lotti.
+export function aggiungiBot(s) {
+  if (s.phase !== 'lobby') return undefined;
+  const libera = TEAM_KEYS.find((k) => !Object.values(s.seats).includes(k));
+  if (!libera) return undefined;
+  const quale = prossimoBot(s);
+  if (!quale) return undefined; // finiti: sono quattro
+  const uid = uidBot(libera);
+  return {
+    ...s,
+    seats: { ...s.seats, [uid]: libera },
+    names: { ...s.names, [uid]: BOT[quale].nome },
+    bots: { ...(s.bots || {}), [libera]: quale },
+  };
+}
+
+export function togliBot(s, teamKey) {
+  if (s.phase !== 'lobby' || !s.bots?.[teamKey]) return undefined;
+  return leaveSeat(s, uidBot(teamKey));
+}
+
+export function botDi(s) {
+  return Object.keys(s.bots || {});
 }
 
 /* ---------- Asta ---------- */
@@ -382,7 +417,7 @@ export function tacticsReady(s) {
   });
 }
 
-export { allenatoriDi };
+export { allenatoriDi, eBot, uidBot };
 
 /* ---------- Stagione regolare ---------- */
 
@@ -487,7 +522,9 @@ export function resetGame(s, seed) {
   // L'albo d'oro e le sedie sopravvivono: e il motivo per cui si rigioca.
   // Anche il formato scelto: chi gioca con la stagione regolare non vuole
   // riattivarla a ogni partita.
-  return { ...fresh, seats: s.seats, names: s.names, albo: s.albo || [], conStagione: !!s.conStagione };
+  // I bot restano seduti fra una partita e l'altra, come le persone.
+  return { ...fresh, seats: s.seats, names: s.names, albo: s.albo || [],
+    bots: s.bots || {}, conStagione: !!s.conStagione };
 }
 
 /* ---------- Utility di presentazione ---------- */

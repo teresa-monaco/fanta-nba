@@ -17,6 +17,34 @@ smetterebbe di somigliare a un torneo. Si scrive il nome e la squadra viene
 assegnata — non si sceglie, così non si perdono cinque minuti a contrattare i
 colori. Chi ospita fa partire con quanti ci sono.
 
+**0-bis. I bot.** Se manca qualcuno, chi ospita aggiunge un bot dalla lobby e
+il tabellone torna pari: siete in tre e volete giocare in quattro, un tocco e
+siete in quattro. Ce ne sono **quattro, e ruotano** — l'ordine dipende dal seed
+della partita, così due serate di fila non hanno gli stessi avversari.
+
+| Bot | Come gioca | Forza |
+|---|---|---|
+| **Ada** | calcola quanto vale ogni giocatore *per la sua rosa* e la tattica migliore contro di voi | 75% |
+| **Bruno** | compra i nomi grossi e si innamora delle stelle | 68% |
+| **Cleo** | caccia le occasioni e non paga mai il prezzo pieno | 67% |
+| **Dino** | svuota la cassa sui primi due che gli piacciono | 66% |
+
+Le percentuali sono serie vinte contro tre stili di gioco simulati
+(`node tools/bot-arena.mjs`). Sono avversari veri, non sacchi da boxe — ma
+quegli stili sono script grossolani, non una persona che gioca bene.
+
+**Non barano.** Vedono quello che vedete voi — le rose altrui sono già sullo
+schermo di tutti — e passano dagli stessi controlli: `canBid`, la regola di
+riserva, il tetto di spesa. Li muove **solo chi ospita**, per lo stesso motivo
+per cui solo lui chiude i lotti: se li muovessero tutti i device, quattro
+browser proverebbero a rilanciare per lo stesso bot.
+
+Solo **Ada** calcola davvero. Quattro copie dello stesso bot ottimo
+renderebbero ogni asta identica, e perdere sempre allo stesso modo non diverte.
+
+> I bot funzionano **nelle stanze**, dove le sedie sono vere. In modalità
+> locale chi ospita gestisce già tutte le squadre da solo, quindi non servono.
+
 **1. Asta.** Ogni squadra parte con **50 crediti** e deve comprare **5 giocatori**.
 Il sistema estrae un giocatore dal pool (225 nomi, picco NBA 2K fra 85 e 100),
 parte un cronometro e si rilancia. Ogni rilancio rimette il timer a 8 secondi:
@@ -223,6 +251,7 @@ js/state.js           stato condiviso e regole (asta, budget, fasi)
 js/net.js             sincronizzazione: Firebase oppure locale
 js/ui.js              rendering delle cinque schermate
 js/avatar.js          la faccia di un allenatore, disegnata da pochi tratti
+js/bot.js             i quattro giocatori finti: valutazione, offerte, tattica
 js/app.js             avvio e gestione dei click
 tools/                test e diagnostiche (vedi sotto)
 ```
@@ -317,6 +346,7 @@ node tools/calibra.mjs     # dove cadono i valori, per scegliere le soglie del m
 node tools/audit-gioco.mjs # le scelte che il gioco chiede contano davvero?
 node tools/tattica.mjs     # ritmo e allenatori: contano, e contano il giusto?
 node tools/anteprima.mjs   # le cinque schermate vere in una pagina sola, da guardare
+node tools/bot-arena.mjs   # i bot giocano partite intere: rispettano le regole? quanto valgono?
 node tools/bye.mjs         # con tre squadre, quanto vale saltare la semifinale
 node tools/partite.mjs     # gioca migliaia di serie e cerca incoerenze nei testi
 node tools/audit-bug.mjs   # i casi storti: giro dal database, azzeramenti, chi entra ed esce

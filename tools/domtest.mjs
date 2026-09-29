@@ -90,6 +90,7 @@ const { ui, render, teamsFromState, stagioneFromState, esc } = await import('../
 const { buildTeam, componiTabellone, simSeriesUpTo, costruisciBracket, matchup, RITMI,
   giriStagione, tabelloneDaStagione } = await import('../js/engine.js');
 const { TEAM_KEYS, STRATEGIES, db } = await import('../js/core.js');
+const BotAI = await import('../js/bot.js');
 
 console.log('\nCollaudo interfaccia (modalita locale, DOM simulato)\n');
 
@@ -414,6 +415,66 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
   await F.session.apply((s) => S.toPlayoffs(s, tab8));
   ok(clean() && has('Semifinale 1', 'Semifinale 2'), 'il tabellone da classifica si disegna');
   ok(!has('Turno preliminare'), 'e non c\'e nessun turno preliminare');
+}
+
+/* 9. I bot: si aggiungono dalla lobby e giocano da soli */
+{
+  await F.session.apply((s) => S.resetGame(s, 'coibot'));
+  // I bot vivono nelle STANZE, dove le sedie sono vere. In modalita locale
+  // chi ospita gia gestisce tutte le squadre da solo e la lobby non mostra
+  // nemmeno le sedie: per disegnarla come la vede una stanza serve fingere
+  // la modalita.
+  const stanza = { ...F.session, mode: 'room' };
+  await F.session.apply((s) => S.joinGame(s, 'io', 'Diego'));
+  render(els.app, { state: F.state, session: stanza });
+  ok(has('data-act="aggiungi-bot"'), 'in una stanza c\'è il tasto per aggiungere un bot');
+  ok(has('Manca qualcuno?'), 'e dice a cosa serve');
+
+  await F.session.apply((s) => S.aggiungiBot(s));
+  render(els.app, { state: F.state, session: stanza });
+  const primi = S.botDi(F.state);
+  ok(primi.length === 1, 'il bot occupa una sedia', primi.join());
+  ok(S.attive(F.state).length === 2, 'e conta come squadra in gioco');
+  ok(has('>bot</span>'), 'ed è segnalato come tale nella lista');
+  ok(has('data-act="togli-bot"'), 'e chi ospita lo può togliere');
+
+  // Quattro e non di più: sono quattro teste diverse, non infinite copie.
+  for (let i = 0; i < 6; i++) await F.session.apply((s) => S.aggiungiBot(s));
+  ok(S.botDi(F.state).length === BotAI.ID_BOT.length,
+    'non se ne aggiungono più di quanti ne esistono', `${S.botDi(F.state).length}`);
+  const nomi = S.botDi(F.state).map((k) => F.state.names[`bot:${k}`]);
+  ok(new Set(nomi).size === nomi.length, 'e sono tutti diversi', nomi.join(', '));
+
+  // Si tolgono.
+  const primo = S.botDi(F.state)[0];
+  await F.session.apply((s) => S.togliBot(s, primo));
+  ok(!S.botDi(F.state).includes(primo), 'un bot si può togliere');
+  ok(!F.state.seats[`bot:${primo}`], 'e la sedia torna libera');
+
+  // A partita avviata non si tocca più niente.
+  await F.session.apply((s) => S.startAuction(s, now(), S.attive(s)));
+  ok(S.aggiungiBot(F.state) === undefined, 'a partita avviata non si aggiungono bot');
+  ok(S.togliBot(F.state, S.botDi(F.state)[0]) === undefined, 'e non si tolgono');
+
+  // Offrono davvero, e restano dentro le regole.
+  {
+    const k = S.botDi(F.state)[0];
+    const memoria = {};
+    let offerte = 0;
+    for (let giro = 0; giro < 30; giro++) {
+      const q = BotAI.offerta(F.state, k, S, Date.now() + giro * 700, memoria);
+      if (q == null) continue;
+      ok(S.canBid(F.state, k, q), 'ogni offerta del bot passa da canBid', `${q}`);
+      offerte++;
+      break;
+    }
+    ok(offerte > 0, 'il bot rilancia entro il tempo del lotto');
+  }
+
+  // L'azzeramento li lascia seduti: sono parte del tavolo, non della partita.
+  const quanti = S.botDi(F.state).length;
+  const dopo = S.resetGame(F.state, 'altro');
+  ok(S.botDi(dopo).length === quanti, 'i bot restano seduti dopo "Nuova partita"');
 }
 
 /* Controlli finali */

@@ -10,6 +10,7 @@ import * as S from './state.js';
 import { now } from './net.js';
 import { audioAcceso } from './suono.js';
 import { avatarSVG } from './avatar.js';
+import { ID_BOT, BOT } from './bot.js';
 
 export const ui = {
   nickname: localStorage.getItem('nbaf:nick') || '',
@@ -94,11 +95,14 @@ function viewLobby({ state: s, session }) {
   // viene assegnata, cosi non si perdono cinque minuti a contrattare i colori.
   const dentro = TEAM_KEYS.filter((k) => S.seatTaken(s, k)).map((k) => {
     const mine = s.seats[session.uid] === k;
+    const bot = s.bots?.[k];
     return `<div class="strip t-${k}">
       <span class="dot"></span>
       <span class="nm">${TEAM_NAMES[k]}</span>
       <span class="grow"></span>
-      <span class="small">${esc(S.nameOfSeat(s, k))}${mine ? ' <span class="tiny muted">(tu)</span>' : ''}</span>
+      <span class="small">${esc(S.nameOfSeat(s, k))}${mine ? ' <span class="tiny muted">(tu)</span>' : ''}
+        ${bot ? `<span class="tag bot">bot</span>` : ''}</span>
+      ${bot && isHost ? `<button class="sm ghost" data-act="togli-bot" data-team="${k}">Togli</button>` : ''}
     </div>`;
   }).join('');
 
@@ -170,6 +174,7 @@ function viewLobby({ state: s, session }) {
 
       ${dentro ? `<div class="card tight">
         <p class="tiny muted mb">In partita (${n})</p>${dentro}
+        ${isHost ? botCard(s, n) : ''}
       </div>` : '<p class="small muted center mb">Ancora nessuno dentro.</p>'}`}
 
     ${sceltaFormato}
@@ -182,6 +187,31 @@ function viewLobby({ state: s, session }) {
     ` : `<p class="small muted center">In attesa che ${esc(s.names[s.host] || 'chi ospita')} avvii l'asta...</p>`}
     ${alboCard(s)}
   `;
+}
+
+// Il tasto che serve quando siete in tre e volete giocare in quattro. Dice
+// anche quanti ne mancano al prossimo numero valido, perche "aggiungi un bot"
+// senza sapere a cosa serve non lo tocca nessuno.
+function botCard(s, n) {
+  const quanti = S.botDi(s).length;
+  const pieno = Object.keys(s.seats).length >= TEAM_KEYS.length;
+  const finiti = quanti >= ID_BOT.length;
+  const ok = S.numeroValido(n);
+  // Il prossimo numero di squadre valido raggiungibile aggiungendo bot.
+  const prossimo = S.NUMERI_SQUADRE.find((v) => v > n);
+  const mancano = prossimo ? prossimo - n : 0;
+
+  return `<div class="bot-zona">
+    <div class="row spread">
+      <span class="tiny muted">${quanti ? `${quanti} bot in partita` : 'Manca qualcuno?'}</span>
+      <button class="sm" data-act="aggiungi-bot" ${pieno || finiti ? 'disabled' : ''}>Aggiungi un bot</button>
+    </div>
+    <p class="tiny muted mt">${finiti
+      ? 'I bot disponibili sono quattro, e ci sono già tutti.'
+      : ok
+        ? `Siete in ${n} e si può giocare. ${mancano ? `Con ${mancano} bot in più si gioca in ${prossimo}.` : ''}`
+        : `Siete in ${n}: servono ${mancano} bot per arrivare a ${prossimo} e far partire il tabellone.`}</p>
+  </div>`;
 }
 
 /* ==========================================================

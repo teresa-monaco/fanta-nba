@@ -415,6 +415,8 @@ table.referto tr.giusta .scelta { color: var(--ok); }
 .chip b { font-family: var(--cond); font-size: 13px; color: var(--gold); }
 .chip.empty { color: var(--muted); border-style: dashed; }
 .tag.lead { background: var(--red); border-color: var(--red); color: #fff; }
+.tag.bot { background: transparent; border: 1px solid var(--line-2); color: var(--muted); letter-spacing: 1.4px; }
+.bot-zona { border-top: 1px solid var(--line); margin-top: 9px; padding-top: 9px; }
 .warn-txt { color: var(--gold); margin-top: 8px; }
 
 /* ---- strisce squadra ---- */

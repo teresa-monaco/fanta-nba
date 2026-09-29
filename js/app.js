@@ -6,6 +6,7 @@ import * as S from './state.js';
 import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
 import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc } from './ui.js';
 import { sblocca, commutaAudio, tic, martelletto, nuovoLotto } from './suono.js';
+import * as BotAI from './bot.js';
 
 const root = document.getElementById('app');
 const topbar = document.getElementById('topbar');
@@ -198,7 +199,62 @@ function startClock() {
     if (left !== null && left <= 0 && state.host === session.uid) {
       session.apply((s) => (s.auction.running && s.auction.deadline <= now() ? S.resolveLot(s, now()) : undefined));
     }
+
+    guidaBot();
   }, 250);
+}
+
+/* ==========================================================
+   I bot
+   ==========================================================
+
+   Li muove SOLO chi ospita, per lo stesso motivo per cui solo lui chiude i
+   lotti: se li muovessero tutti i device, quattro browser proverebbero a
+   rilanciare per lo stesso bot. Passano dagli stessi reducer di tutti gli
+   altri — canBid, la regola di riserva, il tetto — quindi non possono fare
+   niente che non sia permesso anche a una persona. */
+
+const memoriaBot = {};   // per bot: il lotto gia valutato e quando si sveglia
+let botOccupato = false; // una scrittura alla volta, o si accavallano
+
+async function guidaBot() {
+  if (!state || !session || state.host !== session.uid || botOccupato) return;
+  const squadreBot = S.botDi(state).filter((k) => S.attive(state).includes(k));
+  if (!squadreBot.length) return;
+
+  botOccupato = true;
+  try {
+    if (state.phase === 'auction') {
+      // Uno per giro: due rilanci nello stesso istante si annullerebbero a
+      // vicenda nella transazione, e si vedrebbe.
+      for (const k of squadreBot) {
+        const q = BotAI.offerta(state, k, S, Date.now(), memoriaBot);
+        if (q == null) continue;
+        await session.apply((s) => (S.canBid(s, k, q) ? S.placeBid(s, k, q, now()) : undefined));
+        break;
+      }
+    } else if (state.phase === 'squadra') {
+      for (const k of squadreBot) {
+        // Si rifa solo se e cambiato qualcosa da cui dipende la risposta.
+        const firma = S.attive(state).map((o) => `${state.teams[o].roster.join('.')}`).join('|');
+        const m = memoriaBot[k] || (memoriaBot[k] = {});
+        if (m.firmaTattica === firma) continue;
+        const best = BotAI.tatticaBot(state, k, S);
+        if (!best) continue;
+        const ok = await session.apply((s) => {
+          let x = { ...s, lineups: { ...s.lineups, [k]: best.lu } };
+          x = S.setTactics(x, k, best.tac);
+          return x;
+        });
+        if (ok) m.firmaTattica = firma;
+        break;
+      }
+    }
+  } catch (err) {
+    console.error('bot:', err);
+  } finally {
+    botOccupato = false;
+  }
 }
 
 // Il suono segue lo STATO, non il click: cosi lo sentono tutti e quattro,
@@ -279,6 +335,14 @@ document.addEventListener('click', async (ev) => {
 
       // Serve davvero: se entrate in cinque nessuno puo iniziare, e senza
       // questo tasto uno dovrebbe chiudere la scheda per liberare il posto.
+      case 'aggiungi-bot':
+        if (!await session.apply((s) => S.aggiungiBot(s))) flash('Non si possono aggiungere altri bot.', true);
+        break;
+
+      case 'togli-bot':
+        await session.apply((s) => S.togliBot(s, team));
+        break;
+
       case 'leave':
         await session.apply((s) => (s.phase === 'lobby' ? S.leaveSeat(s, session.uid) : undefined));
         break;
