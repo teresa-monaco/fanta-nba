@@ -18,7 +18,10 @@ const { buildTeam, simSeriesUpTo, componiTabellone, formaTabellone } = await imp
 const { autoLineup } = await import('../js/state.js');
 
 const STRAT = Object.keys(STRATEGIES);
-const N = 400;
+// 400 tornei davano un errore di ±3 punti: abbastanza da far sembrare il
+// formato a 6 il piu squilibrato quando il piu squilibrato e quello a 3.
+// Una misura di equita che sbaglia l'ordine delle righe non serve a niente.
+const N = 1500;
 
 console.log('\nQUANTO VALE SALTARE IL PRIMO TURNO\n');
 console.log('  n   con testa di serie   senza   vantaggio   (equita = stessa colonna)');
