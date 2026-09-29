@@ -4,7 +4,7 @@
 
 import { db, SLOTS, SLOT_LABEL, TEAM_KEYS, TEAM_NAMES, STRATEGIES, ROSTER_SIZE, START_CREDITS } from './core.js';
 import { buildTeam, simSeriesUpTo, costruisciBracket, nomeTurno,
-  simStagione, giriStagione, potenzaSotto } from './engine.js';
+  simStagione, giriStagione, potenzaSotto, RITMI } from './engine.js';
 import { narrateGame, explainSeries, teamIdentity } from './narrator.js';
 import * as S from './state.js';
 import { now } from './net.js';
@@ -456,7 +456,16 @@ function viewSquadra({ state: s, session }) {
           <select data-act="set-strat" data-team="${k}" ${canEdit ? '' : 'disabled'}>
             ${Object.entries(STRATEGIES).map(([id, v]) => `<option value="${id}" ${t.strategy === id ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}
           </select></label>
-        <p class="tiny muted">${esc(STRATEGIES[t.strategy]?.desc || '')}</p>
+        <p class="tiny muted mb">${esc(STRATEGIES[t.strategy]?.desc || '')}</p>
+
+        <span class="lbl-mini">Ritmo</span>
+        <div class="ritmo">
+          ${Object.entries(RITMI).map(([id, v]) => `<button class="rbtn ${t.ritmo === id ? 'on' : ''}"
+            ${canEdit ? `data-act="set-ritmo" data-team="${k}" data-v="${id}"` : 'disabled'}>${esc(v.label)}</button>`).join('')}
+        </div>
+        <p class="tiny muted mb">${esc(RITMI[t.ritmo]?.desc || '')}</p>
+
+        ${coachPicker(s, k, t, canEdit)}
       </div>
     </div>`;
   }).join('');
@@ -494,6 +503,40 @@ function viewSquadra({ state: s, session }) {
     ${cards}
     ${isHost ? azione : '<p class="small muted center">In attesa di chi ospita.</p>'}
   `;
+}
+
+// Gli allenatori li sblocca la rosa: uno per giocatore, quello della sua
+// squadra in quell'epoca. Ognuno e un patto, quindi accanto al nome sta
+// scritto cosa da e cosa toglie — altrimenti si sceglie a caso.
+function coachPicker(s, k, t, canEdit) {
+  const liberi = S.allenatoriDi(s.teams[k].roster);
+  if (!liberi.length) return '';
+  const sel = liberi.find((c) => c.id === t.coach) || null;
+  return `
+    <span class="lbl-mini">Allenatore <i class="tiny muted">— sbloccati dai tuoi giocatori</i></span>
+    <div class="coaches">
+      ${liberi.map((c) => `<button class="cbtn ${c.id === t.coach ? 'on' : ''}"
+        ${canEdit ? `data-act="set-coach" data-team="${k}" data-v="${c.id}"` : 'disabled'}>
+        <b>${esc(c.n)}</b><span>${esc(c.label)}</span><i>via ${esc(c.da)}</i>
+      </button>`).join('')}
+    </div>
+    ${sel ? `<p class="tiny muted">${esc(sel.desc)} ${esc(effettoInParole(sel))}</p>` : ''}`;
+}
+
+// L'effetto in chiaro. Un allenatore che non dice cosa fa e un bonus cieco.
+function effettoInParole(c) {
+  const N = { sco: 'realizzazione', tre: 'tiro da 3', pla: 'playmaking', reb: 'rimbalzi',
+    dif: 'protezione ferro', dpe: 'difesa perimetro', atl: 'atletismo', usg: 'palla richiesta' };
+  const e = c.eff || {};
+  const parti = [];
+  const elenco = (obj, chi) => Object.entries(obj || {})
+    .map(([a, v]) => `${v > 0 ? '+' : ''}${v} ${N[a] || a}${chi}`);
+  parti.push(...elenco(e.attr, ' a tutti'));
+  parti.push(...elenco(e.star, ' al primo violino'));
+  parti.push(...elenco(e.altri, ' agli altri'));
+  if (e.poss) parti.push(`${e.poss > 0 ? '+' : ''}${e.poss} possessi`);
+  if (e.var) parti.push(e.var < 0 ? 'più solida' : 'più imprevedibile');
+  return parti.length ? `(${parti.join(', ')})` : '';
 }
 
 // La classifica: la parte piu da fantasy league del gioco. Chi e dentro e chi

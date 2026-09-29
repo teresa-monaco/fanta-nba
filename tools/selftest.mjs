@@ -18,8 +18,8 @@ const root = join(here, '..');
 const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
 
 const core = await import('../js/core.js');
-const { installData, makeRng, shuffle, TEAM_KEYS, SLOTS, STRATEGIES } = core;
-const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'));
+const { installData, makeRng, shuffle, TEAM_KEYS, SLOTS, STRATEGIES, allenatoriDi } = core;
+const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'), readJson('data/coaches.json'));
 const { buildTeam, simSeries, matchup, pickBracket } = await import('../js/engine.js');
 const { narrateGame, explainSeries, teamIdentity } = await import('../js/narrator.js');
 const { autoLineup } = await import('../js/state.js');
@@ -81,6 +81,63 @@ function randomTeams(seed) {
     out[k] = buildTeam(k, lineup, tactics);
   });
   return out;
+}
+
+/* ---------- 1b. Allenatori ---------- */
+// Una squadra|epoca senza allenatore non darebbe errore: darebbe un giocatore
+// che non sblocca niente, in silenzio. Va controllato qui.
+console.log('\n1b. Allenatori');
+{
+  const cJson = readJson('data/coaches.json');
+  const slots = new Set(D.players.map((p) => `${p.tm}|${p.era}`));
+  const assegnati = new Map();
+  const doppi = [];
+  for (const c of cJson.allenatori) {
+    for (const s of c.tm || []) {
+      if (assegnati.has(s)) doppi.push(`${s}: ${assegnati.get(s)} e ${c.id}`);
+      assegnati.set(s, c.id);
+    }
+  }
+  const scoperti = [...slots].filter((s) => !assegnati.has(s));
+  ok(scoperti.length === 0, 'ogni squadra+epoca ha un allenatore',
+    scoperti.length ? scoperti.slice(0, 5).join(', ') : `${slots.size} combinazioni`);
+  ok(doppi.length === 0, 'nessuna squadra+epoca ha due allenatori', doppi.slice(0, 3).join(' | '));
+
+  const archiIgnoti = cJson.allenatori.filter((c) => !cJson.archetipi[c.arc]);
+  ok(archiIgnoti.length === 0, 'ogni allenatore ha un archetipo esistente',
+    archiIgnoti.map((c) => c.id).join(', '));
+
+  // Ogni archetipo e un PATTO: se desse solo bonus, sceglierlo non sarebbe
+  // una decisione ma il calcolo di quale numero e piu grande.
+  const senzaCosto = [];
+  for (const [id, a] of Object.entries(cJson.archetipi)) {
+    const v = [...Object.values(a.eff.attr || {}), ...Object.values(a.eff.star || {}), ...Object.values(a.eff.altri || {})];
+    if (!v.some((x) => x < 0) && !(a.eff.poss < 0)) senzaCosto.push(id);
+  }
+  ok(senzaCosto.length === 0, 'ogni allenatore ha un costo, non solo un bonus', senzaCosto.join(', '));
+
+  // Le chiavi degli attributi devono esistere: un refuso verrebbe ignorato.
+  const ATTR = ['sco', 'tre', 'pla', 'reb', 'dif', 'dpe', 'atl', 'usg'];
+  const refusi = [];
+  for (const [id, a] of Object.entries(cJson.archetipi)) {
+    for (const blocco of ['attr', 'star', 'altri']) {
+      for (const k of Object.keys(a.eff[blocco] || {})) if (!ATTR.includes(k)) refusi.push(`${id}.${blocco}.${k}`);
+    }
+  }
+  ok(refusi.length === 0, 'nessun attributo inventato negli effetti', refusi.join(', '));
+
+  // Una rosa qualunque deve sbloccare piu di un allenatore, o la scelta e finta.
+  {
+    const rng = makeRng('coach-rose');
+    let almenoDue = 0;
+    const M = 300;
+    for (let i = 0; i < M; i++) {
+      const roster = shuffle(D.players.map((p) => p.id), rng).slice(0, 5);
+      if (allenatoriDi(roster).length >= 2) almenoDue++;
+    }
+    ok(almenoDue / M >= 0.95, 'quasi ogni rosa sblocca almeno due allenatori',
+      `${(almenoDue / M * 100).toFixed(0)}%`);
+  }
 }
 
 /* ---------- 2. Distribuzione delle serie ---------- */

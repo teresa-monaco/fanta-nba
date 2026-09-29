@@ -12,7 +12,7 @@ import { dirname, join } from 'node:path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
 const { installData } = await import('../js/core.js');
-const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'));
+const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'), readJson('data/coaches.json'));
 
 const ATTR = { sco: 'Realizzazione', tre: 'Tiro da 3', pla: 'Playmaking', reb: 'Rimbalzi',
   dif: 'Protez. ferro', dpe: 'Difesa perim.', atl: 'Atletismo', usg: 'Palla richiesta' };

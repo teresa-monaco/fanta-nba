@@ -9,7 +9,7 @@ import { dirname, join } from 'node:path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
 const { installData, NUMERI_SQUADRE, ROSTER_SIZE } = await import('../js/core.js');
-const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'));
+const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'), readJson('data/coaches.json'));
 const { formaTabellone, nomeTurno } = await import('../js/engine.js');
 
 console.log('\nFORMATI AMMESSI\n');

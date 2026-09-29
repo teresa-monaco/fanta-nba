@@ -28,7 +28,7 @@ const W_SCORING = [0.25, 0.22, 0.20, 0.17, 0.16];
 
 export function buildTeam(key, lineup, tactics) {
   const D = db();
-  const five = SLOTS.map((slot) => {
+  let five = SLOTS.map((slot) => {
     const p = D.byId[lineup[slot]];
     if (!p) throw new Error(`Quintetto incompleto per ${key}: manca ${slot}`);
     return { ...p, slot };
@@ -36,6 +36,12 @@ export function buildTeam(key, lineup, tactics) {
 
   const a = (p) => p.attrs;
   const factors = [];
+
+  // L'allenatore lavora sugli ATTRIBUTI, prima che se ne ricavi il profilo:
+  // cosi il suo effetto si propaga da solo a tutto il resto (spacing, box
+  // score, soglie), invece di essere un aggiustamento finale sul totale.
+  const coach = applicaAllenatore(five, tactics, key, factors);
+  five = coach.five;
 
   // --- aggregati grezzi ---
   const scoSorted = five.map(a).map((x) => x.sco).sort((x, y) => y - x);
@@ -139,14 +145,79 @@ export function buildTeam(key, lineup, tactics) {
       data: { chosen: D.byId[tactics.v1]?.n, best: D.byId[topScorerId]?.n } });
   }
 
+  const r = RITMI[tactics.ritmo] || RITMI.medio;
+
   return {
     key, name: TEAM_NAMES[key], five, tactics,
     off, def, usageClashDelta,
     spacing, shooters, playmaking, rebounding, rimProtect, perimD,
     athleticism, size, usageTotal, avgSco, teamScoring, bigScoring, bigPlay,
+    // Ritmo: quanti possessi VUOLE e quanto e capace di imporlo. Il secondo
+    // conta quanto il primo — correre senza rimbalzo difensivo e playmaking
+    // vuol dire correre solo quando lo concede l'avversario.
+    ritmo: tactics.ritmo || 'medio',
+    possVoluti: r.poss + (coach.poss || 0),
+    controllo: 1 + r.ctrl + (rebounding - 62) * 0.010 + (playmaking - 74) * 0.008,
+    varCoach: coach.var || 0,
+    coach: coach.info,
     factors,
     byId: (id) => five.find((p) => p.id === id),
   };
+}
+
+/* ==========================================================
+   1b. RITMO E ALLENATORE
+   ========================================================== */
+
+// Il ritmo NON e uno scambio fra attacco e difesa: misurato su 6000 partite,
+// togliere 3 all'attacco e darne 3 alla difesa lascia le vittorie al 51%
+// esatte, cambia solo il punteggio finale. Quello che il ritmo sposta
+// davvero e la VARIANZA: meno possessi, meno tempo per la squadra piu forte
+// di dimostrare che lo e. Con 14 possessi in meno la sfavorita passa dal
+// 24% al 27% (divario 20) e dal 32% al 34% (divario 8).
+//
+// Quindi qui c'e un numero solo, i possessi. Il vantaggio e lo svantaggio di
+// correre nascono dalla ROSA (in matchup) e da CHI hai davanti, non da un
+// bonus piatto uguale per tutti.
+export const RITMI = {
+  lento:    { label: 'Lento',      poss: -9,  ctrl: 0.15,  desc: 'Partita corta. Protegge chi e sfavorito e chi ha un quintetto squilibrato.' },
+  medio:    { label: 'Medio',      poss: 0,   ctrl: 0,     desc: 'Nessuna scelta di campo: si gioca al ritmo che esce.' },
+  veloce:   { label: 'Veloce',     poss: 7,   ctrl: 0,     desc: 'Piu possessi: premia atletismo e tiro, chiede gambe.' },
+  'run-gun': { label: 'Run and gun', poss: 14, ctrl: -0.15, desc: 'Nessun freno. La squadra migliore vince piu spesso, la peggiore crolla.' },
+};
+
+// L'allenatore modifica gli attributi dei cinque PRIMA che se ne ricavi il
+// profilo. E sempre un patto: da e toglie. Un bonus senza costo non sarebbe
+// una scelta, sarebbe il calcolo di quale numero e piu grande.
+function applicaAllenatore(five, tactics, key, factors) {
+  const D = db();
+  const c = D.coachById?.[tactics?.coach];
+  if (!c) return { five, poss: 0, var: 0, info: null };
+  const arc = D.coachArch?.[c.arc];
+  if (!arc) return { five, poss: 0, var: 0, info: null };
+
+  const e = arc.eff || {};
+  const starId = tactics.v1 || five.slice().sort((x, y) => y.attrs.sco - x.attrs.sco)[0]?.id;
+
+  const out = five.map((p) => {
+    const delta = { ...(e.attr || {}) };
+    const extra = p.id === starId ? (e.star || {}) : (e.altri || {});
+    for (const [k, v] of Object.entries(extra)) delta[k] = (delta[k] || 0) + v;
+    if (!Object.keys(delta).length) return p;
+    const attrs = { ...p.attrs };
+    for (const [k, v] of Object.entries(delta)) {
+      if (attrs[k] === undefined) continue;
+      attrs[k] = clamp(attrs[k] + v, 20, 99);
+    }
+    return { ...p, attrs };
+  });
+
+  factors.push({
+    key: 'allenatore', side: key, delta: 0, label: `${c.n}: ${arc.label.toLowerCase()}`,
+    data: { coach: c.n, arc: c.arc }, infoOnly: true,
+  });
+
+  return { five: out, poss: e.poss || 0, var: e.var || 0, info: { id: c.id, n: c.n, arc: c.arc, label: arc.label } };
 }
 
 /* ==========================================================
@@ -269,11 +340,66 @@ export function matchup(A, B) {
       delta: Math.abs(pdDiff) * 0.14, label: 'Difesa perimetrale superiore', data: { diff: Math.round(Math.abs(pdDiff)) } });
   }
 
-  const pace = 95 + (sA.pace + sB.pace) / 2;
+  // --- ritmo: uno scontro, non una scelta solitaria ---
+  // I possessi sono per definizione gli stessi per entrambe: il ritmo reale e
+  // la media delle due volonta, PESATA da chi lo controlla. Non puoi correre
+  // se l'altro rimbalza e risale a passo d'uomo.
+  const cA = Math.max(0.35, A.controllo ?? 1), cB = Math.max(0.35, B.controllo ?? 1);
+  const voluto = ((A.possVoluti ?? 0) * cA + (B.possVoluti ?? 0) * cB) / (cA + cB);
+  const pace = 95 + (sA.pace + sB.pace) / 2 + voluto;
+
+  // Chi ha imposto il suo ritmo e chi lo sta subendo: e un fattore vero, e il
+  // narratore ci puo costruire sopra una frase che non inventa niente.
+  const scartoRitmo = (A.possVoluti ?? 0) - (B.possVoluti ?? 0);
+  if (Math.abs(scartoRitmo) >= 7) {
+    const vince = (scartoRitmo > 0) === (voluto > ((A.possVoluti + B.possVoluti) / 2)) ? A : B;
+    const subisce = vince === A ? B : A;
+    structural.push({ key: 'ritmo-imposto', side: vince.key, delta: 0, infoOnly: true,
+      label: `Ritmo imposto da ${vince.name}`,
+      data: { vince: vince.name, subisce: subisce.name, poss: Math.round(pace) } });
+  }
+
+  // --- il ritmo premia o punisce la ROSA, non tutti allo stesso modo ---
+  // Qui nasce il "+" e il "-" che nel modello piatto non esisteva: correre
+  // con cinque lunghi lenti e un suicidio, rallentare senza un dominatore
+  // uno contro uno anche. Stanno a parte dalle strutturali perche quelle
+  // descrivono differenze gia dentro off/def, queste invece PESANO.
+  const ritmoFx = [];
+  for (const T of [A, B]) {
+    const o = T === A ? B : A;
+    const p = T.possVoluti ?? 0;
+    if (p >= 6) {
+      // Correre: servono gambe e tiratori, la stazza e un peso morto.
+      const d = (T.athleticism - 67) * 0.24 + (T.shooters - 2) * 1.9 - Math.max(0, T.size - 15) * 1.4;
+      ritmoFx.push({ key: 'ritmo-corsa', side: T.key, delta: d,
+        label: d >= 0 ? 'Il quintetto regge il ritmo alto' : 'Quintetto sbagliato per correre',
+        data: { atl: Math.round(T.athleticism), size: T.size } });
+    } else if (p <= -6) {
+      // Rallentare: serve qualcuno che se la crei da solo a meta campo.
+      const iso = Math.max(...T.five.map((x) => x.attrs.sco));
+      const d = (iso - 86) * 0.22 + (T.rimProtect - 70) * 0.10 - Math.max(0, 3 - T.shooters) * 1.2;
+      ritmoFx.push({ key: 'ritmo-lento', side: T.key, delta: d,
+        label: d >= 0 ? 'Attacco da meta campo affidabile' : 'A ritmo basso l\'attacco si inceppa',
+        data: { iso: Math.round(iso) } });
+      // La parte difensiva vale solo contro chi la transizione la cerca:
+      // rallentare contro un post-up gli fa un favore, non un dispetto.
+      if (['transizione', 'attacco-ferro'].includes(o.tactics.strategy)) {
+        ritmoFx.push({ key: 'ritmo-freno', side: T.key, delta: 2.4,
+          label: `Ritmo basso: a ${o.name} tolgono il campo aperto`, data: { opp: o.name } });
+      }
+    }
+  }
+  const sommaRitmo = (k) => ritmoFx.filter((f) => f.side === k).reduce((s, f) => s + f.delta, 0);
+
+  // L'allenatore puo rendere la squadra piu solida o piu imprevedibile.
+  const varA = Math.max(0.6, sA.variance * (1 + (A.varCoach || 0)));
+  const varB = Math.max(0.6, sB.variance * (1 + (B.varCoach || 0)));
+
   return {
-    offA, offB, defA: A.def, defB: B.def, pace,
-    varA: sA.variance, varB: sB.variance,
-    factors: [...A.factors, ...B.factors, ...fxA, ...fxB, ...structural],
+    offA: offA + sommaRitmo(A.key), offB: offB + sommaRitmo(B.key),
+    defA: A.def, defB: B.def, pace,
+    varA, varB,
+    factors: [...A.factors, ...B.factors, ...fxA, ...fxB, ...ritmoFx, ...structural],
   };
 }
 

@@ -12,7 +12,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
 
 const { installData, makeRng, TEAM_KEYS, STRATEGIES, ROSTER_SIZE } = await import('../js/core.js');
-const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'));
+const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'), readJson('data/coaches.json'));
 const { buildTeam, simSeries, simSeriesUpTo, pickBracket } = await import('../js/engine.js');
 const S = await import('../js/state.js');
 

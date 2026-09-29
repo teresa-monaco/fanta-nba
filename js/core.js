@@ -48,7 +48,7 @@ let DB = null;
 
 // Separata dal fetch cosi la stessa pipeline e verificabile da Node,
 // dove i file si leggono da disco (vedi tools/selftest.mjs).
-export function installData(pJson, aJson) {
+export function installData(pJson, aJson, cJson) {
   const archetypes = aJson.archetypes;
   const positionSize = aJson.positionSize;
   const byId = {};
@@ -57,18 +57,49 @@ export function installData(pJson, aJson) {
     byId[p.id] = full;
     return full;
   });
-  DB = { players, byId, archetypes, positionSize };
+
+  // Allenatori: si sbloccano dai giocatori comprati. L'indice squadra|epoca
+  // -> allenatore e il modo in cui una rosa diventa una rosa di panchine.
+  const coachArch = cJson?.archetipi || {};
+  const coaches = cJson?.allenatori || [];
+  const coachById = {};
+  const coachBySlot = {};
+  for (const c of coaches) {
+    coachById[c.id] = c;
+    for (const slot of c.tm || []) coachBySlot[slot] = c;
+  }
+
+  DB = { players, byId, archetypes, positionSize, coaches, coachById, coachBySlot, coachArch };
   return DB;
 }
 
 export async function loadData() {
   if (DB) return DB;
-  const [pRes, aRes] = await Promise.all([
+  const [pRes, aRes, cRes] = await Promise.all([
     fetch('./data/players.json'),
     fetch('./data/archetypes.json'),
+    fetch('./data/coaches.json'),
   ]);
-  if (!pRes.ok || !aRes.ok) throw new Error('Impossibile caricare i dati dei giocatori.');
-  return installData(await pRes.json(), await aRes.json());
+  if (!pRes.ok || !aRes.ok || !cRes.ok) throw new Error('Impossibile caricare i dati dei giocatori.');
+  return installData(await pRes.json(), await aRes.json(), await cRes.json());
+}
+
+// Gli allenatori che una rosa sblocca: uno per giocatore, quello della sua
+// squadra nella sua epoca. Due compagni di squadra portano lo stesso nome,
+// quindi con cinque giocatori se ne sbloccano da uno a cinque.
+export function allenatoriDi(roster) {
+  const D = db();
+  const out = [];
+  const visti = new Set();
+  for (const id of roster || []) {
+    const p = D.byId[id];
+    if (!p) continue;
+    const c = D.coachBySlot[`${p.tm}|${p.era}`];
+    if (!c || visti.has(c.id)) continue;
+    visti.add(c.id);
+    out.push({ ...c, ...D.coachArch[c.arc], da: p.n });
+  }
+  return out;
 }
 
 export function db() {

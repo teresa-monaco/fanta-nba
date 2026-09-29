@@ -29,11 +29,43 @@ almeno 3 crediti restano bloccati. Nessuno rimane a secco.
 Chi ospita può sempre scavalcare l'asta e assegnare un giocatore a mano al
 prezzo che decide — utile se vi mettete d'accordo a voce.
 
-**2. Le squadre.** Una schermata sola. Il quintetto lo assegna l'app
-minimizzando gli adattamenti — serve a **capire cosa hai comprato**, non a
-decidere: sopra c'è il profilo in chiaro (*spacing totale, ferro scoperto,
-troppe stelle*). Se proprio vuoi correggerlo c'è "Modifica". Sotto scegli
-**primo violino**, **secondo violino** e una delle 11 **strategie offensive**.
+**2. Le squadre.** Una schermata sola, con tutte le impostazioni tecniche:
+
+1. **Quintetto** — lo assegna l'app minimizzando gli adattamenti. Serve a
+   *capire cosa hai comprato*, non a decidere: sopra c'è il profilo in chiaro
+   (*spacing totale, ferro scoperto, troppe stelle*). Correggibile da "Modifica".
+2. **Primo e secondo violino**
+3. **Strategia offensiva** — una delle 11
+4. **Ritmo** — lento, medio, veloce, run and gun
+5. **Allenatore** — lo sbloccano i giocatori che hai comprato
+
+Il **ritmo** non è uno scambio fra attacco e difesa. Misurato su 6.000 partite,
+togliere 3 all'attacco e darne 3 alla difesa lascia le vittorie al 51% esatto:
+cambia solo il punteggio finale, non chi vince. Quello che il ritmo sposta
+davvero è la **varianza**: meno possessi, meno tempo perché la squadra più forte
+dimostri di esserlo. Con 14 possessi in meno la sfavorita passa dal 24% al 27%
+(divario 20 punti) e dal 32% al 34% (divario 8). Quindi qui c'è un numero solo,
+i possessi, e il vantaggio o lo svantaggio di correre nasce dalla **tua rosa**
+(gambe e tiratori per correre, un dominatore uno contro uno per rallentare) e da
+**chi hai davanti**: rallentare toglie il campo aperto solo a chi la transizione
+la cerca. Il ritmo reale della partita è la media delle due volontà, *pesata da
+chi lo controlla* — non puoi correre se l'altro rimbalza e risale a passo d'uomo.
+
+L'**allenatore** te lo porta ogni giocatore: quello della sua squadra nella sua
+epoca. Con Ginóbili in rosa hai Popovich, senza no. Cinque giocatori di cinque
+squadre diverse sbloccano cinque allenatori (succede all'83% delle rose). Ogni
+allenatore è un **patto**, mai un regalo: Phil Jackson dà +7 in realizzazione al
+primo violino e toglie 2 a tutti gli altri; Popovich dà +4 in playmaking a tutti
+e ne toglie 5 alla stella. Un bonus senza costo non sarebbe una scelta, sarebbe
+il calcolo di quale numero è più grande.
+
+Le tre scelte pesano in ordine (`node tools/tattica.mjs`): **strategia 3.5
+punti** di vittorie fra la migliore e la peggiore, **ritmo 2.7**, **allenatore
+1.6**. La strategia resta il piatto, il resto è contorno — altrimenti la serata
+la deciderebbe chi ha pescato il nome giusto all'asta invece di chi ha scelto
+meglio. Nessuna delle tre ha una risposta giusta sempre: il ritmo migliore
+cambia con la rosa (34% lento, 31% medio, 19% veloce, 17% run and gun) e così
+l'allenatore (fra il 4% e il 18% a seconda dell'archetipo).
 
 **2-bis. Stagione regolare (opzionale).** Si sceglie in lobby: *solo playoff*
 oppure *stagione + playoff*. Con la stagione si gioca un girone all'italiana a
@@ -140,6 +172,7 @@ index.html            pagina unica
 css/style.css         stile, mobile-first
 data/players.json     225 giocatori
 data/archetypes.json  20 archetipi → attributi
+data/coaches.json     65 allenatori, 10 archetipi di effetto
 js/core.js            RNG deterministico, derivazione attributi, costanti
 js/engine.js          motore di simulazione (profili, matchup, serie, bracket)
 js/narrator.js        cronaca e "perché ha vinto", generati dai fattori
@@ -233,6 +266,7 @@ node tools/fairness.mjs    # le quattro sedie valgono uguale? (non fallisce mai)
 node tools/spread.mjs      # quanto sono varie le valutazioni
 node tools/calibra.mjs     # dove cadono i valori, per scegliere le soglie del motore
 node tools/audit-gioco.mjs # le scelte che il gioco chiede contano davvero?
+node tools/tattica.mjs     # ritmo e allenatori: contano, e contano il giusto?
 node tools/bye.mjs         # con tre squadre, quanto vale saltare la semifinale
 node tools/partite.mjs     # gioca migliaia di serie e cerca incoerenze nei testi
 node tools/audit-bug.mjs   # i casi storti: giro dal database, azzeramenti, chi entra ed esce

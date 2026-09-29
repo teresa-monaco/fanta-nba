@@ -5,7 +5,7 @@
 // ricalcola da solo esattamente le stesse gare. Lo stato condiviso resta di
 // pochi KB e non esiste il rischio che due schermi mostrino risultati diversi.
 
-import { TEAM_KEYS, TEAM_NAMES, SLOTS, START_CREDITS, ROSTER_SIZE, NUMERI_SQUADRE, makeRng, shuffle, db } from './core.js';
+import { TEAM_KEYS, TEAM_NAMES, SLOTS, START_CREDITS, ROSTER_SIZE, NUMERI_SQUADRE, makeRng, shuffle, db, allenatoriDi } from './core.js';
 
 export const BID_SECONDS = 15;
 
@@ -15,7 +15,7 @@ export function newGame(seed, hostUid) {
   const lineups = {}; const tactics = {};
   for (const k of TEAM_KEYS) {
     lineups[k] = { PG: null, SG: null, SF: null, PF: null, C: null };
-    tactics[k] = { v1: null, v2: null, strategy: 'equilibrato' };
+    tactics[k] = { v1: null, v2: null, strategy: 'equilibrato', ritmo: 'medio', coach: null };
   }
   return {
     v: 1, seed, host: hostUid, phase: 'lobby',
@@ -43,7 +43,7 @@ export function hydrate(raw) {
     s.teams[k].roster = s.teams[k].roster || [];
     const lu = s.lineups[k] || {};
     s.lineups[k] = Object.fromEntries(SLOTS.map((sl) => [sl, lu[sl] ?? null]));
-    s.tactics[k] = { v1: null, v2: null, strategy: 'equilibrato', ...(s.tactics[k] || {}) };
+    s.tactics[k] = { v1: null, v2: null, strategy: 'equilibrato', ritmo: 'medio', coach: null, ...(s.tactics[k] || {}) };
   }
   const a = s.auction || {};
   s.auction = {
@@ -62,7 +62,7 @@ export function hydrate(raw) {
     for (const k of TEAM_KEYS) {
       const l = st.lineups?.[k] || {};
       lu[k] = Object.fromEntries(SLOTS.map((sl) => [sl, l[sl] ?? null]));
-      tc[k] = { v1: null, v2: null, strategy: 'equilibrato', ...(st.tactics?.[k] || {}) };
+      tc[k] = { v1: null, v2: null, strategy: 'equilibrato', ritmo: 'medio', coach: null, ...(st.tactics?.[k] || {}) };
     }
     s.stagione = { giri: st.giri ?? 1, seedBase: st.seedBase || s.seed, lineups: lu, tactics: tc };
   }
@@ -266,13 +266,20 @@ export function toSquadra(s) {
   const tactics = { ...s.tactics };
   for (const k of TEAM_KEYS) {
     lineups[k] = autoLineup(s.teams[k].roster);
-    if (tactics[k].v1 && tactics[k].v2) continue;
+    // Un allenatore di partenza c'e sempre: la scelta e se cambiarlo, non se
+    // farla. Cosi nessuno resta bloccato senza sapere che gli mancava.
+    const sbloccati = allenatoriDi(s.teams[k].roster);
+    const coach = sbloccati.some((c) => c.id === tactics[k].coach)
+      ? tactics[k].coach : (sbloccati[0]?.id ?? null);
+    if (tactics[k].v1 && tactics[k].v2) { tactics[k] = { ...tactics[k], coach }; continue; }
     const sorted = s.teams[k].roster.map((id) => D.byId[id]).filter(Boolean)
       .sort((x, y) => y.attrs.sco - x.attrs.sco);
     tactics[k] = {
       v1: sorted[0]?.id ?? null,
       v2: sorted[1]?.id ?? null,
       strategy: tactics[k].strategy || 'equilibrato',
+      ritmo: tactics[k].ritmo || 'medio',
+      coach,
     };
   }
   return {
@@ -336,15 +343,20 @@ export function lineupsReady(s) {
 export function setTactics(s, teamKey, patch) {
   const cur = { ...s.tactics[teamKey], ...patch };
   if (cur.v1 && cur.v1 === cur.v2) return s; // i due violini devono essere diversi
+  // L'allenatore lo sbloccano i giocatori comprati: non si puo scegliere
+  // Popovich senza aver preso nessuno dei suoi Spurs.
+  if (cur.coach && !allenatoriDi(s.teams[teamKey].roster).some((c) => c.id === cur.coach)) return s;
   return { ...s, tactics: { ...s.tactics, [teamKey]: cur } };
 }
 
 export function tacticsReady(s) {
   return attive(s).every((k) => {
     const t = s.tactics[k];
-    return t.v1 && t.v2 && t.v1 !== t.v2 && t.strategy;
+    return t.v1 && t.v2 && t.v1 !== t.v2 && t.strategy && t.ritmo;
   });
 }
+
+export { allenatoriDi };
 
 /* ---------- Stagione regolare ---------- */
 

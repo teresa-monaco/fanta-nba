@@ -44,7 +44,7 @@ Object.defineProperty(globalThis.navigator, 'clipboard', {
   value: { writeText: async () => {} }, configurable: true,
 });
 
-// fetch che legge dal disco: e cosi che core.js carica i due JSON.
+// fetch che legge dal disco: e cosi che core.js carica i JSON dei dati.
 globalThis.fetch = async (url) => {
   const rel = String(url).replace(/^\.\//, '');
   const body = readFileSync(join(root, rel), 'utf8');
@@ -78,10 +78,10 @@ const clean = () => !html().includes('Errore di rendering') && !html().includes(
 
 const F = globalThis.FANTA;
 const S = await import('../js/state.js');
-const { ui, render, teamsFromState, stagioneFromState } = await import('../js/ui.js');
-const { buildTeam, componiTabellone, simSeriesUpTo, costruisciBracket,
+const { ui, render, teamsFromState, stagioneFromState, esc } = await import('../js/ui.js');
+const { buildTeam, componiTabellone, simSeriesUpTo, costruisciBracket, matchup, RITMI,
   giriStagione, tabelloneDaStagione } = await import('../js/engine.js');
-const { TEAM_KEYS, STRATEGIES } = await import('../js/core.js');
+const { TEAM_KEYS, STRATEGIES, db } = await import('../js/core.js');
 
 console.log('\nCollaudo interfaccia (modalita locale, DOM simulato)\n');
 
@@ -164,6 +164,53 @@ ok(has('class="identita"'), 'il profilo del quintetto viene spiegato, non solo m
 ok(has('data-act="toggle-lineup"'), 'il quintetto si puo comunque sbloccare e correggere');
 ok(!has('data-act="pick-slot"'), 'ma di partenza e in sola lettura: non e una decisione finta');
 ok(Object.values(STRATEGIES).every((v) => has(v.label)), 'tutte le strategie sono selezionabili');
+
+/* Tutte le impostazioni tecniche in una schermata sola */
+{
+  ok(Object.values(RITMI).every((v) => has(v.label)) && has('data-act="set-ritmo"'),
+    'il ritmo si sceglie nella stessa schermata');
+  ok(has('data-act="set-coach"') && has('sbloccati dai tuoi giocatori'),
+    'e anche l\'allenatore');
+
+  const k0 = S.attive(F.state)[0];
+  const libs = S.allenatoriDi(F.state.teams[k0].roster);
+  ok(libs.length >= 2, 'la rosa sblocca piu di un allenatore', `${libs.length}`);
+  ok(libs.every((c) => F.state.teams[k0].roster.some((id) => db().byId[id].tm + '|' + db().byId[id].era === c.tm.find((s) => s === db().byId[id].tm + '|' + db().byId[id].era))),
+    'ogni allenatore sbloccato viene da un giocatore davvero in rosa');
+  ok(libs.every((c) => has(esc(c.n))), 'gli allenatori sbloccati sono tutti a schermo');
+
+  // L'ordine: prima cosa hai, poi come lo usi.
+  const pos = (t) => html().indexOf(t);
+  ok(pos('class="slots') < pos('Primo violino')
+    && pos('Primo violino') < pos('Strategia offensiva')
+    && pos('Strategia offensiva') < pos('data-act="set-ritmo"')
+    && pos('data-act="set-ritmo"') < pos('data-act="set-coach"'),
+    'l\'ordine e quello giusto: quintetto, violini, attacco, ritmo, allenatore');
+
+  // Un allenatore che la rosa NON sblocca va rifiutato.
+  const estraneo = db().coaches.find((c) => !libs.some((l) => l.id === c.id));
+  ok(S.setTactics(F.state, k0, { coach: estraneo.id }) === F.state,
+    'un allenatore non sbloccato viene rifiutato', estraneo.n);
+  const dentro = S.setTactics(F.state, k0, { coach: libs[1].id });
+  ok(dentro.tactics[k0].coach === libs[1].id, 'uno sbloccato invece si sceglie', libs[1].n);
+
+  // Il ritmo cambia davvero la partita simulata, non solo l'etichetta.
+  const T1 = buildTeam(k0, F.state.lineups[k0], { ...F.state.tactics[k0], ritmo: 'lento' });
+  const T2 = buildTeam(k0, F.state.lineups[k0], { ...F.state.tactics[k0], ritmo: 'run-gun' });
+  ok(T2.possVoluti - T1.possVoluti >= 20, 'lento e run and gun chiedono ritmi molto diversi',
+    `${T1.possVoluti} contro ${T2.possVoluti}`);
+  const altro = S.attive(F.state)[1];
+  const O = buildTeam(altro, F.state.lineups[altro], F.state.tactics[altro]);
+  ok(matchup(T2, O).pace - matchup(T1, O).pace > 8, 'e il ritmo scelto sposta i possessi della partita',
+    `${matchup(T1, O).pace.toFixed(0)} contro ${matchup(T2, O).pace.toFixed(0)}`);
+
+  // L'allenatore cambia gli attributi dei giocatori, non un totale finale.
+  const senza = buildTeam(k0, F.state.lineups[k0], { ...F.state.tactics[k0], coach: null });
+  const con = buildTeam(k0, F.state.lineups[k0], { ...F.state.tactics[k0], coach: libs[0].id });
+  ok(JSON.stringify(senza.five.map((p) => p.attrs)) !== JSON.stringify(con.five.map((p) => p.attrs)),
+    'l\'allenatore lavora sugli attributi dei cinque', libs[0].n);
+  ok(con.coach?.n === libs[0].n, 'e la squadra sa chi ha in panchina');
+}
 for (const k of TEAM_KEYS) await F.session.apply((s) => S.setTactics(s, k, { strategy: 'pick-roll' }));
 ok(clean(), 'cambiare strategia non rompe il rendering');
 

@@ -361,6 +361,13 @@ document.addEventListener('click', async (ev) => {
         break;
 
 
+      /* --- tattica a bottoni (ritmo e allenatore) --- */
+      case 'set-ritmo':
+      case 'set-coach':
+        await session.apply((s) => S.setTactics(s, team,
+          act === 'set-ritmo' ? { ritmo: el.dataset.v } : { coach: el.dataset.v }));
+        break;
+
       /* --- formato e stagione regolare --- */
       case 'formato':
         await session.apply((s) => S.setFormato(s, el.dataset.con === '1'));
