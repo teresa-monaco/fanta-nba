@@ -23,7 +23,8 @@ for (const n of NUMERI_SQUADRE) {
     `   ${String(tot).padStart(5)}   ${String(n * ROSTER_SIZE).padStart(8)}   ` +
     f.serie.map((s, i) => `${nomi[i]} (${s})`).join(' -> '));
 }
-console.log(`\n  Il pool ha ${D.players.length} giocatori: con 10 squadre se ne comprano ${10 * ROSTER_SIZE}.`);
+const nMax = Math.max(...NUMERI_SQUADRE);
+console.log(`\n  Il pool ha ${D.players.length} giocatori: con ${nMax} squadre se ne comprano ${nMax * ROSTER_SIZE}.`);
 
 // Quanto dura una serata, a spanne.
 console.log('\nDURATA STIMATA\n');

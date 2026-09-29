@@ -34,11 +34,11 @@ async function boot() {
 function landing(errMsg) {
   root.innerHTML = `
     <h1>Fanta NBA</h1>
-    <p class="muted mb">Asta a crediti, quintetti, playoff simulati. Da 2 a 10 squadre, 50 crediti, 5 giocatori a testa.</p>
+    <p class="muted mb">Asta a crediti, quintetti, playoff simulati. Da 2 a 12 squadre, 50 crediti, 5 giocatori a testa.</p>
     ${errMsg ? `<div class="banner err">${esc(errMsg)}</div>` : ''}
     <div class="card">
       <h3 class="mb">Crea una partita</h3>
-      <p class="small muted mb">Generi un codice e lo passi agli altri tre.</p>
+      <p class="small muted mb">Generi un codice e lo passi agli altri.</p>
       <button class="primary wide" data-act="create-room">Crea la stanza</button>
     </div>
     <div class="card">
@@ -239,6 +239,12 @@ document.addEventListener('click', async (ev) => {
         break;
       }
 
+      // Serve davvero: se entrate in cinque nessuno puo iniziare, e senza
+      // questo tasto uno dovrebbe chiudere la scheda per liberare il posto.
+      case 'leave':
+        await session.apply((s) => (s.phase === 'lobby' ? S.leaveSeat(s, session.uid) : undefined));
+        break;
+
       case 'num-squadre':
         ui.numSquadre = Number(el.dataset.n);
         paint();
@@ -250,7 +256,7 @@ document.addEventListener('click', async (ev) => {
           ? TEAM_KEYS.slice(0, ui.numSquadre || 4)
           : null;
         const ok = await session.apply((s) => (s.phase === 'lobby' ? S.startAuction(s, now(), inGioco) : undefined));
-        if (!ok) flash('Numero di squadre non ammesso: si gioca in 2, 3, 4, 6, 8 o 10.', true);
+        if (!ok) flash('Numero di squadre non ammesso: si gioca in 2, 3, 4, 6, 8, 10 o 12.', true);
         break;
       }
 
@@ -265,6 +271,13 @@ document.addEventListener('click', async (ev) => {
         if (!ok) flash('Rilancio non valido: qualcuno ti ha preceduto.', true);
         break;
       }
+
+      // Chi ospita molte squadre sceglie prima per chi sta rilanciando.
+      case 'pick-team':
+        ui.bidTeam = team;
+        ui.allIn = null;
+        paint();
+        break;
 
       // Primo tocco arma, secondo conferma. L'armamento decade da solo appena
       // qualcun altro rilancia, così non offri alla cieca su un prezzo vecchio.

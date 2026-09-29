@@ -232,6 +232,40 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
   ok(dopo.seed !== prima.seed, 'la nuova partita ha un seed diverso (asta diversa)');
 }
 
+/* 7. Dodici squadre in mano a chi ospita: la barra dei rilanci non deve
+      diventare più alta dello schermo. Sopra le tre si sceglie prima la
+      squadra e poi si rilancia, invece di una riga di tasti a testa. */
+{
+  await F.session.apply((s) => S.resetGame(s, 'dodici'));
+  await F.session.apply((s) => S.startAuction(s, now(), TEAM_KEYS.slice(0, 12)));
+  ok(clean() && S.attive(F.state).length === 12, 'l\'asta parte con dodici squadre');
+
+  const righe = (html().match(/class="bidrow"/g) || []).length;
+  ok(has('class="bidpick"'), 'compare il selettore di squadra');
+  ok(righe === 1, 'e i tasti di rilancio restano una riga sola', `${righe} righe`);
+  ok((html().match(/class="pickchip/g) || []).length === 12, 'il selettore elenca tutte e dodici');
+  ok(has('bidbar-spacer tall'), 'lo spazio sotto il contenuto tiene conto del selettore');
+
+  // La scelta è vera: cambia la squadra per cui si rilancia.
+  const primo = TEAM_KEYS[0], settimo = TEAM_KEYS[6];
+  ok(html().includes(`data-act="bid" data-team="${primo}"`), 'di partenza si rilancia per la prima');
+  ui.bidTeam = settimo;
+  render(els.app, { state: F.state, session: F.session });
+  ok(html().includes(`data-act="bid" data-team="${settimo}"`)
+    && !html().includes(`data-act="bid" data-team="${primo}"`),
+    'scegliendo un\'altra squadra i tasti rilanciano per quella');
+  ui.bidTeam = null;
+
+  ok(!has('class="ros"'), 'con dodici squadre le rose degli avversari lasciano il posto ai crediti');
+
+  // Fino a tre squadre in mano il selettore non serve e non deve comparire.
+  await F.session.apply((s) => S.resetGame(s, 'tre'));
+  await F.session.apply((s) => S.startAuction(s, now(), TEAM_KEYS.slice(0, 3)));
+  ok(!has('class="bidpick"') && (html().match(/class="bidrow"/g) || []).length === 3,
+    'con tre squadre restano le tre righe di sempre, senza selettore');
+  ok(has('class="ros"'), 'e le rose degli avversari si vedono');
+}
+
 /* Controlli finali */
 ok(!uncaught, 'nessuna eccezione non gestita', uncaught ? String(uncaught) : '');
 ok(!html().includes('undefined') && !html().includes('NaN'), 'nessun "undefined" o "NaN" a schermo');

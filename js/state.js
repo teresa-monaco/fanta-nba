@@ -143,6 +143,11 @@ export function startAuction(s, now, squadre) {
   const D = db();
   const rng = makeRng(s.seed + ':pool');
   const order = shuffle(D.players.map((p) => p.id), rng);
+  // Senza sedie occupate attive() ripiega su TUTTE le chiavi: da sola farebbe
+  // partire una partita a dodici in una lobby vuota. Qui serve una richiesta
+  // esplicita oppure qualcuno seduto.
+  const nessunoDentro = !Object.keys(s.seats || {}).length;
+  if (nessunoDentro && !squadre?.length) return undefined;
   const inGioco = squadre?.length ? squadre : attive(s);
   if (!numeroValido(inGioco.length)) return undefined;
   return openLot({

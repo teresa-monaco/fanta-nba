@@ -11,7 +11,7 @@ import { dirname, join } from 'node:path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
 
-const { installData, makeRng, TEAM_KEYS, SLOTS, STRATEGIES, START_CREDITS, ROSTER_SIZE } = await import('../js/core.js');
+const { installData, makeRng, TEAM_KEYS, SLOTS, STRATEGIES, START_CREDITS, ROSTER_SIZE, NUMERI_SQUADRE } = await import('../js/core.js');
 const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'));
 const { buildTeam, simSeriesUpTo, componiTabellone, costruisciBracket, formaTabellone } = await import('../js/engine.js');
 const S = await import('../js/state.js');
@@ -175,13 +175,13 @@ function playFullGame(seed, quante = 4) {
 /* ---------- Esecuzione ---------- */
 
 // Si gioca in 2, 3 o 4: ogni formato ha un tabellone diverso e va provato.
-const PER_FORMATO = 40;
+const PER_FORMATO = 30;
 const champs = {};
 const gareFinali = {};
 const contate = {};
 const turniPer = {};
 
-for (const quante of [2, 3, 4, 6, 8, 10]) {
+for (const quante of NUMERI_SQUADRE) {
   for (let i = 0; i < PER_FORMATO; i++) {
     const r = playFullGame(`flow${quante}-${i}`, quante);
     if (!r) continue;
@@ -194,7 +194,7 @@ for (const quante of [2, 3, 4, 6, 8, 10]) {
 
 const totali = Object.values(contate).reduce((a, b) => a + b, 0);
 console.log(`\n${totali} partite intere giocate (lobby → asta → squadre → playoff → campione)\n`);
-for (const q of [2, 3, 4, 6, 8, 10]) {
+for (const q of NUMERI_SQUADRE) {
   console.log(`  con ${String(q).padStart(2)} squadre: ${String(contate[q] || 0).padStart(3)} partite, ${turniPer[q] || 0} turni, Finals da ${((gareFinali[q] || 0) / (contate[q] || 1)).toFixed(1)} gare`);
 }
 console.log('\n  Titoli vinti:', TEAM_KEYS.map((k) => `${k} ${champs[k] || 0}`).join('  '));

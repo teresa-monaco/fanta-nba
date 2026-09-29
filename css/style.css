@@ -35,6 +35,8 @@
   --t8: #84cc16;
   --t9: #eab308;
   --t10: #8b93f8;
+  --t11: #2dd4bf;
+  --t12: #fb7185;
 
   --r: 3px;              /* angoli quasi vivi: è una grafica televisiva */
   --gap: 12px;
@@ -138,6 +140,8 @@ label.field > span {
 .t-t8 { --tc: var(--t8); }
 .t-t9 { --tc: var(--t9); }
 .t-t10 { --tc: var(--t10); }
+.t-t11 { --tc: var(--t11); }
+.t-t12 { --tc: var(--t12); }
 .dot { width: 9px; height: 9px; background: var(--tc); flex: none; }
 
 /* ---- sedie (lobby) ---- */
@@ -386,6 +390,26 @@ details summary {
 /* spazio sotto il contenuto: la barra è fixed e altrimenti coprirebbe il fondo.
    Include lo scostamento della toolbar, così anche l'ultima riga resta leggibile. */
 .bidbar-spacer { height: calc(124px + var(--vv-bottom, 0px)); }
+.bidbar-spacer.tall { height: calc(190px + var(--vv-bottom, 0px)); }
+
+/* Il selettore di squadra: compare solo quando chi ospita ne ha in mano più di
+   tre. Scorre in orizzontale, così dodici squadre non alzano la barra. */
+.bidpick {
+  display: flex; gap: 6px; overflow-x: auto; padding-bottom: 7px; margin-bottom: 7px;
+  border-bottom: 1px solid var(--line); max-width: 700px; margin-left: auto; margin-right: auto;
+  scrollbar-width: none;
+}
+.bidpick::-webkit-scrollbar { display: none; }
+.pickchip {
+  flex: none; display: flex; align-items: center; gap: 5px;
+  background: var(--surface-2); border: 1px solid var(--line-2); border-radius: var(--r);
+  color: var(--muted); padding: 7px 9px;
+  font: 700 11.5px var(--cond); letter-spacing: 1.1px; text-transform: uppercase;
+}
+.pickchip b { font: 800 13px var(--cond); color: var(--gold); }
+.pickchip.on { background: var(--tc); border-color: var(--tc); color: #0e1119; }
+.pickchip.on b { color: #0e1119; }
+.pickchip.out { opacity: .42; }
 
 @media (min-width: 600px) {
   .seats { grid-template-columns: repeat(4, 1fr); }

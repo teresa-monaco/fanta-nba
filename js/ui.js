@@ -17,6 +17,7 @@ export const ui = {
   numSquadre: 4,      // solo in modalita locale: quante squadre gioca chi ospita
   editLineup: null,   // squadra con il quintetto sbloccato per la modifica
   allIn: null,        // { team, at } — All in armato, valido finché l'offerta non cambia
+  bidTeam: null,      // chi ospita molte squadre: per quale sta rilanciando adesso
 };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -114,7 +115,7 @@ function viewLobby({ state: s, session }) {
 
   return `
     <h1>Fanta NBA</h1>
-    <p class="muted mb">Asta a crediti, quintetti, playoff simulati. Da 2 a 10 squadre, 50 crediti a testa, 5 giocatori ciascuna.</p>
+    <p class="muted mb">Asta a crediti, quintetti, playoff simulati. Da 2 a 12 squadre, 50 crediti a testa, 5 giocatori ciascuna.</p>
 
     ${local ? `
       <div class="card">
@@ -125,14 +126,17 @@ function viewLobby({ state: s, session }) {
       ${sceltaLocale}` : `
       <div class="card">
         <h3>Codice stanza: <span class="code-pill">${esc(session.code)}</span></h3>
-        <p class="small muted mt">Gli altri aprono lo stesso link e inseriscono questo codice. Si gioca in 2, 3, 4, 6, 8 o 10: si parte con chi c'è.</p>
+        <p class="small muted mt">Gli altri aprono lo stesso link e inseriscono questo codice. Si gioca in 2, 3, 4, 6, 8, 10 o 12: si parte con chi c'è.</p>
         <button class="sm ghost mt" data-act="copy-link">Copia il link della stanza</button>
       </div>
 
       <div class="card">
         ${sonoDentro ? `
-          <h3 class="mb">Sei dentro</h3>
-          <p class="small muted">Ti è stata assegnata <b>${TEAM_NAMES[s.seats[session.uid]]}</b>.</p>
+          <div class="row spread">
+            <h3>Sei dentro</h3>
+            <button class="sm ghost" data-act="leave">Esci</button>
+          </div>
+          <p class="small muted mt">Ti è stata assegnata <b>${TEAM_NAMES[s.seats[session.uid]]}</b>.</p>
         ` : `
           <label class="field"><span>Il tuo nome</span>
             <input id="nick" value="${esc(ui.nickname)}" placeholder="il tuo nome" maxlength="14" autocomplete="off">
@@ -151,7 +155,7 @@ function viewLobby({ state: s, session }) {
       <button class="primary wide" data-act="start-auction" ${S.numeroValido(n) ? '' : 'disabled'}>
         Inizia l'asta${S.numeroValido(n) ? ` con ${n} squadre` : ''}
       </button>
-      ${S.numeroValido(n) ? '' : `<p class="small muted center mt">Siete in ${n}: si gioca in 2, 3, 4, 6, 8 o 10. Sopra i quattro servono numeri pari, altrimenti mezzo tabellone salta il primo turno.</p>`}
+      ${S.numeroValido(n) ? '' : `<p class="small muted center mt">Siete in ${n}: si gioca in 2, 3, 4, 6, 8, 10 o 12. Sopra i quattro servono numeri pari, altrimenti mezzo tabellone salta il primo turno.</p>`}
     ` : `<p class="small muted center">In attesa che ${esc(s.names[s.host] || 'chi ospita')} avvii l'asta...</p>`}
     ${alboCard(s)}
   `;
@@ -212,6 +216,10 @@ function viewAuction({ state: s, session }) {
   const controllable = S.attive(s).filter((k) => k === myTeam || (isHost && !S.seatTaken(s, k)));
   const bidders = controllable.filter((k) => S.slotsLeft(s, k) > 0);
 
+  // Oltre le sei squadre le rose sparirebbero comunque sotto lo scroll: si
+  // tengono solo crediti e slot, i nomi restano nel registro degli acquisti.
+  const fitto = S.attive(s).length > 6;
+
   const compact = (k) => {
     const t = s.teams[k];
     const names = t.roster.map((id) => D.byId[id]?.n).filter(Boolean).join(' · ') || '—';
@@ -221,7 +229,7 @@ function viewAuction({ state: s, session }) {
       <div class="grow" style="min-width:0">
         <div class="row spread"><span class="nm">${TEAM_NAMES[k]}</span>
           <span><span class="cr">${t.credits}</span> <span class="tiny muted">cr · ${t.roster.length}/${ROSTER_SIZE}</span></span></div>
-        <div class="ros">${esc(names)}</div>
+        ${fitto ? '' : `<div class="ros">${esc(names)}</div>`}
       </div></div>`;
   };
 
@@ -295,7 +303,24 @@ function bidBar(s, bidders, bid, paused) {
   const cur = bid ? bid.amount : 0;
   const minBid = cur + 1;
 
-  return `<div class="bidbar-spacer"></div><div class="bidbar">${bidders.map((k) => {
+  // Chi ospita da solo può avere in mano dodici squadre: una riga di tasti a
+  // testa sarebbe una barra più alta dello schermo, che coprirebbe il lotto in
+  // asta. Oltre le tre, si sceglie prima la squadra e si rilancia per quella.
+  let picker = '';
+  let mostra = bidders;
+  if (bidders.length > 3) {
+    const sel = bidders.includes(ui.bidTeam) ? ui.bidTeam : bidders[0];
+    mostra = [sel];
+    picker = `<div class="bidpick">${bidders.map((k) => {
+      const esaurito = S.maxBid(s, k) < minBid && !(bid && bid.team === k);
+      return `<button class="pickchip t-${k} ${k === sel ? 'on' : ''} ${esaurito ? 'out' : ''}"
+                data-act="pick-team" data-team="${k}">
+        <span class="dot"></span>${TEAM_NAMES[k]}<b>${s.teams[k].credits}</b>
+      </button>`;
+    }).join('')}</div>`;
+  }
+
+  return `<div class="bidbar-spacer ${bidders.length > 3 ? 'tall' : ''}"></div><div class="bidbar">${picker}${mostra.map((k) => {
     const max = S.maxBid(s, k);
     const leader = bid && bid.team === k;
     const tag = bidders.length > 1 ? `<span class="who t-${k}"><span class="dot"></span>${TEAM_NAMES[k]}</span>` : '';

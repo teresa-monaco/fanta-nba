@@ -1,6 +1,6 @@
 # Fanta NBA
 
-Asta a crediti fra quattro squadre, costruzione dei quintetti, playoff simulati.
+Asta a crediti fra 2 e 12 squadre, costruzione dei quintetti, playoff simulati.
 Gira interamente nel browser: niente installazione, niente server, niente account.
 
 Trasposizione web delle regole di `NBA gioco regole.txt`, con una differenza
@@ -11,14 +11,14 @@ ognuno sul proprio telefono.
 
 ## Come si gioca
 
-**0. Chi gioca.** Si gioca in **2, 3, 4, 6, 8 o 10**. Sopra i quattro solo
+**0. Chi gioca.** Si gioca in **2, 3, 4, 6, 8, 10 o 12**. Sopra i quattro solo
 numeri pari: con 5, 7 o 9 metà del tabellone salterebbe il primo turno e
 smetterebbe di somigliare a un torneo. Si scrive il nome e la squadra viene
 assegnata — non si sceglie, così non si perdono cinque minuti a contrattare i
 colori. Chi ospita fa partire con quanti ci sono.
 
 **1. Asta.** Ogni squadra parte con **50 crediti** e deve comprare **5 giocatori**.
-Il sistema estrae un giocatore dal pool (260 nomi, picco NBA 2K fra 85 e 100),
+Il sistema estrae un giocatore dal pool (225 nomi, picco NBA 2K fra 85 e 100),
 parte un cronometro e si rilancia. Ogni rilancio rimette il timer a 8 secondi:
 chi resta in testa allo scadere se lo porta a casa.
 
@@ -47,6 +47,7 @@ che saltano il primo turno:
 | 6 | 2 | Preliminare → Semifinali → Finale | 5 | ~15 min |
 | 8 | – | Quarti → Semifinali → Finale | 7 | ~20 min |
 | 10 | 6 | Preliminare → Quarti → Semifinali → Finale | 9 | ~25 min |
+| 12 | 4 | Preliminare → Quarti → Semifinali → Finale | 11 | ~30 min |
 
 La durata include l'asta, che cresce col numero di squadre (5 acquisti a testa).
 
@@ -75,8 +76,8 @@ Nelle stanze, le squadre su cui **nessuno si è seduto** le gestisce chi ospita:
 si può giocare anche in tre, o in due.
 
 **Limite da conoscere:** è chi ospita a far scattare la chiusura dei lotti (se
-lo facessero tutti e quattro i device, quattro transazioni simultanee
-proverebbero ad assegnare lo stesso giocatore). Quindi se chi ospita chiude il
+lo facessero tutti i device, altrettante transazioni simultanee proverebbero ad
+assegnare lo stesso giocatore). Quindi se chi ospita chiude il
 tab, l'asta si ferma finché non riapre. Lo stato è salvo sul database, non si
 perde niente: basta che torni.
 
@@ -114,7 +115,7 @@ Dal telefono, "Aggiungi alla schermata Home" lo installa come un'app.
 ```
 index.html            pagina unica
 css/style.css         stile, mobile-first
-data/players.json     260 giocatori
+data/players.json     225 giocatori
 data/archetypes.json  20 archetipi → attributi
 js/core.js            RNG deterministico, derivazione attributi, costanti
 js/engine.js          motore di simulazione (profili, matchup, serie, bracket)
@@ -142,11 +143,14 @@ a rimbalzo", quel vantaggio esiste nei numeri.
 Una riga sola, in `js/core.js`:
 
 ```js
-export const TEAM_NAMES = { t1: 'USZ', t2: 'FollowTheLeader', t3: 'Volta Reno', t4: 'R4cist' };
+export const TEAM_NAMES = { t1: 'USZ', t2: 'FollowTheLeader', t3: 'Volta Reno',
+  t4: 'R4cist', t5: 'Squadra 5', /* … fino a */ t12: 'Squadra 12' };
 ```
 
-Le chiavi `t1…t4` sono **posizioni**, non nomi: reggono i colori in CSS
-(`.t-t1` … `.t-t4`) e le partite già salvate. Cambia solo i valori, mai le chiavi.
+Le chiavi `t1…t12` sono **posizioni**, non nomi: reggono i colori in CSS
+(`.t-t1` … `.t-t12`) e le partite già salvate. Cambia solo i valori, mai le
+chiavi. Le prime quattro sono già battezzate, dalla quinta in poi sono
+segnaposto: rinominale quando vi allargate.
 
 ## Modificare i giocatori
 
@@ -207,6 +211,10 @@ node tools/spread.mjs      # quanto sono varie le valutazioni
 node tools/calibra.mjs     # dove cadono i valori, per scegliere le soglie del motore
 node tools/audit-gioco.mjs # le scelte che il gioco chiede contano davvero?
 node tools/bye.mjs         # con tre squadre, quanto vale saltare la semifinale
+node tools/partite.mjs     # gioca migliaia di serie e cerca incoerenze nei testi
+node tools/audit-bug.mjs   # i casi storti: giro dal database, azzeramenti, chi entra ed esce
+node tools/formati.mjs     # struttura e durata di ogni formato
+node tools/teste.mjs       # quanto vale saltare il primo turno, per formato
 
 node tools/checkfirebase.mjs   # parla col progetto vero: login anonimo, regole, scrittura
 ```
@@ -227,20 +235,20 @@ che lo scarto medio somigli a quello vero, che nessuno segni 70 punti.
 Due costanti in `js/engine.js` governano tutto:
 
 ```js
-const RATING_WEIGHT = 0.0047;  // quanto pesa il divario di forza
+const RATING_WEIGHT = 0.0030;  // quanto pesa il divario di forza
 const GAME_SIGMA    = 8.5;     // quanto pesa il caso
 ```
 
 Alzare `RATING_WEIGHT` rende il gioco più prevedibile, alzare `GAME_SIGMA` più
-casuale. Con i valori attuali, fra squadre di pari valore la favorita vince circa
-il 62% delle singole gare, e le serie finiscono così:
+casuale. Con i valori attuali la sfavorita vince la serie una volta su quattro
+(24%), lo scarto medio è di 10.8 punti (NBA ~11) e le serie finiscono così:
 
 | | qui | playoff NBA reali |
 |---|---|---|
-| 4-0 | 21% | ~13% |
-| 4-1 | 31% | ~25% |
+| 4-0 | 17% | ~13% |
+| 4-1 | 33% | ~25% |
 | 4-2 | 27% | ~32% |
-| 4-3 | 21% | ~30% |
+| 4-3 | 23% | ~30% |
 
 Restano un po' più sbrigative dei playoff veri, ed è corretto così: qui le
 squadre sono cinque giocatori senza panchina, sorteggiati da un'asta, con
