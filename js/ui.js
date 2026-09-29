@@ -713,9 +713,12 @@ export function alboCard(s) {
   if (!albo.length) return '';
   const cl = S.classifica(s).filter((t) => t.titoli || t.finali);
 
+  // I nomi girano a ogni partita, la sedia no: senza il nome di chi ci sta
+  // seduto la classifica fra le serate non direbbe piu a chi appartiene.
   const righe = cl.map((t) => `<div class="albo-riga t-${t.key}">
       <span class="dot"></span>
-      <span class="nm">${esc(t.nome)}</span>
+      <span class="nm">${esc(S.nameOfSeat(s, t.key) || t.nome)}</span>
+      ${S.nameOfSeat(s, t.key) ? `<span class="tiny muted">oggi ${esc(t.nome)}</span>` : ''}
       <span class="grow"></span>
       <b>${t.titoli}</b><span class="tiny muted">${t.titoli === 1 ? 'titolo' : 'titoli'}</span>
       <span class="tiny muted">· ${t.finali} final${t.finali === 1 ? 'e' : 'i'}</span>

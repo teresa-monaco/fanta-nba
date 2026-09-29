@@ -1,6 +1,6 @@
 // app.js — avvio, risoluzione della stanza, un solo handler per tutti i click.
 
-import { loadData, TEAM_KEYS, TEAM_NAMES } from './core.js';
+import { loadData, TEAM_KEYS, TEAM_NAMES, applicaNomi } from './core.js';
 import { simSeriesUpTo, componiTabellone, costruisciBracket, giriStagione, tabelloneDaStagione } from './engine.js';
 import * as S from './state.js';
 import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
@@ -65,6 +65,9 @@ async function start({ code, create }) {
 
 function paint() {
   if (!state || !session) return;
+  // I nomi girano a ogni partita e si estraggono dal seed: vanno rimessi a
+  // posto prima di disegnare, perche il seed cambia con "Nuova partita".
+  applicaNomi(state.seed);
   const ctx = { state, session };
   renderTopbar(topbar, ctx);
   render(root, ctx);

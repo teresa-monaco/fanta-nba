@@ -196,17 +196,22 @@ a rimbalzo", quel vantaggio esiste nei numeri.
 
 ## Rinominare le squadre
 
-Una riga sola, in `js/core.js`:
+I nomi **girano a ogni partita**: si estraggono dal seed, quindi ogni telefono
+rimescola con lo stesso seme e arriva alla stessa assegnazione, senza che
+niente finisca nel database. La sedia invece resta: `t3` è sempre la stessa
+persona, cambia solo l'etichetta — e per questo l'albo d'oro mostra il nome di
+chi gioca, non quello della squadra di stasera.
+
+Per cambiarli si tocca una lista sola, in `js/core.js`:
 
 ```js
-export const TEAM_NAMES = { t1: 'USZ', t2: 'FollowTheLeader', t3: 'Volta Reno',
-  t4: 'R4cist', t5: 'Squadra 5', /* … fino a */ t12: 'Squadra 12' };
+export const NOMI_SQUADRE = ['Pornland', 'Volta Reno FC', "m johnson's son", ...];
 ```
 
 Le chiavi `t1…t12` sono **posizioni**, non nomi: reggono i colori in CSS
-(`.t-t1` … `.t-t12`) e le partite già salvate. Cambia solo i valori, mai le
-chiavi. Le prime quattro sono già battezzate, dalla quinta in poi sono
-segnaposto: rinominale quando vi allargate.
+(`.t-t1` … `.t-t12`), le sedie e le partite già salvate. Non si toccano.
+I nomi sono dieci e le sedie dodici: nella partita a dodici le ultime due
+riprendono un nome con il `II` dietro.
 
 ## Modificare i giocatori
 

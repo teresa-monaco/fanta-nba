@@ -140,6 +140,47 @@ console.log('\n1b. Allenatori');
   }
 }
 
+/* ---------- 1c. Nomi delle squadre ---------- */
+console.log('\n1c. Nomi delle squadre');
+{
+  const { NOMI_SQUADRE, applicaNomi, TEAM_NAMES } = core;
+  const a = { ...applicaNomi('partita-uno') };
+  const b = { ...applicaNomi('partita-due') };
+  ok(JSON.stringify(a) !== JSON.stringify(b), 'i nomi girano fra una partita e l\'altra',
+    `${a.t1} -> ${b.t1}`);
+  const c = { ...applicaNomi('partita-uno') };
+  ok(JSON.stringify(a) === JSON.stringify(c),
+    'ma lo stesso seed da sempre gli stessi nomi (o due telefoni divergerebbero)');
+  ok(TEAM_KEYS.every((k) => !!TEAM_NAMES[k]), 'nessuna sedia resta senza nome');
+  // Dieci nomi per dodici sedie: le prime dieci non si ripetono mai.
+  const primi = TEAM_KEYS.slice(0, NOMI_SQUADRE.length).map((k) => TEAM_NAMES[k]);
+  ok(new Set(primi).size === primi.length, 'fino a dieci squadre i nomi sono tutti diversi');
+  ok(new Set(TEAM_KEYS.map((k) => TEAM_NAMES[k])).size === TEAM_KEYS.length,
+    'e anche in dodici nessun nome e ripetuto identico');
+  applicaNomi('fanta-nba');
+}
+
+/* ---------- 1d. Easter egg di gara 7 ---------- */
+console.log('\n1d. Gara 7');
+{
+  const T = randomTeams('egg');
+  const ks = Object.keys(T);
+  const s = simSeries(T[ks[0]], T[ks[1]], 'egg-serie');
+  const testo = (i) => narrateGame(T[ks[0]], T[ks[1]], { ...s.games[0], n: i });
+  const fuori = [1, 2, 3, 4, 5, 6].filter((i) => testo(i).includes('Fabio'));
+  ok(fuori.length === 0, 'prima di gara 7 Fabio non viene nominato', `gare ${fuori.join(', ')}`);
+  ok(testo(7).includes('Fabio'), 'in gara 7 si', testo(7).split('.').pop().trim().slice(0, 48));
+  // Varia, altrimenti in una serata con tre gara 7 esce sempre la stessa riga.
+  const varianti = new Set();
+  for (let i = 0; i < 60; i++) {
+    const A = randomTeams('egg' + i);
+    const kk = Object.keys(A);
+    const ss = simSeries(A[kk[0]], A[kk[1]], 'eggs' + i);
+    varianti.add(narrateGame(A[kk[0]], A[kk[1]], { ...ss.games[0], n: 7 }).split('. ').pop());
+  }
+  ok(varianti.size >= 5, 'e la frase su Fabio cambia', `${varianti.size} varianti su 60 gara 7`);
+}
+
 /* ---------- 2. Distribuzione delle serie ---------- */
 console.log('\n2. Distribuzione dei risultati (400 serie)');
 {

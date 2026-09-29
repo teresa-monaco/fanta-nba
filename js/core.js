@@ -147,23 +147,42 @@ export function deriveAttrs(p, archetypes) {
 /* ---------- Costanti di gioco ---------- */
 
 // Le chiavi sono POSIZIONI fisse (t1…t12), non nomi: reggono i colori in CSS
-// (.t-t1 … .t-t12) e le partite già salvate. Per rinominare le squadre si
-// cambia solo TEAM_NAMES, qui sotto, e non si tocca nient'altro.
+// (.t-t1 … .t-t12), le sedie di chi gioca e le partite già salvate. I NOMI
+// invece girano a ogni partita — per cambiarli si tocca solo la lista qui
+// sotto, e nient'altro.
 export const TEAM_KEYS = ['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12'];
-export const TEAM_NAMES = {
-  t1: 'USZ',
-  t2: 'FollowTheLeader',
-  t3: 'Volta Reno',
-  t4: 'R4cist',
-  t5: 'Squadra 5',
-  t6: 'Squadra 6',
-  t7: 'Squadra 7',
-  t8: 'Squadra 8',
-  t9: 'Squadra 9',
-  t10: 'Squadra 10',
-  t11: 'Squadra 11',
-  t12: 'Squadra 12',
-};
+
+export const NOMI_SQUADRE = [
+  'Pornland',
+  'Volta Reno FC',
+  "m johnson's son",
+  'Dominic Toretto',
+  'Leuvenia',
+  'Sex Pred',
+  'il dolph',
+  'Sucio',
+  'No lo silben',
+  'Dimash',
+];
+
+// I nomi si estraggono dal SEED della partita, non si salvano nel database:
+// ogni client rimescola con lo stesso seme e arriva alla stessa assegnazione.
+// La sedia resta la stessa (t3 e sempre la stessa persona), cambia l'etichetta.
+export const TEAM_NAMES = {};
+
+export function applicaNomi(seed) {
+  const estratti = shuffle(NOMI_SQUADRE, makeRng(String(seed) + ':nomi'));
+  TEAM_KEYS.forEach((k, i) => {
+    // I nomi sono dieci e le sedie dodici: nella partita a dodici le ultime
+    // due riprendono un nome con il numero, invece di restare senza.
+    TEAM_NAMES[k] = i < estratti.length ? estratti[i] : `${estratti[i % estratti.length]} II`;
+  });
+  return TEAM_NAMES;
+}
+
+// Un'assegnazione c'e sempre, anche prima che una partita esista: gli script
+// e i test costruiscono squadre senza passare dalla lobby.
+applicaNomi('fanta-nba');
 
 // Quanti si puo essere. Sopra i quattro solo numeri pari: con 5, 7 o 9 il
 // tabellone si riempie di teste di serie che saltano il primo turno (con 9

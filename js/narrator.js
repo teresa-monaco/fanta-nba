@@ -37,7 +37,7 @@ const FACTOR_LINES = {
   ],
   'troppe-bocche': [
     'In {T} ci sono più giocatori che pretendono la palla di quanti palloni esistano. I palloni, ricordiamolo, sono uno.',
-    '{T} ha comprato cinque prime opzioni e adesso deve spiegare a quattro di loro che non lo sono.',
+    '{T} ha comprato cinque prime opzioni. Adesso qualcuno deve spiegare a quattro di loro che hanno sbagliato squadra.',
     'Troppe stelle in {T}: ognuno aspetta il suo turno con la faccia di chi non ha nessuna intenzione di aspettarlo.',
   ],
   'ferro-scoperto': [
@@ -51,7 +51,7 @@ const FACTOR_LINES = {
     'In {T} la difesa avversaria sceglie dove andare: sceglie {worst}, ogni volta.',
   ],
   'quintetto-piccolo': [
-    '{T} è talmente piccola che a rimbalzo si organizza per collette.',
+    '{T} è talmente piccola che a rimbalzo fa la colletta. E perde lo stesso.',
     'Il quintetto di {T} vince ogni sfida di velocità e perde tutto quello che si svolge sopra i tre metri.',
     'Sotto canestro {T} non difende: assiste.',
   ],
@@ -63,7 +63,7 @@ const FACTOR_LINES = {
   'star-usage': [
     '{player} si prende tutto. Gli altri quattro sono in campo per ragioni prevalentemente decorative.',
     'Tutto passa da {player}: un piano eccellente finché funziona, e un problema serio trenta secondi dopo.',
-    '{player} gioca, {T} guarda. Ogni tanto va bene così.',
+    '{player} gioca, {T} guarda. Quattro giocatori pagati per assistere a una partita.',
   ],
   'star-contenuta': [
     'Difendere {T} è semplice: togli la palla a uno e gli altri quattro si mettono a studiare il parquet.',
@@ -139,10 +139,10 @@ const FACTOR_LINES = {
   ],
   'rimbalzi': [
     '{T} vince i tabelloni con {diff} punti di scarto: gioca con due possessi in più a quarto mentre gli altri guardano il pallone salire.',
-    'A rimbalzo {T} fa quello che vuole. Gli avversari partecipano in qualità di pubblico pagante.',
+    'A rimbalzo {T} fa quello che vuole. Gli avversari assistono, paganti.',
   ],
   'taglia': [
-    '{T} è più grossa di {diff} gradini di stazza. In area non è una partita, è un sopruso.',
+    '{T} è più grossa di {diff} gradini di stazza. In area non è una partita, è bullismo.',
   ],
   'spacing-diff': [
     '{T} gioca con il campo aperto, gli altri in un corridoio. Stessa partita, due sport diversi.',
@@ -155,60 +155,72 @@ const FACTOR_LINES = {
 /* ---------- Aperture, per quanto è finita male ---------- */
 
 const OPEN_BLOWOUT = [
-  'Roba imbarazzante.',
-  'Chiamiamola partita, se serve a farvi stare meglio.',
-  'Finita durante il riscaldamento, il resto era burocrazia.',
-  'In campo c\'era una squadra sola, e non è stato difficile capire quale.',
-  'Hanno smesso di contare nel terzo quarto per pietà.',
-  'Un allenamento a ranghi contrapposti, ma con una squadra sola.',
+  'Vergognoso.',
+  'Chiamatela pure partita, se vi fa dormire meglio.',
+  'Finita nel riscaldamento. Il resto è stato accanimento.',
+  'In campo c\'era una squadra sola. L\'altra ha pagato il biglietto.',
+  'Hanno smesso di contare nel terzo quarto. Per pietà, non per stanchezza.',
+  'Non è una sconfitta, è un referto medico.',
+  'Cinque contro nessuno, e i nessuno avevano pure la maglia.',
+  'Uno scandalo sportivo. Nel senso che qualcuno dovrebbe indagare.',
+  'Se c\'era una scommessa sul divario, ha vinto chi ha detto "tanto".',
 ];
 const OPEN_CONTROL = [
-  'Mai in discussione, mai divertente.',
-  'Gestita con la noia di chi sapeva già come finiva.',
-  'Un controllo talmente tranquillo da risultare maleducato.',
-  'Vantaggio preso, vantaggio amministrato, nessuno si è fatto male.',
-  'Il classico +12 che sembra sempre +4 e non lo è mai stato.',
+  'Mai in discussione. Mai nemmeno interessante.',
+  'Gestita con la noia di chi sapeva già come finiva, e aveva ragione.',
+  'Un controllo talmente tranquillo da risultare offensivo.',
+  'Vantaggio preso, vantaggio amministrato, avversario ignorato.',
+  'Il classico +12 che sembra +4 e invece era +20 travestito.',
+  'Partita a senso unico con l\'educazione di non dirlo troppo forte.',
 ];
 const OPEN_CLOSE = [
   'Equilibrio, finché qualcuno si è ricordato di saper giocare a pallacanestro.',
-  'Sembrava una partita vera, poi il finale ha rimesso le cose al loro posto.',
-  'Punto a punto per tre quarti, poi lo strappo di chi aveva più argomenti.',
-  'Tirata, combattuta e alla fine decisa da chi era semplicemente meglio attrezzato.',
+  'Sembrava una partita vera, poi il finale ha rimesso ognuno al suo posto.',
+  'Punto a punto per tre quarti. Poi è arrivato il quarto quarto e la verità.',
+  'Combattuta, tirata, e alla fine vinta da quella con i giocatori migliori. Che sorpresa.',
+  'Per trenta minuti è stata una partita. Poi è tornata a essere quello che era.',
 ];
 const OPEN_THRILLER = [
-  'Decisa all\'ultimo possesso, come piace a chi non ha il cuore delicato.',
+  'Decisa all\'ultimo possesso. Qualcuno stanotte non dorme.',
   'Un finale così bello che quasi dispiace per chi ha perso. Quasi.',
-  'Poteva finire in entrambi i modi. È finita nel modo peggiore per uno dei due.',
-  'Due punti di scarto e una notte insonne in omaggio.',
-  'Si decide su un possesso, e il possesso va storto a uno solo dei due.',
-  'Di quelle che si rivedono, se si ha il coraggio.',
+  'Poteva finire in due modi. È finita nel modo peggiore, per uno solo.',
+  'Due punti di scarto e un rimpianto a vita in omaggio.',
+  'Si decide su un possesso, e il possesso lo sbaglia sempre lo stesso.',
+  'Di quelle che si rivedono. O che si cancellano, dipende da come è andata.',
 ];
 const OPEN_OT = [
   'Supplementare, perché nessuno dei due era capace di chiuderla.',
-  'Quaranta minuti non sono bastati a stabilire chi fosse meno peggio.',
-  'Overtime: entrambe hanno fatto di tutto per perderla nei tempi regolamentari.',
+  'Quaranta minuti non sono bastati a stabilire chi fosse meno scarso.',
+  'Overtime: entrambe hanno fatto di tutto per perderla prima, senza riuscirci.',
+  'Un supplementare regalato dall\'incapacità di vincere nei tempi normali.',
 ];
 const OPEN_2OT = [
-  'Doppio supplementare. A un certo punto diventa accanimento.',
-  'Due overtime: nessuna delle due voleva vincere, ma una ha dovuto.',
+  'Doppio supplementare. A un certo punto diventa accanimento reciproco.',
+  'Due overtime: nessuna delle due voleva vincere, una ha dovuto arrendersi all\'evidenza.',
+  'Cinquanta minuti per capire una cosa che si sapeva dall\'inizio.',
 ];
 
 /* ---------- Chiusure sul perdente ---------- */
 
 const LOSER_WITH_STAR = [
-  'A {L} non basta un {p} da {n} punti, e fa quasi tenerezza.',
-  '{p} ne mette {n} e {L} perde lo stesso: quando si dice sprecare una serata.',
-  '{n} punti di {p} buttati nel cestino insieme al resto della prestazione di {L}.',
-  '{p} fa la sua parte con {n} punti, gli altri quattro di {L} un po\' meno.',
-  '{n} di {p}: a {L} serviva un secondo uomo, e non si è presentato.',
+  'A {L} non bastano {n} punti di {p}. Gli altri quattro erano lì per il buffet.',
+  '{p} ne mette {n} e {L} perde lo stesso. Complimenti a chi ha costruito quel roster.',
+  '{n} punti di {p} buttati nel secchio insieme al resto di {L}.',
+  '{p} fa la sua parte con {n} punti. Il resto di {L} ha fatto la sua: niente.',
+  '{n} di {p}. A {L} serviva un secondo uomo e ne aveva comprati quattro finti.',
+  '{p} da {n} punti, e {L} perde: si chiama sprecare un patrimonio.',
+  'Un uomo solo al comando e quattro turisti: {p} ne fa {n}, {L} perde.',
 ];
 const LOSER_FLAT = [
-  '{L} non ha mai trovato il possesso buono. Forse perché in rosa non ce l\'ha.',
-  '{L} ha provato tutto. Tutto, in questo caso, era poco.',
-  'Di {L} si ricorderà soprattutto il silenzio in panchina.',
-  '{L} non è mai stata in partita, e verso metà terzo quarto ha smesso di fingere.',
-  'A {L} è mancato tutto, a partire dalle idee.',
-  '{L} ha giocato come se il risultato fosse già stato deciso altrove.',
+  '{L} non ha mai trovato il possesso buono. Perché in rosa non ce l\'ha.',
+  '{L} ha provato tutto. Tutto, in questo caso, era pochissimo.',
+  'Di {L} si ricorderà soprattutto il silenzio imbarazzato in panchina.',
+  '{L} non è mai stata in partita, e a metà terzo quarto ha pure smesso di fingere.',
+  'A {L} è mancato tutto. A partire dai giocatori.',
+  '{L} ha giocato come se il risultato fosse già stato deciso. Lo era.',
+  '{L} in campo c\'era, ma nessuno se n\'è accorto.',
+  'La prestazione di {L} andrebbe studiata, se ci fosse qualcosa da studiare.',
+  '{L} ha reso un buon servizio alla partita: qualcuno doveva pur perdere.',
 ];
 
 /* ---------- Frasi intermedie: anche queste con varianti ---------- */
@@ -234,6 +246,26 @@ const RIMBALZI = [
   '{n} rimbalzi di {p}, praticamente da solo',
   '{p} ripulisce i tabelloni: {n} rimbalzi',
   '{n} rimbalzi di {p}, che sotto canestro decide lui',
+];
+
+/* ---------- Gara 7: si insulta Fabio ---------- */
+// Easter egg. Compare SOLO in gara 7, e Fabio non c'entra niente con la
+// partita: e esattamente il motivo per cui fa ridere. Non toccare la
+// condizione, altrimenti diventa una battuta come tutte le altre.
+
+const FABIO = [
+  'A proposito di niente: Fabio è imbarazzante come GM.',
+  'Comunque Fabio è ubriaco.',
+  'Da segnalare che Fabio, pur non giocando, sta perdendo lo stesso.',
+  'Gara 7. Fabio avrebbe già perso in gara 4.',
+  'Una partita così Fabio non la capirebbe nemmeno se gliela spiegassero due volte.',
+  'Nota a margine: Fabio ha sbagliato l\'asta. Sì, anche questa volta.',
+  'Che poi, uno bravo come Fabio a gara 7 non ci arriva proprio.',
+  'Gara 7 vera. Fabio guarda da casa, e anche da lì sta facendo scelte discutibili.',
+  'Nel frattempo Fabio sta ancora cercando di capire cosa sia il secondo violino.',
+  'Sette gare. A Fabio ne sarebbero bastate tre per fare danni.',
+  'Fabio non è in questa partita. È l\'unica cosa che ha fatto bene finora.',
+  'PS: Fabio è ancora un pessimo general manager. Volevamo ricordarlo.',
 ];
 
 // Dentro una serie le varianti RUOTANO invece di essere pescate a caso:
@@ -265,16 +297,29 @@ export function narrateGame(A, B, g) {
   const glass = wBox.slice().sort((x, y) => y.reb - x.reb)[0];
 
   const riempi = (t, p, num) => t.replaceAll('{p}', p).replaceAll('{n}', String(num)).replaceAll('{T}', W.name);
+  // Ogni pezzo della frase deve parlare di un giocatore DIVERSO: senza questo
+  // controllo usciva "Sabonis apparecchia 11 volte, 20 rimbalzi di Sabonis".
+  const citati = new Set([top.id]);
   const bits = [riempi(ruota(PUNTI, n, off), top.n, top.pts)];
-  if (dime.id !== top.id && dime.ast >= 7) bits.push(riempi(ruota(ASSIST, n, off + 1), dime.n, dime.ast));
-  if (glass.id !== top.id && glass.reb >= 11) bits.push(riempi(ruota(RIMBALZI, n, off + 2), glass.n, glass.reb));
+  if (!citati.has(dime.id) && dime.ast >= 7) {
+    citati.add(dime.id);
+    bits.push(riempi(ruota(ASSIST, n, off + 1), dime.n, dime.ast));
+  }
+  if (!citati.has(glass.id) && glass.reb >= 11) {
+    citati.add(glass.id);
+    bits.push(riempi(ruota(RIMBALZI, n, off + 2), glass.n, glass.reb));
+  }
   const second = `${bits.join(', ')}.`;
 
   const third = topL.pts >= 28
     ? ruota(LOSER_WITH_STAR, n, off).replaceAll('{L}', L.name).replaceAll('{p}', topL.n).replaceAll('{n}', String(topL.pts))
     : ruota(LOSER_FLAT, n, off).replaceAll('{L}', L.name);
 
-  return `${opener} ${second} ${third}`;
+  // Gara 7: il commento se la prende con Fabio, che con questa partita non
+  // c'entra niente. E il punto.
+  const fabio = n >= 7 ? ` ${ruota(FABIO, hashStr(g.scoreA + '-' + g.scoreB + A.key), off)}` : '';
+
+  return `${opener} ${second} ${third}${fabio}`;
 }
 
 /* ---------- Perché ha vinto la serie ---------- */
@@ -329,8 +374,9 @@ export function explainSeries(A, B, series) {
 
   if (!out.length) {
     out.push(pick([
-      `${W.name} è più forte praticamente ovunque. Non serve una spiegazione tattica, serve un'asta migliore.`,
-      `Nessun dettaglio da analizzare: ${W.name} ha semplicemente più giocatori bravi. Succede.`,
+      `${W.name} è più forte ovunque. Non serve una spiegazione tattica, serve rifare l'asta.`,
+      `Niente da analizzare: ${W.name} ha comprato i giocatori bravi, gli altri hanno comprato il resto.`,
+      `${W.name} ha vinto perché è più forte. Tutto qui. Nessuna genialata, nessun alibi.`,
     ], rng));
   }
   return out;
@@ -341,14 +387,14 @@ export function explainSeries(A, B, series) {
 export function teamIdentity(T) {
   const tags = [];
   if (T.shooters >= 4) tags.push('spacing totale');
-  else if (T.shooters <= 1) tags.push('campo chiuso');
+  else if (T.shooters <= 1) tags.push('campo murato');
   if (T.size >= 18) tags.push('quintetto pesante');
   else if (T.size <= 12) tags.push('small ball');
   if (T.rimProtect >= 85) tags.push('ferro blindato');
-  else if (T.rimProtect < 55) tags.push('ferro scoperto');
+  else if (T.rimProtect < 55) tags.push('area a porte aperte');
   if (T.perimD >= 72) tags.push('difesa perimetrale d\'élite');
   if (T.playmaking >= 86) tags.push('regia di alto livello');
-  else if (T.playmaking < 64) tags.push('poca regia');
-  if (T.usageTotal > 390) tags.push('troppe stelle');
-  return tags.length ? tags.join(' · ') : 'profilo equilibrato';
+  else if (T.playmaking < 64) tags.push('nessuno che sappia passarla');
+  if (T.usageTotal > 390) tags.push('troppe stelle e un pallone solo');
+  return tags.length ? tags.join(' · ') : 'profilo equilibrato, cioè anonimo';
 }

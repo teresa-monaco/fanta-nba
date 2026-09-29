@@ -219,11 +219,14 @@ console.log('='.repeat(74));
     TEAM_KEYS.forEach((k, j) => {
       T[k] = squadra(k, pool.slice(j * 5, j * 5 + 5), STRAT[Math.floor(rng() * STRAT.length)]);
     });
+    // Il tabellone e generico da quando si gioca da 2 a 12: gli accoppiamenti
+    // stanno in "ordine", a due a due. "semis" non esiste piu.
     const tab = componiTabellone(T, 't4-' + i);
-    const s1 = simSeriesUpTo(T[tab.semis[0][0]], T[tab.semis[0][1]], `t${i}:s1`, 7);
-    const s2 = simSeriesUpTo(T[tab.semis[1][0]], T[tab.semis[1][1]], `t${i}:s2`, 7);
-    controllaSerie(T[tab.semis[0][0]], T[tab.semis[0][1]], s1, 'semi1');
-    controllaSerie(T[tab.semis[1][0]], T[tab.semis[1][1]], s2, 'semi2');
+    const [a1, b1, a2, b2] = tab.ordine;
+    const s1 = simSeriesUpTo(T[a1], T[b1], `t${i}:s1`, 7);
+    const s2 = simSeriesUpTo(T[a2], T[b2], `t${i}:s2`, 7);
+    controllaSerie(T[a1], T[b1], s1, 'semi1');
+    controllaSerie(T[a2], T[b2], s2, 'semi2');
 
     const F1 = T[s1.winner], F2 = T[s2.winner];
     const f = simSeriesUpTo(F1, F2, `t${i}:f`, 7);
