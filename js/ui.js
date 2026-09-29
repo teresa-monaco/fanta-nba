@@ -9,6 +9,7 @@ import { narrateGame, explainSeries, teamIdentity, verdettoReferto } from './nar
 import * as S from './state.js';
 import { now } from './net.js';
 import { audioAcceso } from './suono.js';
+import { avatarSVG } from './avatar.js';
 
 export const ui = {
   nickname: localStorage.getItem('nbaf:nick') || '',
@@ -274,7 +275,7 @@ function viewAuction({ state: s, session }) {
         <div class="bidnow">${bid ? bid.amount : 0}<small> crediti</small></div>
         <div class="bidder">${bid ? `offerta di <b>${TEAM_NAMES[bid.team]}</b>` : '<span class="muted">nessuna offerta</span>'}</div>
       </div>
-      <div class="clock" id="clock">--</div>
+      <div class="clock" data-clock>--</div>
     </div>
 
     ${myTeam ? myTeamCard(s, myTeam, bid) : ''}
@@ -297,9 +298,20 @@ function myTeamCard(s, k, bid) {
   const left = S.slotsLeft(s, k);
   const max = S.maxBid(s, k);
   const leader = bid && bid.team === k;
-  const chips = t.roster.map((id) => D.byId[id]).filter(Boolean)
-    .map((p) => `<span class="chip">${esc(p.n)} <b>${p.ovr}</b></span>`).join('')
-    + Array.from({ length: left }, () => '<span class="chip empty">libero</span>').join('');
+  // Cinque caselle con il ruolo scritto sopra, non cinque "libero" uguali:
+  // durante l'asta la domanda vera e "chi mi manca", e un posto vuoto
+  // etichettato PG la risponde da solo.
+  const prov = S.slotProvvisori(t.roster);
+  const chips = SLOTS.map((sl) => {
+    const p = D.byId[prov[sl]];
+    if (!p) return `<div class="rslot vuoto"><span class="pos">${sl}</span><span class="nm">—</span></div>`;
+    const fuori = p.pos !== sl && !(p.alt || []).includes(sl);
+    return `<div class="rslot ${fuori ? 'adattato' : ''}">
+      <span class="pos">${sl}</span>
+      <span class="nm">${esc(p.n)}</span>
+      <span class="ov">${p.ovr}</span>
+    </div>`;
+  }).join('');
 
   return `<div class="card mine t-${k}">
     <div class="row spread">
@@ -311,7 +323,7 @@ function myTeamCard(s, k, bid) {
       <div><b>${t.roster.length}/${ROSTER_SIZE}</b><span>giocatori</span></div>
       <div><b>${max}</b><span>puoi arrivare a</span></div>
     </div>
-    <div class="chips">${chips}</div>
+    <div class="rslots">${chips}</div>
     ${left > 0 && max < (bid ? bid.amount + 1 : 1)
       ? '<p class="tiny warn-txt">Qui non puoi rilanciare: devi tenere crediti per gli slot che ti restano.</p>' : ''}
   </div>`;
@@ -342,7 +354,7 @@ function bidBar(s, bidders, bid, paused) {
     }).join('')}</div>`;
   }
 
-  return `<div class="bidbar-spacer ${bidders.length > 3 ? 'tall' : ''}"></div><div class="bidbar">${picker}${mostra.map((k) => {
+  return `<div class="bidbar-spacer ${bidders.length > 3 ? 'tall' : ''}"></div><div class="bidbar"><div class="bidbar-clock ${paused ? 'paused' : ''}"><span data-clock>--</span></div>${picker}${mostra.map((k) => {
     const max = S.maxBid(s, k);
     const leader = bid && bid.team === k;
     const tag = bidders.length > 1 ? `<span class="who t-${k}"><span class="dot"></span>${TEAM_NAMES[k]}</span>` : '';
@@ -377,21 +389,27 @@ function auctionLog(s, D) {
   return `<details class="card tight"><summary>Acquisti (${s.auction.log.length})</summary><div class="log mt">${rows}</div></details>`;
 }
 
+// Il cronometro vive in DUE punti: nel riquadro offerte e nella barra fissa
+// in basso. Il secondo e quello che conta davvero — decidi se rilanciare
+// guardando i tasti, e i tasti stanno in fondo: senza il conto alla rovescia
+// li accanto stavi scegliendo alla cieca.
 export function tickClock(s) {
-  const el = document.getElementById('clock');
-  if (!el) return null;
+  const els = document.querySelectorAll('[data-clock]');
+  if (!els.length) return null;
+  const scrivi = (testo, hot, frozen) => els.forEach((el) => {
+    el.textContent = testo;
+    el.classList.toggle('hot', hot);
+    el.classList.toggle('frozen', frozen);
+  });
+
   if (s.auction.paused) {
-    el.textContent = `fermo a ${Math.ceil((s.auction.remaining ?? 0) / 1000)}s`;
-    el.classList.remove('hot');
-    el.classList.add('frozen');
+    scrivi(`fermo a ${Math.ceil((s.auction.remaining ?? 0) / 1000)}s`, false, true);
     return null;
   }
-  el.classList.remove('frozen');
-  if (!s.auction.running || !s.auction.deadline) { el.textContent = 'in attesa'; return null; }
+  if (!s.auction.running || !s.auction.deadline) { scrivi('in attesa', false, false); return null; }
   const left = Math.max(0, s.auction.deadline - now());
   const sec = Math.ceil(left / 1000);
-  el.textContent = sec > 0 ? `${sec}s` : 'chiuso';
-  el.classList.toggle('hot', sec <= 5);
+  scrivi(sec > 0 ? `${sec}s` : 'chiuso', sec <= 5, false);
   return left;
 }
 
@@ -458,12 +476,7 @@ function viewSquadra({ state: s, session }) {
           </select></label>
         <p class="tiny muted mb">${esc(STRATEGIES[t.strategy]?.desc || '')}</p>
 
-        <span class="lbl-mini">Ritmo</span>
-        <div class="ritmo">
-          ${Object.entries(RITMI).map(([id, v]) => `<button class="rbtn ${t.ritmo === id ? 'on' : ''}"
-            ${canEdit ? `data-act="set-ritmo" data-team="${k}" data-v="${id}"` : 'disabled'}>${esc(v.label)}</button>`).join('')}
-        </div>
-        <p class="tiny muted mb">${esc(RITMI[t.ritmo]?.desc || '')}</p>
+        ${ritmoSlider(k, t, canEdit)}
 
         ${coachPicker(s, k, t, canEdit)}
       </div>
@@ -505,22 +518,67 @@ function viewSquadra({ state: s, session }) {
   `;
 }
 
+// Il ritmo non e una scelta fra quattro scatole separate: e un'unica manopola
+// che va da "partita corta" a "senza freni". Una barra lo dice da sola, e
+// mostra anche quanto sei lontano dagli estremi.
+function ritmoSlider(k, t, canEdit) {
+  const ids = Object.keys(RITMI);
+  const i = Math.max(0, ids.indexOf(t.ritmo));
+  const v = RITMI[ids[i]];
+  return `
+    <span class="lbl-mini">Ritmo <i class="tiny muted">— ${esc(v.label.toLowerCase())}</i></span>
+    <div class="ritmo-slider">
+      <input type="range" min="0" max="${ids.length - 1}" step="1" value="${i}"
+             class="rslider" aria-label="Ritmo"
+             ${canEdit ? `data-act="set-ritmo" data-team="${k}"` : 'disabled'}>
+      <div class="rtacche">${ids.map((id, j) => `<span class="${j === i ? 'on' : ''}">${esc(RITMI[id].label)}</span>`).join('')}</div>
+    </div>
+    <p class="tiny muted mb">${esc(v.desc)}</p>`;
+}
+
 // Gli allenatori li sblocca la rosa: uno per giocatore, quello della sua
 // squadra in quell'epoca. Ognuno e un patto, quindi accanto al nome sta
 // scritto cosa da e cosa toglie — altrimenti si sceglie a caso.
+// Cinque allenatori con nome, identita, effetto e provenienza sono troppo da
+// leggere tutti insieme: si finiva per sceglierne uno a caso. Uno alla volta,
+// con la faccia, si scorre col dito e si legge solo quello che si guarda.
 function coachPicker(s, k, t, canEdit) {
   const liberi = S.allenatoriDi(s.teams[k].roster);
   if (!liberi.length) return '';
-  const sel = liberi.find((c) => c.id === t.coach) || null;
+
+  const carte = liberi.map((c, i) => {
+    const scelto = c.id === t.coach;
+    // Impaginazione in verticale: faccia su una riga sua, poi il testo a
+    // tutta larghezza. Affiancati, su un telefono il testo finiva in una
+    // colonna da una parola per riga.
+    return `<article class="ccard ${scelto ? 'on' : ''}" ${scelto ? 'data-coach-scelto' : ''}>
+      <div class="ctesta">
+        <div class="cface">${avatarSVG(c, 72)}</div>
+        <span class="cconta">${i + 1}/${liberi.length}</span>
+      </div>
+      <div class="cinfo">
+        <b>${esc(c.n)}</b>
+        <span class="cid">${esc(c.label)}</span>
+        <p class="cdesc">${esc(c.desc)}</p>
+        <p class="ceff">${esc(effettoInParole(c))}</p>
+        <p class="cvia">sbloccato da ${esc(c.da)}</p>
+      </div>
+      ${canEdit
+        ? `<button class="csel ${scelto ? 'on' : ''}" data-act="set-coach" data-team="${k}" data-v="${c.id}">
+             ${scelto ? 'Scelto' : 'Scegli'}</button>`
+        : `<div class="csel ${scelto ? 'on' : ''}">${scelto ? 'Scelto' : ''}</div>`}
+    </article>`;
+  }).join('');
+
   return `
-    <span class="lbl-mini">Allenatore <i class="tiny muted">— sbloccati dai tuoi giocatori</i></span>
-    <div class="coaches">
-      ${liberi.map((c) => `<button class="cbtn ${c.id === t.coach ? 'on' : ''}"
-        ${canEdit ? `data-act="set-coach" data-team="${k}" data-v="${c.id}"` : 'disabled'}>
-        <b>${esc(c.n)}</b><span>${esc(c.label)}</span><i>via ${esc(c.da)}</i>
-      </button>`).join('')}
+    <div class="row spread" style="align-items:baseline">
+      <span class="lbl-mini">Allenatore <i class="tiny muted">— dai tuoi giocatori</i></span>
+      ${liberi.length > 1 ? `<span class="cfrecce">
+        <button class="cfr" data-act="coach-scorri" data-team="${k}" data-dir="-1" aria-label="Allenatore precedente">‹</button>
+        <button class="cfr" data-act="coach-scorri" data-team="${k}" data-dir="1" aria-label="Allenatore successivo">›</button>
+      </span>` : ''}
     </div>
-    ${sel ? `<p class="tiny muted">${esc(sel.desc)} ${esc(effettoInParole(sel))}</p>` : ''}`;
+    <div class="cstrip" id="coaches-${k}" data-coach-strip>${carte}</div>`;
 }
 
 // L'effetto in chiaro. Un allenatore che non dice cosa fa e un bonus cieco.
@@ -717,7 +775,12 @@ function serieCard(titolo, A, B, f, meta, passo, isHost, act) {
     ? `Vai — Gara ${n + 1}`
     : (n === 0 ? 'Vai — le prime due gare' : `Vai — Gare ${n + 1} e ${n + 2}`);
 
-  const games = f.games.map((g) => gameBlock(A, B, g)).join('')
+  // Restano aperte le gare dell'ultimo giro (due in semifinale, una nelle
+  // Finals): quelle appena scoperte. Le precedenti si richiudono a una riga.
+  const daAprire = f.done ? 1 : passo;
+  const games = f.games.map((g, i) =>
+    gameBlock(A, B, g, i >= f.games.length - daAprire,
+      i === f.games.length - 1 ? (f.done ? 'chiusa' : 'viva') : null)).join('')
     || '<p class="small muted center" style="padding:12px 0">Non è ancora iniziata.</p>';
 
   const coda = f.done
@@ -774,15 +837,28 @@ export function alboCard(s) {
   </div>`;
 }
 
-function gameBlock(A, B, g) {
+// Le gare gia lette si richiudono a una riga sola. Aperte tutte, una serie da
+// sette diventava un muro di testo: chi guardava senza toccare niente restava
+// fermo su gara 1 mentre il tavolo era gia a gara 6, e non se ne accorgeva.
+function gameBlock(A, B, g, aperta = true, ultima = null) {
   const aWon = g.scoreA > g.scoreB;
-  const box = [...g.boxA.map((l) => ({ ...l, t: A.name })), ...g.boxB.map((l) => ({ ...l, t: B.name }))]
-    .sort((x, y) => y.pts - x.pts).slice(0, 5);
-  return `<div class="game">
-    <div class="line">
+  const testa = `<div class="line">
       <span class="gname">Gara ${g.n}${g.ot ? ' · OT' : ''}</span>
       <span class="res"><span class="${aWon ? 'w' : ''}">${A.name} ${g.scoreA}</span> — <span class="${aWon ? '' : 'w'}">${g.scoreB} ${B.name}</span></span>
-    </div>
+    </div>`;
+
+  if (!aperta) {
+    return `<div class="game chiusa">${testa}</div>`;
+  }
+
+  const box = [...g.boxA.map((l) => ({ ...l, t: A.name })), ...g.boxB.map((l) => ({ ...l, t: B.name }))]
+    .sort((x, y) => y.pts - x.pts).slice(0, 5);
+  // Il segnaposto serve ad app.js per portare in vista l'ultima gara appena
+  // scoperta, anche su chi sta solo guardando e non ha premuto niente. Vale
+  // "viva" se la serie e ancora in corso: con due semifinali aperte insieme
+  // e da quella che resta da leggere che si deve ripartire.
+  return `<div class="game"${ultima ? ` data-ultima-gara="${ultima}"` : ''}>
+    ${testa}
     <div class="story">${esc(narrateGame(A, B, g))}</div>
     <details class="box"><summary>Box score</summary>
       <table>${box.map((l) => `<tr><td class="n">${esc(l.n)}</td><td class="muted tiny">${esc(l.t)}</td>

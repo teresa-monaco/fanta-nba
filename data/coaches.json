@@ -17,136 +17,769 @@
     "  var    quanto rende la squadra imprevedibile (negativo = piu solida)",
     "",
     "Le assegnazioni squadra|epoca seguono chi ha davvero allenato quella squadra in",
-    "quel decennio, con i giocatori che stanno nel pool."
+    "quel decennio, con i giocatori che stanno nel pool.",
+    "",
+    "look: i tratti dell'avatar, separati da virgola. Sono una caricatura",
+    "costruita da pochi elementi (capelli, colore, barba o baffi, occhiali,",
+    "incarnato), non un ritratto: servono a riconoscerlo a colpo d'occhio",
+    "mentre si scorre, non a somigliargli davvero."
   ],
-
   "archetipi": {
     "stella": {
-      "label": "Il sistema serve la stella",
-      "desc": "Tutto passa dal primo violino: lui cresce, gli altri si adattano.",
-      "eff": { "star": { "sco": 7, "pla": 3 }, "altri": { "sco": -2 } }
+      "label": "Tutto sulla stella",
+      "desc": "Costruisce la squadra attorno al primo violino. Lui segna di più, gli altri quattro si arrangiano.",
+      "eff": {
+        "star": {
+          "sco": 7,
+          "pla": 3
+        },
+        "altri": {
+          "sco": -2
+        }
+      }
     },
     "sistema": {
-      "label": "Il collettivo sopra la stella",
-      "desc": "Palla che gira e difesa di squadra, ma la stella segna meno.",
-      "eff": { "attr": { "pla": 4, "dif": 2 }, "star": { "sco": -5 } }
+      "label": "Prima il collettivo",
+      "desc": "La palla gira e la difesa si aiuta, ma il campione non è più il centro di tutto.",
+      "eff": {
+        "attr": {
+          "pla": 4,
+          "dif": 2
+        },
+        "star": {
+          "sco": -5
+        }
+      }
     },
     "difesa": {
-      "label": "Difesa e basta",
-      "desc": "Metà campo blindata, punteggi bassi, nessuna sorpresa.",
-      "eff": { "attr": { "dif": 5, "dpe": 4, "sco": -4 }, "poss": -3, "var": -0.04 }
+      "label": "Difesa prima di tutto",
+      "desc": "Metà campo blindata e ritmo basso. Si segna poco, ma si concede ancora meno.",
+      "eff": {
+        "attr": {
+          "dif": 5,
+          "dpe": 4,
+          "sco": -4
+        },
+        "poss": -3,
+        "var": -0.04
+      }
     },
     "fisico": {
-      "label": "Fisicità e rimbalzo",
-      "desc": "Si vince a rimbalzo e di contatto, si rinuncia al tiro da fuori.",
-      "eff": { "attr": { "reb": 5, "dif": 3, "tre": -4 }, "poss": -3 }
+      "label": "Muscoli e rimbalzi",
+      "desc": "Partita dura, sotto le plance si comanda. Il tiro da fuori però si perde per strada.",
+      "eff": {
+        "attr": {
+          "reb": 5,
+          "dif": 3,
+          "tre": -4
+        },
+        "poss": -3
+      }
     },
     "corsa": {
-      "label": "Correre sempre",
-      "desc": "Tanti possessi e tanti punti, con la difesa che ne paga il conto.",
-      "eff": { "attr": { "atl": 5, "tre": 3, "dif": -3 }, "poss": 6 }
+      "label": "Si corre sempre",
+      "desc": "Contropiede a ogni pallone. Tanti punti fatti, e parecchi anche subiti.",
+      "eff": {
+        "attr": {
+          "atl": 5,
+          "tre": 3,
+          "dif": -3
+        },
+        "poss": 6
+      }
     },
     "tiro": {
-      "label": "Spaziatura e tiro da tre",
-      "desc": "Campo aperto e conclusioni da fuori, pitturato lasciato scoperto.",
-      "eff": { "attr": { "tre": 6, "pla": 2, "reb": -3, "dif": -3 } }
+      "label": "Campo largo, tiro da tre",
+      "desc": "Cinque uomini fuori e canestro spalancato dietro l'arco. In area non difende nessuno.",
+      "eff": {
+        "attr": {
+          "tre": 6,
+          "pla": 2,
+          "reb": -3,
+          "dif": -3
+        }
+      }
     },
     "pickroll": {
-      "label": "Disciplina e pick and roll",
-      "desc": "Esecuzione ripetuta fino alla noia: poche palle perse, poche serate storte.",
-      "eff": { "attr": { "pla": 4, "reb": 2 }, "poss": -2, "var": -0.05 }
+      "label": "Schemi e ripetizione",
+      "desc": "Sempre la stessa giocata, provata fino alla noia. Poche palle perse e poche serate no.",
+      "eff": {
+        "attr": {
+          "pla": 4,
+          "reb": 2
+        },
+        "poss": -2,
+        "var": -0.05
+      }
     },
     "versatile": {
-      "label": "Difesa mutevole",
-      "desc": "Si cambia tutto e si aggredisce il perimetro, a scapito della produzione.",
-      "eff": { "attr": { "dpe": 6, "atl": 3, "sco": -3 } }
+      "label": "Difesa a cambi",
+      "desc": "Si cambia su tutto e si pressa il portatore. In attacco però si produce meno.",
+      "eff": {
+        "attr": {
+          "dpe": 6,
+          "atl": 3,
+          "sco": -3
+        }
+      }
     },
     "equilibrio": {
-      "label": "Mano ferma",
-      "desc": "Nessuno ha trattamenti speciali: più pavimento, meno soffitto.",
-      "eff": { "attr": { "pla": 3, "dif": 3 }, "star": { "sco": -4 }, "var": -0.06 }
+      "label": "Squadra senza padroni",
+      "desc": "Nessun trattamento di favore per nessuno. Più continuità, meno serate memorabili.",
+      "eff": {
+        "attr": {
+          "pla": 3,
+          "dif": 3
+        },
+        "star": {
+          "sco": -4
+        },
+        "var": -0.06
+      }
     },
     "dentro": {
-      "label": "Si gioca dentro",
-      "desc": "Palla al lungo e rimbalzo d'attacco, il tiro da fuori è un ripiego.",
-      "eff": { "attr": { "sco": 3, "reb": 4, "tre": -5 }, "poss": -3 }
+      "label": "Si gioca in area",
+      "desc": "Palla al lungo spalle a canestro e secondi tiri. Da fuori si tira solo se costretti.",
+      "eff": {
+        "attr": {
+          "sco": 3,
+          "reb": 4,
+          "tre": -5
+        },
+        "poss": -3
+      }
     }
   },
-
   "allenatori": [
-    { "id": "jackson",     "n": "Phil Jackson",       "arc": "stella",     "tm": ["Bulls|1990s", "Lakers|2000s"] },
-    { "id": "lue",         "n": "Tyronn Lue",         "arc": "stella",     "tm": ["Cavaliers|2010s"] },
-    { "id": "brooks",      "n": "Scott Brooks",       "arc": "stella",     "tm": ["Thunder|2010s", "Wizards|2010s"] },
-    { "id": "kcjones",     "n": "K.C. Jones",         "arc": "stella",     "tm": ["Celtics|1980s"] },
-    { "id": "woodson",     "n": "Mike Woodson",       "arc": "stella",     "tm": ["Hawks|2000s"] },
-
-    { "id": "popovich",    "n": "Gregg Popovich",     "arc": "sistema",    "tm": ["Spurs|1990s", "Spurs|2000s", "Spurs|2020s"] },
-    { "id": "kerr",        "n": "Steve Kerr",         "arc": "sistema",    "tm": ["Warriors|2010s", "Warriors|2020s"] },
-    { "id": "carlisle",    "n": "Rick Carlisle",      "arc": "sistema",    "tm": ["Mavericks|2010s", "Pacers|2000s", "Pacers|2020s"] },
-    { "id": "stevens",     "n": "Brad Stevens",       "arc": "sistema",    "tm": ["Celtics|2010s"] },
-    { "id": "larrybrown",  "n": "Larry Brown",        "arc": "sistema",    "tm": ["Nets|1980s", "Sixers|1990s", "Sixers|2000s", "Pistons|2000s", "Bobcats|2010s"] },
-
-    { "id": "thibodeau",   "n": "Tom Thibodeau",      "arc": "difesa",     "tm": ["Bulls|2010s", "Knicks|2020s"] },
-    { "id": "jvangundy",   "n": "Jeff Van Gundy",     "arc": "difesa",     "tm": ["Knicks|1990s", "Rockets|2000s"] },
-    { "id": "vogel",       "n": "Frank Vogel",        "arc": "difesa",     "tm": ["Pacers|2010s"] },
-    { "id": "joerger",     "n": "Dave Joerger",       "arc": "difesa",     "tm": ["Grizzlies|2010s"] },
-
-    { "id": "riley",       "n": "Pat Riley",          "arc": "fisico",     "tm": ["Lakers|1980s", "Heat|1990s", "Heat|2000s"] },
-    { "id": "daly",        "n": "Chuck Daly",         "arc": "fisico",     "tm": ["Pistons|1980s"] },
-    { "id": "unseld",      "n": "Wes Unseld",         "arc": "fisico",     "tm": ["Wizards|1990s"] },
-    { "id": "billups",     "n": "Chauncey Billups",   "arc": "fisico",     "tm": ["Blazers|2020s"] },
-    { "id": "green",       "n": "Willie Green",       "arc": "fisico",     "tm": ["Pelicans|2020s"] },
-
-    { "id": "dantoni",     "n": "Mike D'Antoni",      "arc": "corsa",      "tm": ["Suns|2000s", "Knicks|2010s", "Rockets|2010s"] },
-    { "id": "karl",        "n": "George Karl",        "arc": "corsa",      "tm": ["Sonics|1990s", "Nuggets|2000s", "Nuggets|2010s"] },
-    { "id": "nelson",      "n": "Don Nelson",         "arc": "corsa",      "tm": ["Bucks|1980s", "Warriors|1990s", "Mavericks|2000s", "Warriors|2000s"] },
-    { "id": "moe",         "n": "Doug Moe",           "arc": "corsa",      "tm": ["Nuggets|1980s"] },
-    { "id": "cunningham",  "n": "Billy Cunningham",   "arc": "corsa",      "tm": ["Sixers|1980s"] },
-    { "id": "westphal",    "n": "Paul Westphal",      "arc": "corsa",      "tm": ["Suns|1990s"] },
-
-    { "id": "budenholzer", "n": "Mike Budenholzer",   "arc": "tiro",       "tm": ["Hawks|2010s", "Bucks|2020s"] },
-    { "id": "mazzulla",    "n": "Joe Mazzulla",       "arc": "tiro",       "tm": ["Celtics|2020s"] },
-    { "id": "stotts",      "n": "Terry Stotts",       "arc": "tiro",       "tm": ["Blazers|2010s"] },
-    { "id": "finch",       "n": "Chris Finch",        "arc": "tiro",       "tm": ["Timberwolves|2020s"] },
-    { "id": "hardy",       "n": "Will Hardy",         "arc": "tiro",       "tm": ["Jazz|2020s"] },
-    { "id": "mosley",      "n": "Jamahl Mosley",      "arc": "tiro",       "tm": ["Magic|2020s"] },
-
-    { "id": "sloan",       "n": "Jerry Sloan",        "arc": "pickroll",   "tm": ["Jazz|1980s", "Jazz|1990s", "Jazz|2000s"] },
-    { "id": "adelman",     "n": "Rick Adelman",       "arc": "pickroll",   "tm": ["Blazers|1990s", "Kings|1990s", "Kings|2000s", "Timberwolves|2010s"] },
-    { "id": "mmalone",     "n": "Michael Malone",     "arc": "pickroll",   "tm": ["Kings|2010s", "Nuggets|2020s"] },
-    { "id": "dunleavy",    "n": "Mike Dunleavy",      "arc": "pickroll",   "tm": ["Bucks|1990s", "Clippers|2000s"] },
-    { "id": "mcmillan",    "n": "Nate McMillan",      "arc": "pickroll",   "tm": ["Sonics|2000s", "Blazers|2000s"] },
-    { "id": "kidd",        "n": "Jason Kidd",         "arc": "pickroll",   "tm": ["Mavericks|2020s"] },
-
-    { "id": "spoelstra",   "n": "Erik Spoelstra",     "arc": "versatile",  "tm": ["Heat|2010s", "Heat|2020s"] },
-    { "id": "nurse",       "n": "Nick Nurse",         "arc": "versatile",  "tm": ["Raptors|2010s", "Raptors|2020s", "Sixers|2020s"] },
-    { "id": "daigneault",  "n": "Mark Daigneault",    "arc": "versatile",  "tm": ["Thunder|2020s"] },
-    { "id": "udoka",       "n": "Ime Udoka",          "arc": "versatile",  "tm": ["Rockets|2020s"] },
-    { "id": "snyder",      "n": "Quin Snyder",        "arc": "versatile",  "tm": ["Jazz|2010s", "Hawks|2020s"] },
-    { "id": "bickerstaff", "n": "J.B. Bickerstaff",   "arc": "versatile",  "tm": ["Cavaliers|2020s"] },
-
-    { "id": "wilkens",     "n": "Lenny Wilkens",      "arc": "equilibrio", "tm": ["Sonics|1980s", "Cavaliers|1990s", "Hawks|1990s", "Knicks|2000s", "Raptors|2000s"] },
-    { "id": "rivers",      "n": "Doc Rivers",         "arc": "equilibrio", "tm": ["Celtics|2000s", "Clippers|2010s"] },
-    { "id": "clifford",    "n": "Steve Clifford",     "arc": "equilibrio", "tm": ["Hornets|2010s", "Hornets|2020s"] },
-    { "id": "hornacek",    "n": "Jeff Hornacek",      "arc": "equilibrio", "tm": ["Suns|2010s"] },
-    { "id": "motta",       "n": "Dick Motta",         "arc": "equilibrio", "tm": ["Mavericks|1980s"] },
-    { "id": "fitzsimmons", "n": "Cotton Fitzsimmons", "arc": "equilibrio", "tm": ["Spurs|1980s"] },
-    { "id": "bird",        "n": "Larry Bird",         "arc": "equilibrio", "tm": ["Pacers|1990s"] },
-    { "id": "collins",     "n": "Doug Collins",       "arc": "equilibrio", "tm": ["Pistons|1990s"] },
-    { "id": "ejordan",     "n": "Eddie Jordan",       "arc": "equilibrio", "tm": ["Wizards|2000s"] },
-    { "id": "bscott",      "n": "Byron Scott",        "arc": "equilibrio", "tm": ["Nets|2000s"] },
-    { "id": "mbrown",      "n": "Mike Brown",         "arc": "equilibrio", "tm": ["Cavaliers|2000s", "Kings|2020s"] },
-    { "id": "donovan",     "n": "Billy Donovan",      "arc": "equilibrio", "tm": ["Bulls|2020s"] },
-    { "id": "jenkins",     "n": "Taylor Jenkins",     "arc": "equilibrio", "tm": ["Grizzlies|2020s"] },
-    { "id": "monty",       "n": "Monty Williams",     "arc": "equilibrio", "tm": ["Pelicans|2010s", "Suns|2020s", "Pistons|2020s"] },
-
-    { "id": "rudyt",       "n": "Rudy Tomjanovich",   "arc": "dentro",     "tm": ["Rockets|1990s"] },
-    { "id": "hubie",       "n": "Hubie Brown",        "arc": "dentro",     "tm": ["Knicks|1980s"] },
-    { "id": "cowens",      "n": "Dave Cowens",        "arc": "dentro",     "tm": ["Hornets|1990s"] },
-    { "id": "saunders",    "n": "Flip Saunders",      "arc": "dentro",     "tm": ["Timberwolves|2000s"] },
-    { "id": "svangundy",   "n": "Stan Van Gundy",     "arc": "dentro",     "tm": ["Magic|2000s", "Pistons|2010s"] },
-    { "id": "hill",        "n": "Brian Hill",         "arc": "dentro",     "tm": ["Magic|1990s"] },
-    { "id": "issel",       "n": "Dan Issel",          "arc": "dentro",     "tm": ["Nuggets|1990s"] },
-    { "id": "brettbrown",  "n": "Brett Brown",        "arc": "dentro",     "tm": ["Sixers|2010s"] }
+    {
+      "id": "jackson",
+      "n": "Phil Jackson",
+      "arc": "stella",
+      "look": "rado,bianco,barba,occhiali",
+      "tm": [
+        "Bulls|1990s",
+        "Lakers|2000s"
+      ]
+    },
+    {
+      "id": "lue",
+      "n": "Tyronn Lue",
+      "arc": "stella",
+      "look": "calvo,scura,barba",
+      "tm": [
+        "Cavaliers|2010s"
+      ]
+    },
+    {
+      "id": "brooks",
+      "n": "Scott Brooks",
+      "arc": "stella",
+      "look": "corti,castano",
+      "tm": [
+        "Thunder|2010s",
+        "Wizards|2010s"
+      ]
+    },
+    {
+      "id": "kcjones",
+      "n": "K.C. Jones",
+      "arc": "stella",
+      "look": "corti,grigio,scura",
+      "tm": [
+        "Celtics|1980s"
+      ]
+    },
+    {
+      "id": "woodson",
+      "n": "Mike Woodson",
+      "arc": "stella",
+      "look": "calvo,scura,baffi",
+      "tm": [
+        "Hawks|2000s"
+      ]
+    },
+    {
+      "id": "popovich",
+      "n": "Gregg Popovich",
+      "arc": "sistema",
+      "look": "rado,grigio,pizzetto",
+      "tm": [
+        "Spurs|1990s",
+        "Spurs|2000s",
+        "Spurs|2020s"
+      ]
+    },
+    {
+      "id": "kerr",
+      "n": "Steve Kerr",
+      "arc": "sistema",
+      "look": "corti,castano",
+      "tm": [
+        "Warriors|2010s",
+        "Warriors|2020s"
+      ]
+    },
+    {
+      "id": "carlisle",
+      "n": "Rick Carlisle",
+      "arc": "sistema",
+      "look": "corti,castano",
+      "tm": [
+        "Mavericks|2010s",
+        "Pacers|2000s",
+        "Pacers|2020s"
+      ]
+    },
+    {
+      "id": "stevens",
+      "n": "Brad Stevens",
+      "arc": "sistema",
+      "look": "corti,castano",
+      "tm": [
+        "Celtics|2010s"
+      ]
+    },
+    {
+      "id": "larrybrown",
+      "n": "Larry Brown",
+      "arc": "sistema",
+      "look": "rado,bianco,occhiali",
+      "tm": [
+        "Nets|1980s",
+        "Sixers|1990s",
+        "Sixers|2000s",
+        "Pistons|2000s",
+        "Bobcats|2010s"
+      ]
+    },
+    {
+      "id": "thibodeau",
+      "n": "Tom Thibodeau",
+      "arc": "difesa",
+      "look": "rado,grigio",
+      "tm": [
+        "Bulls|2010s",
+        "Knicks|2020s"
+      ]
+    },
+    {
+      "id": "jvangundy",
+      "n": "Jeff Van Gundy",
+      "arc": "difesa",
+      "look": "calvo,occhiali",
+      "tm": [
+        "Knicks|1990s",
+        "Rockets|2000s"
+      ]
+    },
+    {
+      "id": "vogel",
+      "n": "Frank Vogel",
+      "arc": "difesa",
+      "look": "calvo,castano",
+      "tm": [
+        "Pacers|2010s"
+      ]
+    },
+    {
+      "id": "joerger",
+      "n": "Dave Joerger",
+      "arc": "difesa",
+      "look": "corti,castano",
+      "tm": [
+        "Grizzlies|2010s"
+      ]
+    },
+    {
+      "id": "riley",
+      "n": "Pat Riley",
+      "arc": "fisico",
+      "look": "folti,scuro",
+      "tm": [
+        "Lakers|1980s",
+        "Heat|1990s",
+        "Heat|2000s"
+      ]
+    },
+    {
+      "id": "daly",
+      "n": "Chuck Daly",
+      "arc": "fisico",
+      "look": "folti,bianco",
+      "tm": [
+        "Pistons|1980s"
+      ]
+    },
+    {
+      "id": "unseld",
+      "n": "Wes Unseld",
+      "arc": "fisico",
+      "look": "calvo,scura,baffi",
+      "tm": [
+        "Wizards|1990s"
+      ]
+    },
+    {
+      "id": "billups",
+      "n": "Chauncey Billups",
+      "arc": "fisico",
+      "look": "calvo,scura,barba",
+      "tm": [
+        "Blazers|2020s"
+      ]
+    },
+    {
+      "id": "green",
+      "n": "Willie Green",
+      "arc": "fisico",
+      "look": "calvo,scura",
+      "tm": [
+        "Pelicans|2020s"
+      ]
+    },
+    {
+      "id": "dantoni",
+      "n": "Mike D'Antoni",
+      "arc": "corsa",
+      "look": "corti,grigio,baffi",
+      "tm": [
+        "Suns|2000s",
+        "Knicks|2010s",
+        "Rockets|2010s"
+      ]
+    },
+    {
+      "id": "karl",
+      "n": "George Karl",
+      "arc": "corsa",
+      "look": "rado,bianco",
+      "tm": [
+        "Sonics|1990s",
+        "Nuggets|2000s",
+        "Nuggets|2010s"
+      ]
+    },
+    {
+      "id": "nelson",
+      "n": "Don Nelson",
+      "arc": "corsa",
+      "look": "rado,bianco",
+      "tm": [
+        "Bucks|1980s",
+        "Warriors|1990s",
+        "Mavericks|2000s",
+        "Warriors|2000s"
+      ]
+    },
+    {
+      "id": "moe",
+      "n": "Doug Moe",
+      "arc": "corsa",
+      "look": "corti,grigio",
+      "tm": [
+        "Nuggets|1980s"
+      ]
+    },
+    {
+      "id": "cunningham",
+      "n": "Billy Cunningham",
+      "arc": "corsa",
+      "look": "corti,castano",
+      "tm": [
+        "Sixers|1980s"
+      ]
+    },
+    {
+      "id": "westphal",
+      "n": "Paul Westphal",
+      "arc": "corsa",
+      "look": "corti,castano",
+      "tm": [
+        "Suns|1990s"
+      ]
+    },
+    {
+      "id": "budenholzer",
+      "n": "Mike Budenholzer",
+      "arc": "tiro",
+      "look": "rado,castano",
+      "tm": [
+        "Hawks|2010s",
+        "Bucks|2020s"
+      ]
+    },
+    {
+      "id": "mazzulla",
+      "n": "Joe Mazzulla",
+      "arc": "tiro",
+      "look": "corti,scuro,barba",
+      "tm": [
+        "Celtics|2020s"
+      ]
+    },
+    {
+      "id": "stotts",
+      "n": "Terry Stotts",
+      "arc": "tiro",
+      "look": "corti,grigio",
+      "tm": [
+        "Blazers|2010s"
+      ]
+    },
+    {
+      "id": "finch",
+      "n": "Chris Finch",
+      "arc": "tiro",
+      "look": "corti,castano",
+      "tm": [
+        "Timberwolves|2020s"
+      ]
+    },
+    {
+      "id": "hardy",
+      "n": "Will Hardy",
+      "arc": "tiro",
+      "look": "corti,castano",
+      "tm": [
+        "Jazz|2020s"
+      ]
+    },
+    {
+      "id": "mosley",
+      "n": "Jamahl Mosley",
+      "arc": "tiro",
+      "look": "corti,scura,barba",
+      "tm": [
+        "Magic|2020s"
+      ]
+    },
+    {
+      "id": "sloan",
+      "n": "Jerry Sloan",
+      "arc": "pickroll",
+      "look": "corti,grigio",
+      "tm": [
+        "Jazz|1980s",
+        "Jazz|1990s",
+        "Jazz|2000s"
+      ]
+    },
+    {
+      "id": "adelman",
+      "n": "Rick Adelman",
+      "arc": "pickroll",
+      "look": "corti,grigio",
+      "tm": [
+        "Blazers|1990s",
+        "Kings|1990s",
+        "Kings|2000s",
+        "Timberwolves|2010s"
+      ]
+    },
+    {
+      "id": "mmalone",
+      "n": "Michael Malone",
+      "arc": "pickroll",
+      "look": "corti,castano,barba",
+      "tm": [
+        "Kings|2010s",
+        "Nuggets|2020s"
+      ]
+    },
+    {
+      "id": "dunleavy",
+      "n": "Mike Dunleavy",
+      "arc": "pickroll",
+      "look": "corti,grigio",
+      "tm": [
+        "Bucks|1990s",
+        "Clippers|2000s"
+      ]
+    },
+    {
+      "id": "mcmillan",
+      "n": "Nate McMillan",
+      "arc": "pickroll",
+      "look": "calvo,scura",
+      "tm": [
+        "Sonics|2000s",
+        "Blazers|2000s"
+      ]
+    },
+    {
+      "id": "kidd",
+      "n": "Jason Kidd",
+      "arc": "pickroll",
+      "look": "calvo,scura",
+      "tm": [
+        "Mavericks|2020s"
+      ]
+    },
+    {
+      "id": "spoelstra",
+      "n": "Erik Spoelstra",
+      "arc": "versatile",
+      "look": "corti,scuro,olivastra",
+      "tm": [
+        "Heat|2010s",
+        "Heat|2020s"
+      ]
+    },
+    {
+      "id": "nurse",
+      "n": "Nick Nurse",
+      "arc": "versatile",
+      "look": "corti,grigio,occhiali",
+      "tm": [
+        "Raptors|2010s",
+        "Raptors|2020s",
+        "Sixers|2020s"
+      ]
+    },
+    {
+      "id": "daigneault",
+      "n": "Mark Daigneault",
+      "arc": "versatile",
+      "look": "corti,castano,barba",
+      "tm": [
+        "Thunder|2020s"
+      ]
+    },
+    {
+      "id": "udoka",
+      "n": "Ime Udoka",
+      "arc": "versatile",
+      "look": "calvo,scura,barba",
+      "tm": [
+        "Rockets|2020s"
+      ]
+    },
+    {
+      "id": "snyder",
+      "n": "Quin Snyder",
+      "arc": "versatile",
+      "look": "folti,castano",
+      "tm": [
+        "Jazz|2010s",
+        "Hawks|2020s"
+      ]
+    },
+    {
+      "id": "bickerstaff",
+      "n": "J.B. Bickerstaff",
+      "arc": "versatile",
+      "look": "calvo,scura,barba",
+      "tm": [
+        "Cavaliers|2020s"
+      ]
+    },
+    {
+      "id": "wilkens",
+      "n": "Lenny Wilkens",
+      "arc": "equilibrio",
+      "look": "corti,grigio,scura",
+      "tm": [
+        "Sonics|1980s",
+        "Cavaliers|1990s",
+        "Hawks|1990s",
+        "Knicks|2000s",
+        "Raptors|2000s"
+      ]
+    },
+    {
+      "id": "rivers",
+      "n": "Doc Rivers",
+      "arc": "equilibrio",
+      "look": "corti,grigio,scura",
+      "tm": [
+        "Celtics|2000s",
+        "Clippers|2010s"
+      ]
+    },
+    {
+      "id": "clifford",
+      "n": "Steve Clifford",
+      "arc": "equilibrio",
+      "look": "rado,grigio",
+      "tm": [
+        "Hornets|2010s",
+        "Hornets|2020s"
+      ]
+    },
+    {
+      "id": "hornacek",
+      "n": "Jeff Hornacek",
+      "arc": "equilibrio",
+      "look": "corti,castano",
+      "tm": [
+        "Suns|2010s"
+      ]
+    },
+    {
+      "id": "motta",
+      "n": "Dick Motta",
+      "arc": "equilibrio",
+      "look": "corti,grigio,occhiali",
+      "tm": [
+        "Mavericks|1980s"
+      ]
+    },
+    {
+      "id": "fitzsimmons",
+      "n": "Cotton Fitzsimmons",
+      "arc": "equilibrio",
+      "look": "rado,grigio",
+      "tm": [
+        "Spurs|1980s"
+      ]
+    },
+    {
+      "id": "bird",
+      "n": "Larry Bird",
+      "arc": "equilibrio",
+      "look": "folti,biondo",
+      "tm": [
+        "Pacers|1990s"
+      ]
+    },
+    {
+      "id": "collins",
+      "n": "Doug Collins",
+      "arc": "equilibrio",
+      "look": "corti,grigio",
+      "tm": [
+        "Pistons|1990s"
+      ]
+    },
+    {
+      "id": "ejordan",
+      "n": "Eddie Jordan",
+      "arc": "equilibrio",
+      "look": "corti,scura",
+      "tm": [
+        "Wizards|2000s"
+      ]
+    },
+    {
+      "id": "bscott",
+      "n": "Byron Scott",
+      "arc": "equilibrio",
+      "look": "corti,scura,baffi",
+      "tm": [
+        "Nets|2000s"
+      ]
+    },
+    {
+      "id": "mbrown",
+      "n": "Mike Brown",
+      "arc": "equilibrio",
+      "look": "corti,scuro,scura",
+      "tm": [
+        "Cavaliers|2000s",
+        "Kings|2020s"
+      ]
+    },
+    {
+      "id": "donovan",
+      "n": "Billy Donovan",
+      "arc": "equilibrio",
+      "look": "corti,grigio",
+      "tm": [
+        "Bulls|2020s"
+      ]
+    },
+    {
+      "id": "jenkins",
+      "n": "Taylor Jenkins",
+      "arc": "equilibrio",
+      "look": "corti,castano,barba",
+      "tm": [
+        "Grizzlies|2020s"
+      ]
+    },
+    {
+      "id": "monty",
+      "n": "Monty Williams",
+      "arc": "equilibrio",
+      "look": "calvo,scura",
+      "tm": [
+        "Pelicans|2010s",
+        "Suns|2020s",
+        "Pistons|2020s"
+      ]
+    },
+    {
+      "id": "rudyt",
+      "n": "Rudy Tomjanovich",
+      "arc": "dentro",
+      "look": "corti,grigio,baffi",
+      "tm": [
+        "Rockets|1990s"
+      ]
+    },
+    {
+      "id": "hubie",
+      "n": "Hubie Brown",
+      "arc": "dentro",
+      "look": "rado,bianco,occhiali",
+      "tm": [
+        "Knicks|1980s"
+      ]
+    },
+    {
+      "id": "cowens",
+      "n": "Dave Cowens",
+      "arc": "dentro",
+      "look": "riccio,rosso,barba",
+      "tm": [
+        "Hornets|1990s"
+      ]
+    },
+    {
+      "id": "saunders",
+      "n": "Flip Saunders",
+      "arc": "dentro",
+      "look": "corti,scuro",
+      "tm": [
+        "Timberwolves|2000s"
+      ]
+    },
+    {
+      "id": "svangundy",
+      "n": "Stan Van Gundy",
+      "arc": "dentro",
+      "look": "rado,scuro,baffi,occhiali",
+      "tm": [
+        "Magic|2000s",
+        "Pistons|2010s"
+      ]
+    },
+    {
+      "id": "hill",
+      "n": "Brian Hill",
+      "arc": "dentro",
+      "look": "rado,grigio",
+      "tm": [
+        "Magic|1990s"
+      ]
+    },
+    {
+      "id": "issel",
+      "n": "Dan Issel",
+      "arc": "dentro",
+      "look": "corti,castano",
+      "tm": [
+        "Nuggets|1990s"
+      ]
+    },
+    {
+      "id": "brettbrown",
+      "n": "Brett Brown",
+      "arc": "dentro",
+      "look": "corti,grigio",
+      "tm": [
+        "Sixers|2010s"
+      ]
+    }
   ]
 }

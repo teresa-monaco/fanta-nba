@@ -1,7 +1,7 @@
 // app.js — avvio, risoluzione della stanza, un solo handler per tutti i click.
 
 import { loadData, TEAM_KEYS, TEAM_NAMES, applicaNomi } from './core.js';
-import { simSeriesUpTo, componiTabellone, costruisciBracket, giriStagione, tabelloneDaStagione } from './engine.js';
+import { simSeriesUpTo, componiTabellone, costruisciBracket, giriStagione, tabelloneDaStagione, RITMI } from './engine.js';
 import * as S from './state.js';
 import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
 import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc } from './ui.js';
@@ -73,7 +73,42 @@ function paint() {
   render(root, ctx);
   tickClock(state);
   suoniDiStato();
+  seguiLaPartita();
+  tieniIlPosto();
   registraAlbo();
+}
+
+// Scegliere un allenatore ridisegna la schermata, e la striscia tornerebbe
+// da capo: avresti scorso fino al quinto, toccato "Scegli", e ti ritroveresti
+// a guardare il primo. Dopo ogni ridisegno la carta scelta si rimette dov'era.
+function tieniIlPosto() {
+  for (const strip of root.querySelectorAll('[data-coach-strip]')) {
+    const scelta = strip.querySelector('[data-coach-scelto]');
+    if (scelta) strip.scrollLeft = scelta.offsetLeft - strip.offsetLeft;
+  }
+}
+
+// Chi guarda e basta restava fermo su gara 1 mentre il tavolo era a gara 6:
+// le gare nuove si aprono sotto e spingono giu la pagina, e senza scrollare
+// non te ne accorgi. Quando il conto delle gare scoperte cresce, l'ultima si
+// porta in vista da sola. Solo quando CRESCE: altrimenti a ogni ridisegno
+// strapperebbe via la pagina da sotto le dita.
+let gareViste = null;
+
+function seguiLaPartita() {
+  if (state.phase !== 'playoffs') { gareViste = null; return; }
+  const tot = (state.po?.turni || []).flat().reduce((s, m) => s + (m.gamesPlayed || 0), 0)
+    + (state.po?.third?.gamesPlayed || 0);
+  const prima = gareViste;
+  gareViste = tot;
+  if (prima === null || tot <= prima) return;
+  // La serie ancora aperta e quella da leggere. Se sono tutte chiuse, l'ultima
+  // in ordine di tabellone: e li che e appena successo qualcosa.
+  const tutte = root.querySelectorAll('[data-ultima-gara]');
+  const el = root.querySelector('[data-ultima-gara="viva"]') || tutte[tutte.length - 1];
+  if (el?.scrollIntoView) {
+    try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch { el.scrollIntoView(); }
+  }
 }
 
 // L'albo si scrive da se quando le Finals si chiudono. Il risultato non sta
@@ -364,12 +399,19 @@ document.addEventListener('click', async (ev) => {
         break;
 
 
-      /* --- tattica a bottoni (ritmo e allenatore) --- */
-      case 'set-ritmo':
+      /* --- allenatore (il ritmo e uno slider: vive nell'handler change) --- */
       case 'set-coach':
-        await session.apply((s) => S.setTactics(s, team,
-          act === 'set-ritmo' ? { ritmo: el.dataset.v } : { coach: el.dataset.v }));
+        await session.apply((s) => S.setTactics(s, team, { coach: el.dataset.v }));
         break;
+
+      // Le frecce spostano la striscia di una carta. Non tocca lo stato
+      // condiviso: guardare gli allenatori non e sceglierli.
+      case 'coach-scorri': {
+        const strip = document.getElementById(`coaches-${team}`);
+        const carta = strip?.querySelector('.ccard');
+        if (strip && carta) strip.scrollBy({ left: Number(el.dataset.dir) * (carta.offsetWidth + 10), behavior: 'smooth' });
+        break;
+      }
 
       /* --- formato e stagione regolare --- */
       case 'formato':
@@ -439,7 +481,12 @@ document.addEventListener('change', async (ev) => {
   if (!el) return;
   const team = el.dataset.team;
   const v = el.value;
-  const patch = { 'set-v1': { v1: v }, 'set-v2': { v2: v }, 'set-strat': { strategy: v } }[el.dataset.act];
+  // Il ritmo e una barra: il valore e l'indice, non il nome. Si scrive sullo
+  // stato al rilascio (change) e non a ogni pixel (input), o si manderebbero
+  // venti scritture al database per una sola scelta.
+  const patch = el.dataset.act === 'set-ritmo'
+    ? { ritmo: Object.keys(RITMI)[Number(v)] }
+    : { 'set-v1': { v1: v }, 'set-v2': { v2: v }, 'set-strat': { strategy: v } }[el.dataset.act];
   if (!patch) return;
   await session.apply((s) => S.setTactics(s, team, patch));
 });

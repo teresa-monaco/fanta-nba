@@ -134,6 +134,26 @@ Serve a una cosa sola: senza, le scelte si tirano a caso per sempre e tanto
 valeva non chiederle. Il 3% dei referti è perfetto, in media c'è quasi un paio
 di correzioni utili per squadra.
 
+### Scelte di interfaccia che hanno una ragione
+
+Tre cose che sembrano dettagli e non lo sono, tutte nate guardando qualcuno
+giocare invece che leggendo il codice:
+
+- **Le gare già lette si richiudono a una riga**, e quando ne esce una nuova si
+  porta in vista da sola. Aperte tutte, chi guardava senza toccare niente
+  restava fermo su gara 1 mentre il tavolo era a gara 6: le nuove si aprivano
+  in fondo e spingevano giù la pagina senza che te ne accorgessi.
+- **Il cronometro sta anche nella barra dei rilanci**, non solo in cima. Decidi
+  se rilanciare guardando i tasti, e i tasti sono in fondo allo schermo: con la
+  pagina scrollata stavi scegliendo alla cieca con tre secondi rimasti.
+- **Durante l'asta la rosa è fatta di cinque caselle PG/SG/SF/PF/C**, non di
+  cinque "libero" uguali. La domanda vera, mentre rilanci, è *chi mi manca*.
+
+Gli **avatar degli allenatori** sono caricature costruite da pochi tratti
+(capelli, colore, barba o baffi, occhiali, incarnato), non ritratti: servono a
+riconoscere chi stai guardando mentre scorri. Le foto vere sono di qualcun
+altro e non si possono usare.
+
 **4. Albo d'oro.** Ogni partita conclusa resta: campione, quintetto, MVP. Più
 una classifica fra voi. Sopravvive a "Nuova partita".
 
@@ -202,6 +222,7 @@ js/narrator.js        cronaca e "perché ha vinto", generati dai fattori
 js/state.js           stato condiviso e regole (asta, budget, fasi)
 js/net.js             sincronizzazione: Firebase oppure locale
 js/ui.js              rendering delle cinque schermate
+js/avatar.js          la faccia di un allenatore, disegnata da pochi tratti
 js/app.js             avvio e gestione dei click
 tools/                test e diagnostiche (vedi sotto)
 ```
@@ -295,6 +316,7 @@ node tools/spread.mjs      # quanto sono varie le valutazioni
 node tools/calibra.mjs     # dove cadono i valori, per scegliere le soglie del motore
 node tools/audit-gioco.mjs # le scelte che il gioco chiede contano davvero?
 node tools/tattica.mjs     # ritmo e allenatori: contano, e contano il giusto?
+node tools/anteprima.mjs   # le cinque schermate vere in una pagina sola, da guardare
 node tools/bye.mjs         # con tre squadre, quanto vale saltare la semifinale
 node tools/partite.mjs     # gioca migliaia di serie e cerca incoerenze nei testi
 node tools/audit-bug.mjs   # i casi storti: giro dal database, azzeramenti, chi entra ed esce

@@ -16,10 +16,16 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 /* ---------- DOM finto ---------- */
 
 const store = new Map();
+// Il DOM finto tiene stringhe, non un albero: querySelector non puo davvero
+// cercare. Restituisce vuoto, e i controlli sul markup si fanno sul testo.
+// L'importante e che l'app non esploda chiamandolo.
 const mkEl = (id) => ({
   id, innerHTML: '', value: '', disabled: false, textContent: '',
   dataset: {}, classList: { toggle() {}, add() {}, remove() {} },
   closest: () => null,
+  querySelector: () => null,
+  querySelectorAll: () => [],
+  scrollIntoView() {},
 });
 const els = { app: mkEl('app'), topbar: mkEl('topbar') };
 
@@ -31,6 +37,8 @@ globalThis.localStorage = {
 globalThis.document = {
   getElementById: (id) => els[id] ?? null,
   addEventListener() {},
+  querySelector: () => null,
+  querySelectorAll: () => [],
 };
 // ?local=1 tiene il test in modalità locale anche ora che Firebase è configurato:
 // senza, proverebbe a scaricare l'SDK dalla rete e a connettersi davvero.
@@ -107,6 +115,15 @@ ok(has('data-act="toggle-pause"'), 'c\'è il tasto per fermare il cronometro');
 ok(has('+1<small>1') && has('+2<small>2') && has('+3<small>3') && has('All in'),
   'i quattro tasti di rilancio ci sono, con l\'importo risultante sotto');
 ok(!has('Rilancia a'), 'niente etichette lunghe sui tasti di rilancio');
+// Il cronometro deve stare ANCHE nella barra fissa: i tasti sono li, e con
+// la pagina scrollata il conto alla rovescia in cima non si vede piu.
+ok((html().match(/data-clock/g) || []).length >= 2,
+  'il cronometro c\'e anche nella barra dei rilanci, non solo in cima');
+ok(html().lastIndexOf('data-clock') > html().indexOf('class="bidbar"'),
+  'ed e dentro la barra fissa, non sopra');
+// Le caselle d'asta sono targate per ruolo: serve a vedere chi manca.
+ok(['PG', 'SG', 'SF', 'PF', 'C'].every((p) => html().includes(`<span class="pos">${p}</span>`))
+  || !has('class="rslots"'), 'le caselle della propria rosa portano il ruolo');
 
 /* Con un'offerta sul tavolo "Assegna" compare, e All in si arma in due tocchi */
 await F.session.apply((s) => S.placeBid(s, TEAM_KEYS[1], 3, now()));
@@ -126,9 +143,12 @@ ok(has('+1<small>4'), 'i rilanci ripartono dall\'offerta corrente, non da zero')
 /* Squadra propria in evidenza — è il comportamento della modalità online */
 await F.session.apply((s) => S.joinGame(s, 'local', 'Diego'));
 ok(has('(tu)') && has('puoi arrivare a'), 'chi ha una squadra la vede in evidenza, con budget e tetto di spesa');
+ok(has('class="rslots"') && ['PG', 'SG', 'SF', 'PF', 'C'].every((p) => html().includes(`>${p}</span>`)),
+  'la propria rosa mostra cinque caselle di ruolo, non cinque "libero" uguali');
+ok(has('rslot vuoto'), 'e i ruoli ancora scoperti si vedono a colpo d\'occhio');
 ok(has('Gli avversari'), 'gli altri finiscono in un blocco separato, sotto');
 ok(html().indexOf('(tu)') < html().indexOf('Gli avversari'), 'e la propria viene prima');
-ok(has('class="chip'), 'la propria rosa è visibile a colpo d\'occhio');
+ok(has('class="rslot'), 'la propria rosa è visibile a colpo d\'occhio');
 await F.session.apply((s) => S.leaveSeat(s, 'local'));
 
 /* Pausa: ferma il cronometro per tutti e blocca i rilanci */
@@ -169,8 +189,16 @@ ok(Object.values(STRATEGIES).every((v) => has(v.label)), 'tutte le strategie son
 {
   ok(Object.values(RITMI).every((v) => has(v.label)) && has('data-act="set-ritmo"'),
     'il ritmo si sceglie nella stessa schermata');
-  ok(has('data-act="set-coach"') && has('sbloccati dai tuoi giocatori'),
-    'e anche l\'allenatore');
+  ok(has('type="range"') && has('class="rslider"'),
+    'ed e una barra da scorrere, non quattro scatole separate');
+  ok(has(`max="${Object.keys(RITMI).length - 1}"`), 'la barra copre tutti i ritmi');
+  ok(has('data-act="set-coach"') && has('class="cstrip"'),
+    'e anche l\'allenatore, in una striscia da sfogliare');
+  ok(has('class="avatar"') && has('data-coach-strip'), 'ogni allenatore ha una faccia');
+  ok(has('data-act="coach-scorri"'), 'e ci sono le frecce per il successivo');
+  // Una carta alla volta: se fossero affiancate torneremmo al muro di testo.
+  ok(has('scroll-snap-align') || html().includes('class="ccard'),
+    'le schede stanno su una striscia, non tutte aperte insieme');
 
   const k0 = S.attive(F.state)[0];
   const libs = S.allenatoriDi(F.state.teams[k0].roster);
@@ -230,6 +258,13 @@ for (let i = 0; i < 5; i++) {
   await F.session.apply((s) => S.advanceSeries(s, 0, 1, S.PASSO_SEMI));
 }
 ok(clean() && has('Gara 1', 'MVP della serie', 'Perché ha vinto'), 'le semifinali mostrano gare, MVP e spiegazione');
+// Le gare gia lette si richiudono: aperte tutte, chi guarda senza toccare
+// restava fermo su gara 1 mentre il tavolo era a gara 6.
+ok(has('game chiusa'), 'le gare precedenti si richiudono a una riga');
+ok(has('data-ultima-gara'), 'l\'ultima gara e marcata, cosi si puo portare in vista');
+ok((html().match(/class="story"/g) || []).length < (html().match(/class="gname"/g) || []).length,
+  'e non sono tutte aperte insieme',
+  `${(html().match(/class="story"/g) || []).length} cronache su ${(html().match(/class="gname"/g) || []).length} gare`);
 ok(has('Box score'), 'il box score e consultabile');
 ok(has('Finale') && has('Vai — Gara 1'), 'la finale si apre da sola quando le semifinali sono chiuse');
 

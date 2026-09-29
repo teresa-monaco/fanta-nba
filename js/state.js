@@ -327,6 +327,32 @@ export function autoLineup(roster) {
   return out;
 }
 
+// Assegnazione PROVVISORIA, per l'asta: la rosa non e ancora completa e
+// autoLineup ha bisogno di cinque giocatori. Serve solo a far vedere quali
+// caselle sono ancora vuote, cioe chi ti manca davvero. A fine asta
+// autoLineup rifa tutto da zero cercando la disposizione ottima.
+export function slotProvvisori(roster) {
+  const D = db();
+  const out = Object.fromEntries(SLOTS.map((sl) => [sl, null]));
+  const ps = (roster || []).map((id) => D.byId[id]).filter(Boolean);
+  const restano = [];
+  // Prima chi ha il ruolo naturale libero, poi i ruoli alternativi, poi il
+  // resto dove capita: cosi un doppione non ruba la casella a chi la merita.
+  for (const p of ps) {
+    if (!out[p.pos]) out[p.pos] = p.id; else restano.push(p);
+  }
+  const ancora = [];
+  for (const p of restano) {
+    const alt = (p.alt || []).find((sl) => !out[sl]);
+    if (alt) out[alt] = p.id; else ancora.push(p);
+  }
+  for (const p of ancora) {
+    const libero = SLOTS.find((sl) => !out[sl]);
+    if (libero) out[libero] = p.id;
+  }
+  return out;
+}
+
 // Scambia due slot (unico modo sicuro di editare: il quintetto resta sempre completo).
 export function swapSlots(s, teamKey, slotA, slotB) {
   const lu = { ...s.lineups[teamKey] };
