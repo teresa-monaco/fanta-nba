@@ -13,7 +13,8 @@ const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
 
 const { installData, makeRng, TEAM_KEYS, SLOTS, STRATEGIES, START_CREDITS, ROSTER_SIZE, NUMERI_SQUADRE } = await import('../js/core.js');
 const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'));
-const { buildTeam, simSeriesUpTo, componiTabellone, costruisciBracket, formaTabellone } = await import('../js/engine.js');
+const { buildTeam, simSeriesUpTo, componiTabellone, costruisciBracket, formaTabellone,
+  simStagione, giriStagione, tabelloneDaStagione, potenzaSotto } = await import('../js/engine.js');
 const S = await import('../js/state.js');
 
 let fails = 0;
@@ -29,9 +30,13 @@ const tick = () => (clock += 1000);
 
 /* ---------- Una partita intera ---------- */
 
-function playFullGame(seed, quante = 4) {
+function playFullGame(seed, quante = 4, conStagione = false) {
   const rng = makeRng(seed);
   let s = S.newGame(seed, 'host');
+  if (conStagione) {
+    s = S.setFormato(s, true);
+    if (!s?.conStagione) { bad('il formato con stagione non si attiva'); return null; }
+  }
 
   // Lobby: entrano in quanti dice il chiamante, e la squadra gliela assegna il gioco.
   for (let i = 0; i < quante; i++) s = S.joinGame(s, 'u' + i, 'P' + i);
@@ -120,14 +125,72 @@ function playFullGame(seed, quante = 4) {
   const v1 = s.tactics[IN_GIOCO[0]].v1;
   if (S.setTactics(s, IN_GIOCO[0], { v2: v1 }) !== s) bad('accettati due violini identici');
 
+  /* --- Stagione regolare, se il formato la prevede --- */
+  let inTabellone = quante;
+  let st = null;
+  if (conStagione) {
+    const giri = giriStagione(quante);
+    const prima = s;
+    s = S.giocaStagione(s, giri);
+    if (!s?.stagione) { bad('la stagione regolare non parte'); return null; }
+    if (S.giocaStagione(s, giri) !== undefined) bad('la stagione si puo giocare due volte');
+
+    const Tst = {};
+    for (const k of IN_GIOCO) Tst[k] = buildTeam(k, s.stagione.lineups[k], s.stagione.tactics[k]);
+    st = simStagione(Tst, IN_GIOCO, s.stagione.seedBase, giri);
+
+    // Contabilita del girone: ogni squadra gioca contro tutte le altre,
+    // tante volte quanti sono i giri, e vittorie piu sconfitte tornano.
+    const atteseAtesta = (quante - 1) * giri;
+    if (st.gare.length !== quante * (quante - 1) / 2 * giri) bad('gare di stagione sbagliate', `${quante}: ${st.gare.length}`);
+    for (const r of st.cls) {
+      if (r.w + r.l !== atteseAtesta) bad('partite giocate sbagliate', `${r.k}: ${r.w}+${r.l} invece di ${atteseAtesta}`);
+      if (r.pf <= 0 || r.ps <= 0) bad('punti di stagione a zero', r.k);
+    }
+    if (st.cls.length !== quante) bad('classifica incompleta');
+    if (new Set(st.cls.map((r) => r.k)).size !== quante) bad('classifica con ripetizioni');
+    // Ordinata davvero: nessuno sotto uno che ha vinto meno.
+    for (let i = 1; i < st.cls.length; i++) {
+      if (st.cls[i].w > st.cls[i - 1].w) bad('classifica fuori ordine', `${st.cls[i].k} sopra ${st.cls[i - 1].k}`);
+    }
+    // Deterministica: ricalcolarla deve dare esattamente la stessa cosa.
+    const bis = simStagione(Tst, IN_GIOCO, s.stagione.seedBase, giri);
+    if (bis.cls.map((r) => `${r.k}${r.w}`).join() !== st.cls.map((r) => `${r.k}${r.w}`).join()) {
+      bad('la stagione non e deterministica');
+    }
+
+    // Ritocco delle tattiche: i playoff cambiano, la classifica no.
+    for (const k of IN_GIOCO) s = S.setTactics(s, k, { strategy: strategies[Math.floor(rng() * strategies.length)] });
+    const dopo = simStagione(Tst, IN_GIOCO, s.stagione.seedBase, giri);
+    if (dopo.cls.map((r) => r.k).join() !== st.cls.map((r) => r.k).join()) {
+      bad('ritoccare le tattiche ha cambiato la classifica gia giocata');
+    }
+    // La fotografia non deve seguire i ritocchi.
+    if (JSON.stringify(s.stagione.tactics[IN_GIOCO[0]]) === JSON.stringify(s.tactics[IN_GIOCO[0]])
+        && s.stagione.tactics[IN_GIOCO[0]].strategy !== s.tactics[IN_GIOCO[0]].strategy) {
+      bad('la fotografia della stagione segue i ritocchi');
+    }
+    inTabellone = potenzaSotto(quante);
+  }
+
   // Playoff: il tabellone e generico, cambia solo il numero di turni.
   const T = {};
   for (const k of IN_GIOCO) T[k] = buildTeam(k, s.lineups[k], s.tactics[k]);
-  const tab = componiTabellone(T, seed);
-  const atteso = formaTabellone(quante);
+  const tab = st ? tabelloneDaStagione(T, st.cls, seed) : componiTabellone(T, seed);
+  const atteso = formaTabellone(inTabellone);
   if (tab.serie.join(',') !== atteso.serie.join(',')) bad('forma del tabellone sbagliata', `${quante}: ${tab.serie}`);
   if (!tab.reasons?.length) bad('motivazioni mancanti');
-  if (new Set(tab.ordine).size !== quante) bad('ordine del tabellone con ripetizioni');
+  if (new Set(tab.ordine).size !== inTabellone) bad('ordine del tabellone con ripetizioni');
+  if (st) {
+    if (tab.teste !== 0) bad('con la stagione nessuno deve saltare un turno', String(tab.teste));
+    if (tab.fuori.length !== quante - inTabellone) bad('eliminate sbagliate', `${tab.fuori.length}`);
+    // Chi e fuori deve essere davvero in fondo alla classifica.
+    const ultimi = new Set(st.cls.slice(inTabellone).map((r) => r.k));
+    if (tab.fuori.some((k) => !ultimi.has(k))) bad('eliminata una squadra che non era ultima');
+    // La prima incontra l'ultima qualificata: e il senso di vincere il girone.
+    if (inTabellone >= 2 && tab.ordine[0] !== st.cls[0].k) bad('la prima della classe non e testa di serie');
+    if (inTabellone >= 4 && tab.ordine[1] !== st.cls[inTabellone - 1].k) bad('accoppiamento non da classifica');
+  }
   s = S.toPlayoffs(s, tab);
 
   // Si scopre turno per turno: ogni serie fino in fondo, poi il turno dopo.
@@ -166,36 +229,49 @@ function playFullGame(seed, quante = 4) {
   // Ogni squadra entra nel tabellone una volta sola.
   const primoTurno = new Set(bracket[0].flatMap((m) => [m.a, m.b]));
   const teste = new Set(s.po.ordine.slice(0, s.po.teste));
-  if (primoTurno.size + teste.size !== quante) bad('qualcuno manca dal tabellone o e contato due volte');
+  if (primoTurno.size + teste.size !== inTabellone) bad('qualcuno manca dal tabellone o e contato due volte');
   if (bracket[bracket.length - 1].length !== 1) bad('l\'ultimo turno non e una finale sola');
+  // Chi e stato eliminato dalla stagione non deve ricomparire da nessuna parte.
+  if (st) {
+    const nel = new Set(bracket.flatMap((rd) => rd.flatMap((m) => [m.a, m.b])).filter(Boolean));
+    for (const k of tab.fuori) if (nel.has(k)) bad('una eliminata gioca i playoff', k);
+  }
 
   return { champion: ultimo.winner, games: ultimo.games.length, quante, turni: totTurni };
 }
 
 /* ---------- Esecuzione ---------- */
 
-// Si gioca in 2, 3 o 4: ogni formato ha un tabellone diverso e va provato.
-const PER_FORMATO = 30;
+// Ogni formato ha un tabellone diverso e va provato, e ogni formato si gioca
+// in due modi: solo playoff e stagione regolare + playoff.
+const PER_FORMATO = 15;
 const champs = {};
 const gareFinali = {};
 const contate = {};
 const turniPer = {};
 
-for (const quante of NUMERI_SQUADRE) {
-  for (let i = 0; i < PER_FORMATO; i++) {
-    const r = playFullGame(`flow${quante}-${i}`, quante);
-    if (!r) continue;
-    champs[r.champion] = (champs[r.champion] || 0) + 1;
-    gareFinali[quante] = (gareFinali[quante] || 0) + r.games;
-    contate[quante] = (contate[quante] || 0) + 1;
-    turniPer[quante] = r.turni;
+for (const conStagione of [false, true]) {
+  for (const quante of NUMERI_SQUADRE) {
+    for (let i = 0; i < PER_FORMATO; i++) {
+      const r = playFullGame(`flow${conStagione ? 'S' : ''}${quante}-${i}`, quante, conStagione);
+      if (!r) continue;
+      const cella = `${quante}${conStagione ? 'S' : ''}`;
+      champs[r.champion] = (champs[r.champion] || 0) + 1;
+      gareFinali[cella] = (gareFinali[cella] || 0) + r.games;
+      contate[cella] = (contate[cella] || 0) + 1;
+      turniPer[cella] = r.turni;
+    }
   }
 }
 
 const totali = Object.values(contate).reduce((a, b) => a + b, 0);
-console.log(`\n${totali} partite intere giocate (lobby → asta → squadre → playoff → campione)\n`);
+console.log(`\n${totali} partite intere giocate (lobby → asta → squadre → [stagione] → playoff → campione)\n`);
+console.log('   n   formato                     partite   turni   gare della finale');
 for (const q of NUMERI_SQUADRE) {
-  console.log(`  con ${String(q).padStart(2)} squadre: ${String(contate[q] || 0).padStart(3)} partite, ${turniPer[q] || 0} turni, Finals da ${((gareFinali[q] || 0) / (contate[q] || 1)).toFixed(1)} gare`);
+  for (const [suff, nome] of [['', 'solo playoff'], ['S', 'stagione + playoff']]) {
+    const c = `${q}${suff}`;
+    console.log(`  ${String(q).padStart(2)}   ${nome.padEnd(24)}   ${String(contate[c] || 0).padStart(5)}   ${String(turniPer[c] || 0).padStart(5)}   ${((gareFinali[c] || 0) / (contate[c] || 1)).toFixed(1).padStart(14)}`);
+  }
 }
 console.log('\n  Titoli vinti:', TEAM_KEYS.map((k) => `${k} ${champs[k] || 0}`).join('  '));
 

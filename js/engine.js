@@ -527,7 +527,133 @@ function contrast(t1, t2) {
 const potenza = (t) => t.off + t.def;
 
 /* ==========================================================
-   5b. TABELLONE — da 2 a 10 squadre, un solo algoritmo
+   5a-bis. STAGIONE REGOLARE — girone all'italiana
+   ==========================================================
+
+   Alternativa alle teste di serie sorteggiate. Tutti contro tutti a gara
+   secca, poi le prime 2^k entrano nel tabellone e partono tutte dallo stesso
+   turno: il vantaggio di saltare un turno sparisce perche non lo salta piu
+   nessuno. Misurato: valeva +12.5 punti di titoli in tre squadre, +8.3 in sei.
+
+   Costa meno di quanto sembri. Le gare di stagione sono righe di una tabella,
+   simulate in blocco; le serie sono quelle che si scoprono due gare alla
+   volta. Il girone TOGLIE serie: in dodici si passa da 11 a 7. */
+
+// Quanti giri. Sotto una decina di partite a testa la classifica e rumore:
+// con tre squadre e un giro solo la piu forte resta fuori dal tabellone una
+// volta su cinque, con dieci partite a testa una volta su nove. Sopra la
+// decina il guadagno si ferma, quindi non si paga di piu.
+export function giriStagione(n) {
+  return Math.max(1, Math.round(10 / (n - 1)));
+}
+
+export function potenzaSotto(n) {
+  let p = 1;
+  while (p * 2 <= n) p *= 2;
+  return p;
+}
+
+// Il calendario e deterministico come tutto il resto: sul database finisce il
+// seed, non i risultati.
+export function calendario(keys, giri) {
+  const out = [];
+  for (let g = 0; g < giri; g++) {
+    for (let a = 0; a < keys.length; a++) {
+      for (let b = a + 1; b < keys.length; b++) {
+        // Andata in casa di A, ritorno in casa di B. Con un giro solo si
+        // alterna: il fattore campo non puo essere un regalo a meta girone.
+        const homeIsA = giri > 1 ? g % 2 === 0 : (a + b) % 2 === 0;
+        out.push({ g, a: keys[a], b: keys[b], homeIsA, seed: `${g}:${keys[a]}-${keys[b]}` });
+      }
+    }
+  }
+  return out;
+}
+
+export function simStagione(T, keys, seedBase, giri) {
+  const cal = calendario(keys, giri);
+  const righe = {};
+  for (const k of keys) righe[k] = { k, w: 0, l: 0, pf: 0, ps: 0, h2h: {} };
+  const gare = [];
+
+  for (const m of cal) {
+    const A = T[m.a], B = T[m.b];
+    const g = simGame(A, B, matchup(A, B), makeRng(`${seedBase}:rs${m.seed}`), { homeIsA: m.homeIsA });
+    const ra = righe[m.a], rb = righe[m.b];
+    const vinceA = g.scoreA > g.scoreB;
+    ra.pf += g.scoreA; ra.ps += g.scoreB;
+    rb.pf += g.scoreB; rb.ps += g.scoreA;
+    (vinceA ? ra : rb).w++;
+    (vinceA ? rb : ra).l++;
+    ra.h2h[m.b] = (ra.h2h[m.b] || 0) + (vinceA ? 1 : 0);
+    rb.h2h[m.a] = (rb.h2h[m.a] || 0) + (vinceA ? 0 : 1);
+    gare.push({
+      giro: m.g, a: m.a, b: m.b, sa: g.scoreA, sb: g.scoreB,
+      vince: vinceA ? m.a : m.b, margin: g.margin, ot: g.ot, mvp: g.mvp,
+    });
+  }
+
+  for (const k of keys) righe[k].diff = righe[k].pf - righe[k].ps;
+
+  // Criteri di parita, nell'ordine: vittorie, poi record fra le sole squadre
+  // appaiate (una mini-classifica, cosi il confronto resta transitivo e
+  // l'ordinamento e sempre lo stesso), poi differenza canestri, poi la chiave.
+  // Un comparatore non transitivo darebbe classifiche diverse a seconda
+  // dell'ordine di partenza: su uno stato condiviso sarebbe un disastro.
+  const cls = [];
+  const perVittorie = new Map();
+  for (const k of keys) {
+    const w = righe[k].w;
+    if (!perVittorie.has(w)) perVittorie.set(w, []);
+    perVittorie.get(w).push(righe[k]);
+  }
+  for (const w of [...perVittorie.keys()].sort((x, y) => y - x)) {
+    const gruppo = perVittorie.get(w);
+    for (const r of gruppo) {
+      r.miniW = gruppo.reduce((acc, o) => acc + (o.k === r.k ? 0 : (r.h2h[o.k] || 0)), 0);
+    }
+    gruppo.sort((x, y) => (y.miniW - x.miniW) || (y.diff - x.diff) || (x.k < y.k ? -1 : 1));
+    // Con chi e' stato deciso il posto: serve a spiegarlo in tabella.
+    for (const r of gruppo) r.appaiata = gruppo.length > 1;
+    cls.push(...gruppo);
+  }
+  cls.forEach((r, i) => { r.pos = i + 1; });
+
+  return { cls, gare, giri, perSquadra: (keys.length - 1) * giri };
+}
+
+// Dal tabellone della stagione al tabellone dei playoff. Accoppiamenti da
+// testa di serie: la prima contro l'ultima qualificata, la seconda contro la
+// penultima. Nessun turno saltato da nessuno.
+export function tabelloneDaStagione(teams, cls, _seedBase) {
+  const tutte = cls.length;
+  const q = potenzaSotto(tutte);
+  const passa = cls.slice(0, q).map((r) => r.k);
+  const fuori = cls.slice(q).map((r) => r.k);
+
+  const ordine = [];
+  for (let i = 0; i < q / 2; i++) ordine.push(passa[i], passa[q - 1 - i]);
+
+  const serie = [];
+  let campo = q;
+  while (campo > 1) { serie.push(campo / 2); campo /= 2; }
+
+  const nome = (k) => teams[k]?.name || TEAM_NAMES[k] || k;
+  const reasons = [];
+  const prima = cls[0];
+  reasons.push(`${nome(prima.k)} chiude la stagione regolare da prima, ${prima.w}-${prima.l}.`);
+  if (fuori.length) {
+    reasons.push(fuori.length === 1
+      ? `${nome(fuori[0])} resta fuori dai playoff.`
+      : `Restano fuori ${fuori.map(nome).join(', ')}.`);
+  }
+  if (q >= 4) reasons.push('Accoppiamenti da classifica: la prima incontra l\'ultima qualificata.');
+
+  return { n: tutte, ordine, teste: 0, giocano: q, serie, reasons, fuori, daStagione: true };
+}
+
+/* ==========================================================
+   5b. TABELLONE — da 2 a 12 squadre, un solo algoritmo
    ========================================================== */
 
 // Eliminazione diretta. Si arrotonda alla potenza di due superiore e i posti

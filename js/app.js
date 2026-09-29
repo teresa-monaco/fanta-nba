@@ -1,10 +1,10 @@
 // app.js — avvio, risoluzione della stanza, un solo handler per tutti i click.
 
 import { loadData, TEAM_KEYS, TEAM_NAMES } from './core.js';
-import { simSeriesUpTo, componiTabellone, costruisciBracket } from './engine.js';
+import { simSeriesUpTo, componiTabellone, costruisciBracket, giriStagione, tabelloneDaStagione } from './engine.js';
 import * as S from './state.js';
 import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
-import { render, renderTopbar, tickClock, ui, teamsFromState, esc } from './ui.js';
+import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc } from './ui.js';
 import { sblocca, commutaAudio, tic, martelletto, nuovoLotto } from './suono.js';
 
 const root = document.getElementById('app');
@@ -361,10 +361,28 @@ document.addEventListener('click', async (ev) => {
         break;
 
 
+      /* --- formato e stagione regolare --- */
+      case 'formato':
+        await session.apply((s) => S.setFormato(s, el.dataset.con === '1'));
+        break;
+
+      case 'gioca-stagione': {
+        if (!S.squadraReady(state)) return flash('Servono primo violino, secondo violino e strategia per ogni squadra.', true);
+        const giri = giriStagione(S.attive(state).length);
+        const ok = await session.apply((s) => S.giocaStagione(s, giri));
+        if (!ok) flash('La stagione regolare è già stata giocata.', true);
+        break;
+      }
+
       /* --- playoff --- */
       case 'to-playoffs': {
         if (!S.squadraReady(state)) return flash('Servono primo violino, secondo violino e strategia per ogni squadra.', true);
-        const tab = componiTabellone(teamsFromState(state), state.seed);
+        // Con la stagione regolare il tabellone si semina dalla classifica e
+        // nessuno salta un turno; senza, le teste di serie si sorteggiano.
+        const st = stagioneFromState(state);
+        const tab = st
+          ? tabelloneDaStagione(teamsFromState(state), st.cls, state.seed)
+          : componiTabellone(teamsFromState(state), state.seed);
         await session.apply((s) => S.toPlayoffs(s, tab));
         break;
       }

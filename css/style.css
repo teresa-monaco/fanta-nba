@@ -157,6 +157,27 @@ label.field > span {
 }
 .seat .who { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 
+/* ---- classifica di stagione regolare ---- */
+.classifica { width: 100%; border-collapse: collapse; font-size: 14px; }
+.classifica th {
+  font: 700 9.5px var(--cond); letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); text-align: left; padding: 0 6px 7px; font-weight: 700;
+}
+.classifica td { padding: 9px 6px; border-top: 1px solid var(--line); vertical-align: middle; }
+.classifica tr.out td { opacity: .5; }
+.classifica .pos { font: 800 15px var(--cond); color: var(--muted); width: 22px; text-align: center; }
+.classifica .sq {
+  font: 800 13.5px var(--cond); letter-spacing: 1.1px; text-transform: uppercase;
+  display: flex; align-items: center; gap: 7px;
+}
+.classifica .rec { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.classifica .rec b { font: 800 16px var(--cond); }
+.classifica .diff { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.classifica .esito { text-align: right; }
+.tag.in { background: var(--ok); border-color: var(--ok); color: #06130d; }
+.tag.fuori { background: transparent; border: 1px solid var(--line-2); color: var(--muted); }
+.log b.w { color: var(--gold); }
+
 /* ---- il giocatore in asta ---- */
 .card.lot {
   padding: 0; overflow: hidden; border: none;

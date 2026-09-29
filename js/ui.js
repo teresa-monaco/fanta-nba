@@ -3,7 +3,8 @@
 // slot selezionato per lo scambio) vive qui, fuori dallo stato condiviso.
 
 import { db, SLOTS, SLOT_LABEL, TEAM_KEYS, TEAM_NAMES, STRATEGIES, ROSTER_SIZE, START_CREDITS } from './core.js';
-import { buildTeam, simSeriesUpTo, costruisciBracket, nomeTurno } from './engine.js';
+import { buildTeam, simSeriesUpTo, costruisciBracket, nomeTurno,
+  simStagione, giriStagione, potenzaSotto } from './engine.js';
 import { narrateGame, explainSeries, teamIdentity } from './narrator.js';
 import * as S from './state.js';
 import { now } from './net.js';
@@ -113,6 +114,25 @@ function viewLobby({ state: s, session }) {
       </div>
     </div>`;
 
+  // Il formato. Con un numero che non e potenza di due la stagione regolare
+  // toglie anche il sorteggio delle teste di serie: non e solo un di piu.
+  const giri = S.numeroValido(n) ? giriStagione(n) : 1;
+  const q = S.numeroValido(n) ? potenzaSotto(n) : n;
+  const sceltaFormato = !isHost ? `
+    <p class="small muted center mb">Formato: ${s.conStagione ? 'stagione regolare + playoff' : 'solo playoff'}.</p>` : `
+    <div class="card">
+      <h3 class="mb">Formato</h3>
+      <div class="row">
+        <button class="${s.conStagione ? '' : 'primary'} grow" data-act="formato" data-con="0">Solo playoff</button>
+        <button class="${s.conStagione ? 'primary' : ''} grow" data-act="formato" data-con="1">Stagione + playoff</button>
+      </div>
+      <p class="small muted mt">${s.conStagione
+        ? `Tutti contro tutti${giri > 1 ? ` (${giri} giri)` : ''}, ${(n - 1) * giri} partite a testa, poi i playoff.
+           ${q < n ? `Le prime ${q} passano, le ultime ${n - q} restano fuori.` : 'Passano tutte: la classifica decide gli accoppiamenti.'}
+           Le tattiche si possono ritoccare a stagione finita.`
+        : `Si va dritti al tabellone.${q < n ? ` In ${n}, ${n - q} squadre salteranno il primo turno per sorteggio.` : ''}`}</p>
+    </div>`;
+
   return `
     <h1>Fanta NBA</h1>
     <p class="muted mb">Asta a crediti, quintetti, playoff simulati. Da 2 a 12 squadre, 50 crediti a testa, 5 giocatori ciascuna.</p>
@@ -150,6 +170,8 @@ function viewLobby({ state: s, session }) {
       ${dentro ? `<div class="card tight">
         <p class="tiny muted mb">In partita (${n})</p>${dentro}
       </div>` : '<p class="small muted center mb">Ancora nessuno dentro.</p>'}`}
+
+    ${sceltaFormato}
 
     ${isHost ? `
       <button class="primary wide" data-act="start-auction" ${S.numeroValido(n) ? '' : 'disabled'}>
@@ -439,12 +461,77 @@ function viewSquadra({ state: s, session }) {
     </div>`;
   }).join('');
 
+  const n = S.attive(s).length;
+  const giri = giriStagione(n);
+  const st = stagioneFromState(s);
+  const pronte = S.squadraReady(s);
+
+  // Tre stati diversi per lo stesso schermo: prima della stagione, dopo la
+  // stagione (con la classifica in cima e le tattiche ancora ritoccabili),
+  // e senza stagione del tutto.
+  let testa, azione;
+  if (s.conStagione && !st) {
+    testa = `<h2>Le squadre</h2>
+      <p class="muted small mb">Prima della stagione regolare: ${giri > 1 ? `girone di ${giri} giri` : 'tutti contro tutti'},
+      ${(n - 1) * giri} partite a testa. Dopo potrai ritoccare le tattiche prima dei playoff.</p>`;
+    azione = `<button class="primary wide" data-act="gioca-stagione" ${pronte ? '' : 'disabled'}>
+      Gioca la stagione regolare</button>`;
+  } else if (st) {
+    testa = `<h2>Stagione regolare</h2>
+      ${classificaCard(s, st)}
+      <h2 class="mt">Ritocca le tattiche</h2>
+      <p class="muted small mb">La classifica è chiusa e non cambia più. Quello che scegli adesso vale per i playoff:
+      hai visto come è andata, puoi correggere violini e strategia.</p>`;
+    azione = `<button class="primary wide" data-act="to-playoffs" ${pronte ? '' : 'disabled'}>Ai playoff</button>`;
+  } else {
+    testa = `<h2>Le squadre</h2>
+      <p class="muted small mb">Il quintetto lo assegna l'app cercando il minor numero di adattamenti: qui serve a capire cosa hai comprato. La strategia invece la scegli tu, e pesa: cambia chi prende i tiri e quali difese ti mettono in crisi.</p>`;
+    azione = `<button class="primary wide" data-act="to-playoffs" ${pronte ? '' : 'disabled'}>Componi il tabellone</button>`;
+  }
+
   return `
-    <h2>Le squadre</h2>
-    <p class="muted small mb">Il quintetto lo assegna l'app cercando il minor numero di adattamenti: qui serve a capire cosa hai comprato. La strategia invece la scegli tu, e pesa: cambia chi prende i tiri e quali difese ti mettono in crisi.</p>
+    ${testa}
     ${cards}
-    ${isHost ? `<button class="primary wide" data-act="to-playoffs" ${S.squadraReady(s) ? '' : 'disabled'}>Componi le semifinali</button>` : '<p class="small muted center">In attesa di chi ospita.</p>'}
+    ${isHost ? azione : '<p class="small muted center">In attesa di chi ospita.</p>'}
   `;
+}
+
+// La classifica: la parte piu da fantasy league del gioco. Chi e dentro e chi
+// e fuori si vede a colpo d'occhio, perche e l'unica cosa che conta davvero.
+function classificaCard(s, st) {
+  const q = potenzaSotto(S.attive(s).length);
+  const righe = st.cls.map((r, i) => {
+    const dentro = i < q;
+    const diff = r.diff > 0 ? `+${r.diff}` : String(r.diff);
+    return `<tr class="${dentro ? '' : 'out'}">
+      <td class="pos">${r.pos}</td>
+      <td class="sq"><span class="dot t-${r.k}"></span>${TEAM_NAMES[r.k]}</td>
+      <td class="rec"><b>${r.w}</b>-${r.l}</td>
+      <td class="diff">${diff}</td>
+      <td class="esito">${dentro ? '<span class="tag in">playoff</span>' : '<span class="tag fuori">fuori</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  const pari = st.cls.filter((r) => r.appaiata).length;
+  return `<div class="card tight">
+    <table class="classifica">
+      <thead><tr><th></th><th>Squadra</th><th>V-S</th><th>Diff</th><th></th></tr></thead>
+      <tbody>${righe}</tbody>
+    </table>
+    <p class="tiny muted mt">${st.gare.length} gare, ${st.perSquadra} a testa${
+      pari ? ` · ${pari} posti a pari vittorie, decisi da scontro diretto e differenza canestri` : ''}.</p>
+    ${calendarioCard(st)}
+  </div>`;
+}
+
+function calendarioCard(st) {
+  const righe = st.gare.map((g) => {
+    const vinceA = g.vince === g.a;
+    return `<div><span>${TEAM_NAMES[g.a]} <b class="${vinceA ? 'w' : ''}">${g.sa}</b> – <b class="${vinceA ? '' : 'w'}">${g.sb}</b> ${TEAM_NAMES[g.b]}</span>
+      <span class="muted">${g.ot ? `${g.ot} ts` : ''}</span></div>`;
+  }).join('');
+  return `<details class="mt"><summary class="tiny">Tutti i risultati (${st.gare.length})</summary>
+    <div class="log mt">${righe}</div></details>`;
 }
 
 /* ==========================================================
@@ -455,6 +542,17 @@ export function teamsFromState(s) {
   const out = {};
   for (const k of S.attive(s)) out[k] = buildTeam(k, s.lineups[k], s.tactics[k]);
   return out;
+}
+
+// La classifica non sta nel database: si ricalcola dalla fotografia di
+// quintetti e tattiche con cui la stagione e stata giocata. Cosi ritoccare le
+// tattiche per i playoff non riscrive risultati gia visti.
+export function stagioneFromState(s) {
+  if (!s.stagione) return null;
+  const keys = S.attive(s);
+  const T = {};
+  for (const k of keys) T[k] = buildTeam(k, s.stagione.lineups[k], s.stagione.tactics[k]);
+  return simStagione(T, keys, s.stagione.seedBase, s.stagione.giri);
 }
 
 function viewPlayoffs({ state: s, session }) {

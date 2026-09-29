@@ -14,7 +14,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
 const { installData, makeRng, TEAM_KEYS, NUMERI_SQUADRE, STRATEGIES, ROSTER_SIZE } = await import('../js/core.js');
 const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'));
-const { buildTeam, simSeriesUpTo, componiTabellone, costruisciBracket, formaTabellone } = await import('../js/engine.js');
+const { buildTeam, simSeriesUpTo, componiTabellone, costruisciBracket, formaTabellone,
+  simStagione, giriStagione, tabelloneDaStagione } = await import('../js/engine.js');
 const S = await import('../js/state.js');
 
 let fails = 0;
@@ -61,6 +62,22 @@ function partitaFinoA(quante, fase, seed = 'bug') {
   }
   if (fase === 'squadra') return s;
 
+  // La fotografia della stagione e la struttura piu fragile che passa dal
+  // database: cinque slot per squadra, e il database i null li butta via.
+  if (fase === 'stagione' || fase === 'stagione-playoff') {
+    s = S.setFormato({ ...s, phase: 'lobby' }, true);
+    s = { ...s, phase: 'squadra' };
+    s = S.giocaStagione(s, giriStagione(quante));
+    if (fase === 'stagione') return s;
+    const Tst = {};
+    for (const k of IN) Tst[k] = buildTeam(k, s.stagione.lineups[k], s.stagione.tactics[k]);
+    const st = simStagione(Tst, IN, s.stagione.seedBase, s.stagione.giri);
+    const Tp = {};
+    for (const k of IN) Tp[k] = buildTeam(k, s.lineups[k], s.tactics[k]);
+    s = S.toPlayoffs(s, tabelloneDaStagione(Tp, st.cls, seed));
+    return { s, T: Tp, st };
+  }
+
   const T = {};
   for (const k of IN) T[k] = buildTeam(k, s.lineups[k], s.tactics[k]);
   s = S.toPlayoffs(s, componiTabellone(T, seed));
@@ -82,7 +99,7 @@ console.log('\n' + '='.repeat(70));
 console.log('1. LO STATO SOPRAVVIVE AL GIRO ATTRAVERSO FIREBASE?');
 console.log('='.repeat(70) + '\n');
 for (const quante of NUMERI_SQUADRE) {
-  for (const fase of ['lobby', 'auction-inizio', 'squadra', 'playoff-inizio', 'fine']) {
+  for (const fase of ['lobby', 'auction-inizio', 'squadra', 'stagione', 'stagione-playoff', 'playoff-inizio', 'fine']) {
     const r = partitaFinoA(quante, fase, `fb${quante}${fase}`);
     const s = r.s || r;
     const dopo = giroFirebase(s);
@@ -100,10 +117,24 @@ for (const quante of NUMERI_SQUADRE) {
         if (key(a) !== key(b)) problema = 'il tabellone cambia dopo il giro';
       }
     }
+    // La classifica ricalcolata dopo il giro dal database deve essere identica:
+    // se il database mangia uno slot del quintetto, la stagione si riscrive.
+    if (!problema && s.stagione) {
+      if (!dopo.stagione) problema = 'la fotografia della stagione si perde';
+      else {
+        const rifai = (x) => {
+          const Tx = {};
+          for (const k of S.attive(x)) Tx[k] = buildTeam(k, x.stagione.lineups[k], x.stagione.tactics[k]);
+          return simStagione(Tx, S.attive(x), x.stagione.seedBase, x.stagione.giri)
+            .cls.map((rr) => `${rr.k}:${rr.w}-${rr.l}`).join();
+        };
+        if (rifai(s) !== rifai(dopo)) problema = 'la classifica cambia dopo il giro';
+      }
+    }
     if (problema) { ok(false, `${quante} squadre, fase ${fase}`, problema); }
   }
 }
-ok(fails === 0, 'nessuno stato si rompe passando dal database', `${NUMERI_SQUADRE.length} formati x 5 fasi`);
+ok(fails === 0, 'nessuno stato si rompe passando dal database', `${NUMERI_SQUADRE.length} formati x 7 fasi`);
 
 console.log('\n' + '='.repeat(70));
 console.log('2. NUMERI DI SQUADRE NON AMMESSI');

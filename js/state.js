@@ -22,6 +22,8 @@ export function newGame(seed, hostUid) {
     seats: {}, // uid -> teamKey
     names: {}, // uid -> nickname
     teams, lineups, tactics,
+    conStagione: false, // si sceglie in lobby: solo playoff, o stagione + playoff
+    stagione: null,     // fotografia di quintetti e tattiche con cui si e giocata
     auction: { order: null, idx: 0, bid: null, deadline: null, running: false, log: [], unsold: [] },
     po: null,
   };
@@ -51,6 +53,19 @@ export function hydrate(raw) {
     log: a.log || [], unsold: a.unsold || [],
   };
   s.albo = s.albo || [];
+  s.conStagione = !!s.conStagione;
+  if (s.stagione) {
+    // Anche qui il database toglie i null: lo scheletro va ricostruito o
+    // buildTeam trova un quintetto con quattro slot invece di cinque.
+    const st = s.stagione;
+    const lu = {}, tc = {};
+    for (const k of TEAM_KEYS) {
+      const l = st.lineups?.[k] || {};
+      lu[k] = Object.fromEntries(SLOTS.map((sl) => [sl, l[sl] ?? null]));
+      tc[k] = { v1: null, v2: null, strategy: 'equilibrato', ...(st.tactics?.[k] || {}) };
+    }
+    s.stagione = { giri: st.giri ?? 1, seedBase: st.seedBase || s.seed, lineups: lu, tactics: tc };
+  }
   if (s.po) {
     s.po = {
       ...s.po,
@@ -331,6 +346,29 @@ export function tacticsReady(s) {
   });
 }
 
+/* ---------- Stagione regolare ---------- */
+
+// Il formato si sceglie in lobby e vale per tutti. Con 2, 4 e 8 squadre la
+// stagione non serve a eliminare nessuno (entrano tutte nel tabellone): serve
+// a dare un senso alla classifica e a seminare gli accoppiamenti.
+export function setFormato(s, con) {
+  if (s.phase !== 'lobby') return undefined;
+  return { ...s, conStagione: !!con };
+}
+
+// La stagione si gioca UNA volta, con i quintetti e le tattiche di adesso.
+// Quella fotografia resta nello stato: dopo si possono ritoccare le tattiche
+// per i playoff senza che la classifica gia giocata cambi sotto i piedi.
+export function giocaStagione(s, giri) {
+  if (s.phase !== 'squadra' || s.stagione || !squadraReady(s)) return undefined;
+  const lineups = {}, tactics = {};
+  for (const k of TEAM_KEYS) {
+    lineups[k] = { ...s.lineups[k] };
+    tactics[k] = { ...s.tactics[k] };
+  }
+  return { ...s, stagione: { giri, seedBase: s.seed, lineups, tactics } };
+}
+
 /* ---------- Playoff ---------- */
 
 // Ogni serie si scopre un pezzo alla volta. Le semifinali vanno a due gare per
@@ -352,6 +390,8 @@ export function toPlayoffs(s, tab) {
     po: {
       n: tab.n, ordine: tab.ordine, teste: tab.teste,
       reasons: tab.reasons, seedBase: s.seed,
+      fuori: tab.fuori || [],          // eliminate dalla stagione regolare
+      daStagione: !!tab.daStagione,
       turni,
       third: null, // nasce solo se il penultimo turno aveva due serie
     },
@@ -407,7 +447,9 @@ export function classifica(s) {
 export function resetGame(s, seed) {
   const fresh = newGame(seed, s.host);
   // L'albo d'oro e le sedie sopravvivono: e il motivo per cui si rigioca.
-  return { ...fresh, seats: s.seats, names: s.names, albo: s.albo || [] };
+  // Anche il formato scelto: chi gioca con la stagione regolare non vuole
+  // riattivarla a ogni partita.
+  return { ...fresh, seats: s.seats, names: s.names, albo: s.albo || [], conStagione: !!s.conStagione };
 }
 
 /* ---------- Utility di presentazione ---------- */

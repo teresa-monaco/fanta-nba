@@ -78,8 +78,9 @@ const clean = () => !html().includes('Errore di rendering') && !html().includes(
 
 const F = globalThis.FANTA;
 const S = await import('../js/state.js');
-const { ui, render } = await import('../js/ui.js');
-const { buildTeam, componiTabellone, simSeriesUpTo, costruisciBracket } = await import('../js/engine.js');
+const { ui, render, teamsFromState, stagioneFromState } = await import('../js/ui.js');
+const { buildTeam, componiTabellone, simSeriesUpTo, costruisciBracket,
+  giriStagione, tabelloneDaStagione } = await import('../js/engine.js');
 const { TEAM_KEYS, STRATEGIES } = await import('../js/core.js');
 
 console.log('\nCollaudo interfaccia (modalita locale, DOM simulato)\n');
@@ -264,6 +265,64 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
   ok(!has('class="bidpick"') && (html().match(/class="bidrow"/g) || []).length === 3,
     'con tre squadre restano le tre righe di sempre, senza selettore');
   ok(has('class="ros"'), 'e le rose degli avversari si vedono');
+}
+
+/* 8. Stagione regolare: la classifica al posto delle teste sorteggiate */
+{
+  await F.session.apply((s) => S.resetGame(s, 'stagione'));
+  await F.session.apply((s) => S.setFormato(s, true));
+  ui.numSquadre = 6;
+  render(els.app, { state: F.state, session: F.session });
+  ok(clean() && has('Stagione + playoff', 'data-act="formato"'), 'in lobby si sceglie il formato');
+  ok(has('Le prime 4 passano'), 'e la lobby dice cosa comporta', '6 squadre');
+
+  // Il formato e una preferenza del tavolo, non della singola partita.
+  await F.session.apply((s) => S.resetGame(s, 'stagione2'));
+  ok(F.state.conStagione === true, 'il formato scelto sopravvive a "Nuova partita"');
+
+  await F.session.apply((s) => S.startAuction(s, now(), TEAM_KEYS.slice(0, 6)));
+  let g2 = 0;
+  while (F.state.phase === 'auction' && g2++ < 400) {
+    const k = S.attive(F.state).filter((t) => S.slotsLeft(F.state, t) > 0)[0];
+    await F.session.apply((s) => S.placeBid(s, k, Math.max(1, Math.min(S.maxBid(F.state, k), 1 + (g2 % 5))), now()));
+    await F.session.apply((s) => S.resolveLot(s, now()));
+  }
+  ok(F.state.phase === 'squadra', 'l\'asta a sei si chiude');
+  ok(has('Gioca la stagione regolare'), 'prima della stagione il tasto e quello giusto');
+  ok(!has('Ai playoff'), 'e non si puo saltare direttamente ai playoff');
+  ok(has('10 partite a testa'), 'la schermata dice quante partite si giocano');
+
+  const giri = giriStagione(6);
+  ok(giri === 2, 'con sei squadre il girone e di andata e ritorno', `${giri} giri`);
+  await F.session.apply((s) => S.giocaStagione(s, giri));
+  ok(clean() && has('class="classifica"', 'Stagione regolare'), 'la classifica si disegna');
+  ok(has('>playoff<') && has('>fuori<'), 'si vede chi passa e chi resta fuori');
+  ok(has('30 gare, 10 a testa'), 'e quante gare sono state giocate');
+  ok(has('Tutti i risultati (30)'), 'i risultati partita per partita sono consultabili');
+  ok(has('Ritocca le tattiche') && has('Ai playoff'), 'dopo la stagione si ritoccano le tattiche');
+
+  const st = stagioneFromState(F.state);
+  ok(st.cls.length === 6 && st.cls.every((r) => r.w + r.l === 10), 'ognuna ha giocato 10 partite');
+
+  // Il ritocco cambia i playoff ma non la classifica gia giocata.
+  const primaDelRitocco = st.cls.map((r) => `${r.k}:${r.w}`).join();
+  for (const k of S.attive(F.state)) await F.session.apply((s) => S.setTactics(s, k, { strategy: 'tiro-3' }));
+  const dopo = stagioneFromState(F.state);
+  ok(dopo.cls.map((r) => `${r.k}:${r.w}`).join() === primaDelRitocco,
+    'ritoccare le tattiche non riscrive la classifica');
+  ok(F.state.tactics[S.attive(F.state)[0]].strategy === 'tiro-3'
+    && F.state.stagione.tactics[S.attive(F.state)[0]].strategy !== undefined,
+    'ma le nuove tattiche sono quelle che andranno ai playoff');
+
+  const Tfin = teamsFromState(F.state);
+  const tab8 = tabelloneDaStagione(Tfin, dopo.cls, F.state.seed);
+  ok(tab8.teste === 0, 'col girone nessuno salta un turno');
+  ok(tab8.ordine.length === 4 && tab8.fuori.length === 2, 'passano le prime quattro, due restano fuori');
+  ok(tab8.ordine[0] === dopo.cls[0].k && tab8.ordine[1] === dopo.cls[3].k,
+    'la prima incontra l\'ultima qualificata');
+  await F.session.apply((s) => S.toPlayoffs(s, tab8));
+  ok(clean() && has('Semifinale 1', 'Semifinale 2'), 'il tabellone da classifica si disegna');
+  ok(!has('Turno preliminare'), 'e non c\'e nessun turno preliminare');
 }
 
 /* Controlli finali */

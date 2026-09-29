@@ -35,9 +35,32 @@ decidere: sopra c'è il profilo in chiaro (*spacing totale, ferro scoperto,
 troppe stelle*). Se proprio vuoi correggerlo c'è "Modifica". Sotto scegli
 **primo violino**, **secondo violino** e una delle 11 **strategie offensive**.
 
-**3. Playoff.** Eliminazione diretta. Il tabellone si arrotonda alla potenza di
-due superiore e i posti che avanzano diventano **teste di serie sorteggiate**
-che saltano il primo turno:
+**2-bis. Stagione regolare (opzionale).** Si sceglie in lobby: *solo playoff*
+oppure *stagione + playoff*. Con la stagione si gioca un girone all'italiana a
+gara secca — tanti giri quanti servono perche ognuna faccia **una decina di
+partite** — e ne esce una classifica con record e differenza canestri. Passano
+le prime 2, 4 o 8; le altre sono fuori. A stagione finita **le tattiche si
+possono ritoccare**: hai visto come e andata, correggi prima dei playoff.
+
+Costa meno di quanto sembri, perche toglie serie invece di aggiungerne: in
+dodici si passa da 11 serie a 7. E il vantaggio della testa di serie sparisce,
+perche non salta il turno piu nessuno.
+
+| Squadre | Giri | Gare a testa | Passano | Serie: solo playoff -> con stagione |
+|---|---|---|---|---|
+| 3 | 5 | 10 | 2 | 2 -> 1 |
+| 4 | 3 | 9 | 4 | 3 -> 3 |
+| 6 | 2 | 10 | 4 | 5 -> 3 |
+| 8 | 1 | 7 | 8 | 7 -> 7 |
+| 10 | 1 | 9 | 8 | 9 -> 7 |
+| 12 | 1 | 11 | 8 | 11 -> 7 |
+
+Con 2, 4 e 8 squadre non elimina nessuno: serve solo a seminare gli
+accoppiamenti (la prima contro l'ultima qualificata) e a dare una classifica.
+
+**3. Playoff.** Eliminazione diretta. Senza stagione regolare il tabellone si
+arrotonda alla potenza di due superiore e i posti che avanzano diventano
+**teste di serie sorteggiate** che saltano il primo turno:
 
 | Squadre | Teste | Struttura | Serie | Durata |
 |---|---|---|---|---|
@@ -203,7 +226,7 @@ così grande da svuotare l'archetipo.
 
 ```bash
 node tools/selftest.mjs    # dati, distribuzioni, statistiche, determinismo, testi
-node tools/flowtest.mjs    # 200 partite intere: nessuna regola deve rompersi
+node tools/flowtest.mjs    # 210 partite intere, tutti i formati x solo-playoff e con-stagione
 node tools/domtest.mjs     # l'app vera attraverso tutte e cinque le schermate
 node tools/balance.mjs     # diagnostica di taratura (non fallisce mai)
 node tools/fairness.mjs    # le quattro sedie valgono uguale? (non fallisce mai)
