@@ -382,6 +382,49 @@ export function explainSeries(A, B, series) {
   return out;
 }
 
+/* ---------- Il referto: verdetto sulle scelte tecniche ---------- */
+
+// Una riga sola sopra la tabella. Deve dire in mezzo secondo se hai allenato
+// o hai tirato a caso, ed e il punto dove il gioco insegna qualcosa.
+export function verdettoReferto(ref, haVinto) {
+  const contate = ref.voci.filter((v) => !v.ininfluente);
+  const giuste = contate.filter((v) => v.eraGiusta).length;
+  const tot = contate.length;
+  const guadagno = ref.voci.reduce((s, v) => s + v.valore, 0);
+  const peggiore = ref.voci.slice().sort((a, b) => b.quantoMeglio - a.quantoMeglio)[0];
+
+  const pt = (x) => `${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(1)}`;
+
+  // Prima i casi estremi, poi quelli specifici, e solo alla fine il grigio.
+  // L'ordine conta: senza, un −1.3 finiva sotto "non ha inciso".
+  if (tot === 0) {
+    return 'Contro questa squadra qualunque scelta valeva l\'altra. Potevi anche non presentarti in panchina.';
+  }
+  if (giuste === tot) {
+    return haVinto
+      ? `${tot} scelte su ${tot} azzeccate, ${pt(guadagno)} punti a partita. Per una volta, complimenti.`
+      : `Le scelte erano tutte giuste (${pt(guadagno)} a partita) e hai perso lo stesso. Il problema è la rosa, non la panchina.`;
+  }
+  if (guadagno <= -2.5) {
+    return `${pt(guadagno)} punti a partita: una monetina avrebbe fatto meglio. `
+      + `Il disastro è ${peggiore.etichetta.toLowerCase()}, dove ${peggiore.migliore} valeva ${pt(peggiore.quantoMeglio)}.`;
+  }
+  if (peggiore.quantoMeglio >= 1.5) {
+    return `${pt(guadagno)} a partita, ma su ${peggiore.etichetta.toLowerCase()} hai proprio sbagliato: `
+      + `con ${peggiore.migliore} erano ${pt(peggiore.quantoMeglio)} punti in più. Ogni singola partita.`;
+  }
+  if (guadagno >= 2.5) {
+    return `Hai allenato davvero: ${giuste} scelte su ${tot} erano le migliori, ${pt(guadagno)} punti a partita rispetto a tirare a caso.`;
+  }
+  if (guadagno >= 1) {
+    return `${pt(guadagno)} punti a partita. Niente di memorabile, ma almeno non ti sei fatto male da solo.`;
+  }
+  if (guadagno <= -1) {
+    return `${pt(guadagno)} punti a partita rispetto a scegliere a caso. Hai allenato contro te stesso.`;
+  }
+  return `${pt(guadagno)} punti a partita: la panchina non ha inciso, né in un senso né nell'altro.`;
+}
+
 /* ---------- Riga sintetica di un profilo squadra ---------- */
 
 export function teamIdentity(T) {

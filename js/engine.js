@@ -15,7 +15,7 @@
 // il narratore ci costruisce sopra la spiegazione, quindi il racconto non puo
 // mai contraddire il risultato.
 
-import { db, makeRng, gauss, clamp, SLOTS, TEAM_NAMES } from './core.js';
+import { db, makeRng, gauss, clamp, SLOTS, TEAM_NAMES, STRATEGIES, allenatoriDi } from './core.js';
 
 // Peso per rango di realizzazione. Piu i pesi sono piatti, piu conta il quinto
 // uomo e meno paga comprare una sola superstar circondata da gregari.
@@ -407,17 +407,20 @@ export function matchup(A, B) {
    3. SIMULAZIONE PARTITA
    ========================================================== */
 
+// Taratura: con questi due numeri una sfida fra squadre di pari valore da
+// circa il 62% alla favorita per singola gara — il che produce una
+// distribuzione di serie vicina a quella dei playoff veri. Alzare il
+// coefficiente rende il gioco piu prevedibile, alzare la sigma piu casuale.
+// Verificabile con: node tools/balance.mjs
+export const RATING_WEIGHT = 0.0030;
+const GAME_SIGMA = 8.5;
+
 export function simGame(A, B, m, rng, opts = {}) {
   const homeIsA = !!opts.homeIsA;
   const poss = Math.round(m.pace + clamp(gauss(rng), -2, 2) * 2.4);
 
-  // Taratura: con questi due numeri una sfida fra squadre di pari valore da
-  // circa il 62% alla favorita per singola gara — il che produce una
-  // distribuzione di serie vicina a quella dei playoff veri. Alzare il
-  // coefficiente rende il gioco piu prevedibile, alzare la sigma piu casuale.
-  // Verificabile con: node tools/balance.mjs
-  const RATING_WEIGHT = 0.0030;
-  const GAME_SIGMA = 8.5;
+  // Le due costanti di taratura stanno fuori (vedi sopra simGame): servono
+  // anche al referto, che deve tradurre un divario di rating in punti veri.
 
   // La normale pura ha code infinite: senza un taglio esce ogni tanto una gara
   // da 65 punti, che per dei quintetti di All-Star non e verosimile.
@@ -651,6 +654,68 @@ function contrast(t1, t2) {
 }
 
 const potenza = (t) => t.off + t.def;
+
+/* ==========================================================
+   4b. IL REFERTO — le scelte tattiche hanno pagato?
+   ==========================================================
+
+   Senza questo, nessuna delle scelte si impara: si tirano a caso per sempre.
+   Ogni voce e un numero che il motore ha davvero usato, riportato in PUNTI A
+   PARTITA, che e l'unica unita che si capisce al volo. Confronta la scelta
+   fatta con la media di tutte le alternative, e dice quale sarebbe stata la
+   migliore CONTRO QUESTO AVVERSARIO: contro un altro la risposta cambia. */
+
+// Sotto questa soglia, in punti a partita, una differenza non e un consiglio.
+const SOGLIA_REFERTO = 0.25;
+
+export function refertoTattico(T, O) {
+  const lineup = Object.fromEntries(T.five.map((p) => [p.slot, p.id]));
+  const roster = T.five.map((p) => p.id);
+
+  // Punti a partita che questo attacco produce contro questa difesa.
+  const punti = (tactics) => {
+    const t = buildTeam(T.key, lineup, tactics);
+    const m = matchup(t, O);
+    return (m.offA - m.defB) * RATING_WEIGHT * m.pace;
+  };
+
+  const base = punti(T.tactics);
+  const voci = [];
+
+  const dimensione = (campo, valori, etichetta, nomeDi) => {
+    if (valori.length < 2) return;
+    const alt = valori.map((v) => ({ v, p: v === T.tactics[campo] ? base : punti({ ...T.tactics, [campo]: v }) }));
+    const media = alt.reduce((s, x) => s + x.p, 0) / alt.length;
+    const best = alt.reduce((a, b) => (b.p > a.p ? b : a));
+    const quantoMeglio = best.p - base;
+    // Sotto un quarto di punto a partita non e un consiglio, e rumore
+    // arrotondato: suggerire "meglio Drummond (+0.0)" al posto di Doncic
+    // farebbe sembrare rotto il referto, e avrebbe ragione.
+    const ininfluente = quantoMeglio < SOGLIA_REFERTO
+      && Math.max(...alt.map((x) => x.p)) - Math.min(...alt.map((x) => x.p)) < SOGLIA_REFERTO * 2;
+    voci.push({
+      campo, etichetta,
+      scelto: nomeDi(T.tactics[campo]),
+      // Rispetto a scegliere a caso: e la domanda vera, "e servito decidere?"
+      valore: base - media,
+      migliore: nomeDi(best.v),
+      quantoMeglio,
+      eraGiusta: quantoMeglio < SOGLIA_REFERTO,
+      ininfluente,
+    });
+  };
+
+  dimensione('strategy', Object.keys(STRAT), 'Strategia', (v) => STRATEGIES[v]?.label || v);
+  dimensione('ritmo', Object.keys(RITMI), 'Ritmo', (v) => RITMI[v]?.label || v);
+  const coachDisponibili = allenatoriDi(roster).map((c) => c.id);
+  dimensione('coach', coachDisponibili, 'Allenatore', (v) => db().coachById?.[v]?.n || '—');
+
+  // Il primo violino: l'unica delle cinque scelte che finora non si misurava.
+  dimensione('v1', roster.filter((id) => id !== T.tactics.v2), 'Primo violino',
+    (v) => db().byId[v]?.n || '—');
+
+  return { squadra: T.name, key: T.key, base, voci };
+}
 
 /* ==========================================================
    5a-bis. STAGIONE REGOLARE — girone all'italiana

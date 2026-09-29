@@ -20,8 +20,8 @@ const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
 const core = await import('../js/core.js');
 const { installData, makeRng, shuffle, TEAM_KEYS, SLOTS, STRATEGIES, allenatoriDi } = core;
 const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'), readJson('data/coaches.json'));
-const { buildTeam, simSeries, matchup, pickBracket } = await import('../js/engine.js');
-const { narrateGame, explainSeries, teamIdentity } = await import('../js/narrator.js');
+const { buildTeam, simSeries, matchup, pickBracket, refertoTattico } = await import('../js/engine.js');
+const { narrateGame, explainSeries, teamIdentity, verdettoReferto } = await import('../js/narrator.js');
 const { autoLineup } = await import('../js/state.js');
 
 // Le quattro posizioni, per nome corto: i test non devono rompersi
@@ -152,11 +152,11 @@ console.log('\n1c. Nomi delle squadre');
   ok(JSON.stringify(a) === JSON.stringify(c),
     'ma lo stesso seed da sempre gli stessi nomi (o due telefoni divergerebbero)');
   ok(TEAM_KEYS.every((k) => !!TEAM_NAMES[k]), 'nessuna sedia resta senza nome');
-  // Dieci nomi per dodici sedie: le prime dieci non si ripetono mai.
-  const primi = TEAM_KEYS.slice(0, NOMI_SQUADRE.length).map((k) => TEAM_NAMES[k]);
-  ok(new Set(primi).size === primi.length, 'fino a dieci squadre i nomi sono tutti diversi');
+  ok(NOMI_SQUADRE.length >= TEAM_KEYS.length,
+    'i nomi bastano per tutte le sedie', `${NOMI_SQUADRE.length} nomi, ${TEAM_KEYS.length} sedie`);
+  ok(new Set(NOMI_SQUADRE).size === NOMI_SQUADRE.length, 'nella lista non ci sono doppioni');
   ok(new Set(TEAM_KEYS.map((k) => TEAM_NAMES[k])).size === TEAM_KEYS.length,
-    'e anche in dodici nessun nome e ripetuto identico');
+    'e anche in dodici nessuna squadra ha il nome di un\'altra');
   applicaNomi('fanta-nba');
 }
 
@@ -179,6 +179,44 @@ console.log('\n1d. Gara 7');
     varianti.add(narrateGame(A[kk[0]], A[kk[1]], { ...ss.games[0], n: 7 }).split('. ').pop());
   }
   ok(varianti.size >= 5, 'e la frase su Fabio cambia', `${varianti.size} varianti su 60 gara 7`);
+}
+
+/* ---------- 1e. Il referto tattico ---------- */
+console.log('\n1e. Il referto');
+{
+  let numeriStorti = 0, consigliInutili = 0, verdettiVuoti = 0, contraddizioni = 0;
+  let conConsiglio = 0, tutteGiuste = 0, voci = 0;
+  const M = 120;
+  for (let i = 0; i < M; i++) {
+    const T = randomTeams('ref' + i);
+    const ks = Object.keys(T);
+    const s = simSeries(T[ks[0]], T[ks[1]], 'refs' + i);
+    for (const [a, b] of [[0, 1], [1, 0]]) {
+      const r = refertoTattico(T[ks[a]], T[ks[b]]);
+      voci += r.voci.length;
+      for (const v of r.voci) {
+        if (!Number.isFinite(v.valore) || !Number.isFinite(v.quantoMeglio)) numeriStorti++;
+        // Un consiglio deve valere qualcosa: "meglio X (+0.0)" fa sembrare
+        // rotto il referto, ed e il difetto che aveva alla prima stesura.
+        if (!v.eraGiusta && !v.ininfluente && v.quantoMeglio < 0.2) consigliInutili++;
+        if (v.eraGiusta && v.quantoMeglio > 0.3) contraddizioni++;
+        if (!v.eraGiusta && !v.ininfluente) conConsiglio++;
+      }
+      if (r.voci.every((v) => v.eraGiusta)) tutteGiuste++;
+      const verdetto = verdettoReferto(r, s.winner === T[ks[a]].key);
+      if (!verdetto || verdetto.length < 25) verdettiVuoti++;
+    }
+  }
+  ok(numeriStorti === 0, 'nessun numero storto nel referto', `${voci} voci`);
+  ok(consigliInutili === 0, 'nessun consiglio che non vale niente', `${consigliInutili}`);
+  ok(contraddizioni === 0, '"la migliore" non compare mai su una scelta battuta');
+  ok(verdettiVuoti === 0, 'il verdetto c\'e sempre ed e una frase vera');
+  // Se fossero sempre tutte giuste, il referto non insegnerebbe niente; se
+  // non lo fossero mai, sarebbe solo una sberla.
+  const q = tutteGiuste / (M * 2) * 100;
+  ok(q > 2 && q < 60, 'qualche volta si azzecca tutto, di solito no', `${q.toFixed(0)}% di referti perfetti`);
+  ok(conConsiglio / (M * 2) >= 1, 'in media almeno un consiglio utile per squadra',
+    `${(conConsiglio / (M * 2)).toFixed(1)} per referto`);
 }
 
 /* ---------- 2. Distribuzione delle serie ---------- */

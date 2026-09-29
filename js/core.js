@@ -163,6 +163,8 @@ export const NOMI_SQUADRE = [
   'Sucio',
   'No lo silben',
   'Dimash',
+  'Climberz',
+  'Appennino',
 ];
 
 // I nomi si estraggono dal SEED della partita, non si salvano nel database:
@@ -173,8 +175,9 @@ export const TEAM_NAMES = {};
 export function applicaNomi(seed) {
   const estratti = shuffle(NOMI_SQUADRE, makeRng(String(seed) + ':nomi'));
   TEAM_KEYS.forEach((k, i) => {
-    // I nomi sono dieci e le sedie dodici: nella partita a dodici le ultime
-    // due riprendono un nome con il numero, invece di restare senza.
+    // I nomi bastano per tutte le sedie. Il ripiego col numero resta come rete
+    // di sicurezza: se un giorno si toglie un nome dalla lista, la sedia in
+    // fondo resta comunque battezzata invece di finire "undefined".
     TEAM_NAMES[k] = i < estratti.length ? estratti[i] : `${estratti[i % estratti.length]} II`;
   });
   return TEAM_NAMES;

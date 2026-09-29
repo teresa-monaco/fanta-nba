@@ -157,6 +157,33 @@ label.field > span {
 }
 .seat .who { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 
+/* ---- il referto tattico ---- */
+.referto-wrap > summary {
+  font: 800 11px var(--cond); letter-spacing: 1.6px; text-transform: uppercase;
+  color: var(--gold); padding: 10px 0; cursor: pointer;
+}
+.ref-blocco { margin-top: 12px; border-left: 3px solid var(--tc); padding-left: 10px; }
+.ref-blocco .nm {
+  display: flex; align-items: center; gap: 7px; margin-bottom: 5px;
+  font: 800 13px var(--cond); letter-spacing: 1.2px; text-transform: uppercase;
+}
+table.referto { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.referto td { padding: 5px 4px; border-top: 1px solid var(--line); vertical-align: top; }
+table.referto .dim {
+  font: 700 9.5px var(--cond); letter-spacing: 1.4px; text-transform: uppercase;
+  color: var(--muted); white-space: nowrap; width: 1%;
+}
+table.referto .scelta { font-weight: 700; }
+table.referto .val {
+  font: 800 13px var(--cond); text-align: right; white-space: nowrap; width: 1%;
+  font-variant-numeric: tabular-nums;
+}
+table.referto .val.su { color: var(--ok); }
+table.referto .val.giu { color: var(--bad); }
+table.referto .alt { color: var(--muted); font-size: 11.5px; }
+table.referto .alt .ok { color: var(--ok); }
+table.referto tr.giusta .scelta { color: var(--ok); }
+
 /* ---- ritmo e allenatore ---- */
 .lbl-mini {
   display: block; font: 700 9.5px var(--cond); letter-spacing: 2px;

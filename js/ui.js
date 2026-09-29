@@ -4,8 +4,8 @@
 
 import { db, SLOTS, SLOT_LABEL, TEAM_KEYS, TEAM_NAMES, STRATEGIES, ROSTER_SIZE, START_CREDITS } from './core.js';
 import { buildTeam, simSeriesUpTo, costruisciBracket, nomeTurno,
-  simStagione, giriStagione, potenzaSotto, RITMI } from './engine.js';
-import { narrateGame, explainSeries, teamIdentity } from './narrator.js';
+  simStagione, giriStagione, potenzaSotto, RITMI, refertoTattico } from './engine.js';
+import { narrateGame, explainSeries, teamIdentity, verdettoReferto } from './narrator.js';
 import * as S from './state.js';
 import { now } from './net.js';
 import { audioAcceso } from './suono.js';
@@ -668,6 +668,42 @@ function viewPlayoffs({ state: s, session }) {
   return out;
 }
 
+// Il referto: quanto sono valse le scelte tecniche, in punti a partita.
+// Senza questo nessuna delle cinque scelte si impara mai — si tirano a caso
+// per sempre e tanto valeva non chiederle. Sta chiuso in un <details> perche
+// e la parte che si legge dopo, non durante.
+function refertoCard(A, B, f) {
+  const blocchi = [A, B].map((T) => {
+    const O = T === A ? B : A;
+    let ref;
+    try { ref = refertoTattico(T, O); } catch { return ''; }
+    const haVinto = f.winner === T.key;
+    const pt = (x) => `${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(1)}`;
+
+    const righe = ref.voci.map((v) => `<tr class="${v.eraGiusta ? 'giusta' : ''}">
+      <td class="dim">${esc(v.etichetta)}</td>
+      <td class="scelta">${esc(v.scelto)}</td>
+      <td class="val ${v.ininfluente ? '' : (v.valore >= 0 ? 'su' : 'giu')}">${v.ininfluente ? '—' : pt(v.valore)}</td>
+      <td class="alt">${v.ininfluente
+        ? 'qui valeva uguale qualunque cosa'
+        : (v.eraGiusta
+          ? '<span class="ok">la migliore</span>'
+          : `meglio <b>${esc(v.migliore)}</b> <span class="muted">${pt(v.quantoMeglio)}</span>`)}</td>
+    </tr>`).join('');
+
+    return `<div class="ref-blocco t-${T.key}">
+      <div class="row spread"><span class="nm"><span class="dot"></span>${esc(T.name)}</span></div>
+      <p class="small mb">${esc(verdettoReferto(ref, haVinto))}</p>
+      <table class="referto"><tbody>${righe}</tbody></table>
+    </div>`;
+  }).join('');
+
+  return `<details class="referto-wrap mt"><summary>Il referto — hanno pagato le tue scelte?</summary>
+    <p class="tiny muted mt">Punti a partita rispetto a scegliere a caso, contro <i>questo</i> avversario.
+    Contro un altro le risposte cambiano.</p>
+    ${blocchi}</details>`;
+}
+
 // Una sola carta per tutte le serie: cambia solo di quante gare si avanza
 // a ogni tocco. Semifinali e finalina due, Finals una.
 function serieCard(titolo, A, B, f, meta, passo, isHost, act) {
@@ -689,7 +725,8 @@ function serieCard(titolo, A, B, f, meta, passo, isHost, act) {
          <div class="n">${esc(f.mvp.n)}</div>
          <div class="small muted">${f.mvp.ppg.toFixed(1)} punti · ${f.mvp.rpg.toFixed(1)} rimbalzi · ${f.mvp.apg.toFixed(1)} assist di media</div></div>
        <div class="why"><h3 style="margin:14px 0 8px">Perché ha vinto ${esc(f.winner === A.key ? A.name : B.name)}</h3>
-         <ul>${explainSeries(A, B, f).map((w) => `<li>${esc(w)}</li>`).join('')}</ul></div>`
+         <ul>${explainSeries(A, B, f).map((w) => `<li>${esc(w)}</li>`).join('')}</ul></div>
+       ${refertoCard(A, B, f)}`
     : (isHost
       ? `<button class="primary wide mt" data-act="${act}">${etichetta}</button>`
       : '<p class="small muted center mt">In attesa di chi ospita.</p>');

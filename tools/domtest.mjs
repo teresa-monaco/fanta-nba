@@ -241,6 +241,15 @@ while (steps++ < 8) {
 }
 ok(sawStop, 'la finale si chiude e proclama il campione', `${steps} gare`);
 ok(clean() && has('MVP della serie'), 'l\'MVP viene assegnato');
+
+/* Il referto: senza, nessuna delle cinque scelte si impara mai */
+ok(has('Il referto'), 'a serie chiusa compare il referto tattico');
+ok(has('class="referto"') && has('Strategia') && has('Ritmo') && has('Allenatore') && has('Primo violino'),
+  'e copre tutte e quattro le scelte misurabili');
+ok(html().indexOf('Perché ha vinto') < html().indexOf('Il referto'),
+  'sta dopo la spiegazione, non prima: prima cosa e successo, poi di chi e la colpa');
+ok(!has('>Il referto') || has('punti a partita'),
+  'i numeri sono in punti a partita, non in unita del motore');
 ok(has('finale 3°/4° posto'), 'viene proposta la finalina fra le due eliminate');
 {
   const turni = costruisciBracket(F.state.po, T);

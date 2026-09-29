@@ -111,6 +111,29 @@ così la tensione sale invece di restare piatta. Chi gioca contro chi dal second
 turno in poi **non è salvato nel database**: viene dedotto dai risultati, che
 sono identici per tutti perché il motore è deterministico.
 
+**3-bis. Il referto.** A serie chiusa, sotto il "perché ha vinto", si apre il
+referto: quanto sono valse davvero le tue scelte, **in punti a partita**, per
+entrambe le squadre. Per ognuna delle quattro — strategia, ritmo, allenatore,
+primo violino — dice quanto hai guadagnato rispetto a scegliere a caso e quale
+sarebbe stata la migliore *contro quell'avversario*. Dove la differenza è sotto
+il quarto di punto non suggerisce niente: scrive che valeva uguale qualunque
+cosa, invece di consigliare Drummond al posto di Doncic per +0.0.
+
+```
+Sucio                                             ha perso
+  −1.2 a partita, ma su allenatore hai proprio sbagliato:
+  con Don Nelson erano +2.6 punti in più. Ogni singola partita.
+
+  Strategia       Isolamento        −0.5   meglio Transizione (+2.1)
+  Ritmo           Lento             −0.5   meglio Medio (+1.3)
+  Allenatore      Flip Saunders     −0.8   meglio Don Nelson (+2.6)
+  Primo violino   Zach LaVine       +0.7   la migliore
+```
+
+Serve a una cosa sola: senza, le scelte si tirano a caso per sempre e tanto
+valeva non chiederle. Il 3% dei referti è perfetto, in media c'è quasi un paio
+di correzioni utili per squadra.
+
 **4. Albo d'oro.** Ogni partita conclusa resta: campione, quintetto, MVP. Più
 una classifica fra voi. Sopravvive a "Nuova partita".
 
@@ -205,7 +228,7 @@ chi gioca, non quello della squadra di stasera.
 Per cambiarli si tocca una lista sola, in `js/core.js`:
 
 ```js
-export const NOMI_SQUADRE = ['Pornland', 'Volta Reno FC', "m johnson's son", ...];
+export const NOMI_SQUADRE = ['Pornland', 'Volta Reno FC', "m johnson's son", ...]; // 12
 ```
 
 Le chiavi `t1…t12` sono **posizioni**, non nomi: reggono i colori in CSS
