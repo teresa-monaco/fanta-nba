@@ -238,7 +238,16 @@ async function guidaBot() {
         const q = BotAI.offerta(state, k, S, Date.now(), memoriaBot);
         if (q == null) continue;
         await session.apply((s) => (S.canBid(s, k, q) ? S.placeBid(s, k, q, now()) : undefined));
-        break;
+        return;
+      }
+      // Nessun bot vuole rilanciare: quelli a cui il giocatore non interessa
+      // votano per saltarlo, se no il tavolo non arriverebbe mai
+      // all'unanimita e il lotto finirebbe sempre assegnato d'ufficio.
+      for (const k of squadreBot) {
+        if (!BotAI.vuoleSaltare(state, k, S, memoriaBot)) continue;
+        if (state.auction.skipVoti?.[k]) continue;
+        await session.apply((s) => S.votaSkip(s, k, now()));
+        return;
       }
     } else if (state.phase === 'squadra') {
       for (const k of squadreBot) {
@@ -408,9 +417,11 @@ document.addEventListener('click', async (ev) => {
         await session.apply((s) => (s.auction.running ? S.resolveLot(s, now()) : undefined));
         break;
 
+      // Il "Salta" unilaterale di chi ospita non esiste piu: saltare e una
+      // decisione del tavolo (data-act="vota-skip"). Il caso resta solo per
+      // le stanze aperte prima dell'aggiornamento, dove un telefono non
+      // ancora ricaricato potrebbe mandarlo.
       case 'pass': {
-        // Scartare con un'offerta valida sul tavolo butta via quell'offerta:
-        // vale una conferma, perché non si torna indietro.
         const b = state.auction.bid;
         if (b && !confirm(`Saltare? L'offerta di ${b.amount} di ${S.TEAM_NAMES[b.team]} viene annullata e il giocatore non va a nessuno.`)) break;
         await session.apply((s) => (s.phase === 'auction' ? S.passLot(s, now()) : undefined));
@@ -469,6 +480,18 @@ document.addEventListener('click', async (ev) => {
         }));
         break;
 
+
+      // Chi ospita gestisce anche le squadre senza nessuno seduto: il voto
+      // vale per tutte quelle che controlla, o non si arriverebbe mai
+      // all'unanimita in una stanza con sedie vuote.
+      case 'vota-skip': {
+        const mie = S.puoVotare(state).filter((k) => k === S.teamOf(state, session.uid)
+          || (state.host === session.uid && !S.seatTaken(state, k)));
+        for (const k of (mie.length ? mie : [team])) {
+          await session.apply((s) => S.votaSkip(s, k, now()));
+        }
+        break;
+      }
 
       /* --- allenatore (il ritmo e uno slider: vive nell'handler change) --- */
       case 'set-coach':

@@ -109,7 +109,8 @@ await F.session.apply((s) => S.startAuction(s, now(), TEAM_KEYS.slice(0, 4)));
 // Agganciato alla struttura, non a una parola: le etichette cambiano con la grafica.
 ok(clean() && has('class="card lot"', 'class="lot-head"', 'crediti'), 'la schermata d\'asta si disegna');
 ok(has('Realizzazione', 'Protezione ferro'), 'gli attributi del giocatore sono visibili');
-ok(has('Assegna a mano') && has('>Salta<'), 'i comandi del banditore stanno nel blocco del giocatore');
+ok(has('Assegna a mano'), 'i comandi del banditore stanno nel blocco del giocatore');
+ok(!has('data-act="pass"'), 'ma chi ospita non puo piu saltare da solo: si vota');
 ok(html().indexOf('Assegna a mano') < html().indexOf('class="card bidbox'),
   'e stanno sotto le valutazioni, prima del riquadro offerte');
 ok(!has('>Assegna</button>'), 'senza offerte "Assegna" non compare: non c\'è niente da assegnare');
@@ -117,6 +118,11 @@ ok(has('data-act="toggle-pause"'), 'c\'è il tasto per fermare il cronometro');
 ok(has('+1<small>1') && has('+2<small>2') && has('+3<small>3') && has('All in'),
   'i quattro tasti di rilancio ci sono, con l\'importo risultante sotto');
 ok(!has('Rilancia a'), 'niente etichette lunghe sui tasti di rilancio');
+// Saltare e una decisione del tavolo: il conteggio si vede mentre si vota.
+ok(has('data-act="vota-skip"'), 'c\'è il tasto per saltare il giocatore');
+ok(has(`0/${S.attive(F.state).length}`), 'con il conteggio dei voti',
+  `0 su ${S.attive(F.state).length}`);
+ok(has(`${S.MAX_SKIP} skip rimasti`), 'e quanti skip restano al tavolo');
 // Il cronometro deve stare ANCHE nella barra fissa: i tasti sono li, e con
 // la pagina scrollata il conto alla rovescia in cima non si vede piu.
 ok((html().match(/data-clock/g) || []).length >= 2,

@@ -26,7 +26,8 @@ export function newGame(seed, hostUid) {
     bots: {},           // teamKey -> quale bot la occupa
     conStagione: false, // si sceglie in lobby: solo playoff, o stagione + playoff
     stagione: null,     // fotografia di quintetti e tattiche con cui si e giocata
-    auction: { order: null, idx: 0, bid: null, deadline: null, running: false, log: [], unsold: [] },
+    auction: { order: null, idx: 0, bid: null, deadline: null, running: false, log: [], unsold: [],
+      skipVoti: {}, skipUsati: 0 },
     po: null,
   };
 }
@@ -53,6 +54,7 @@ export function hydrate(raw) {
     deadline: a.deadline || null, running: !!a.running,
     paused: !!a.paused, remaining: a.remaining ?? null,
     log: a.log || [], unsold: a.unsold || [],
+    skipVoti: a.skipVoti || {}, skipUsati: a.skipUsati ?? 0,
   };
   s.albo = s.albo || [];
   s.bots = s.bots || {};
@@ -212,7 +214,8 @@ export function startAuction(s, now, squadre) {
 export function openLot(s, now) {
   const a = s.auction;
   // Un lotto nuovo riparte sempre spausato: la pausa vale per il lotto in corso.
-  const fresh = { ...a, bid: null, paused: false, remaining: null };
+  // I voti per saltare valgono per QUESTO lotto: al successivo si riparte.
+  const fresh = { ...a, bid: null, paused: false, remaining: null, skipVoti: {} };
   const stillBuying = attive(s).some((k) => slotsLeft(s, k) > 0 && maxBid(s, k) >= 1);
   if (!stillBuying || !a.order?.length) {
     return { ...s, auction: { ...fresh, running: false, deadline: null } };
@@ -274,13 +277,69 @@ export function passLot(s, now) {
   return openLot({ ...s, auction: { ...s.auction, unsold } }, now);
 }
 
+/* ---------- Saltare un giocatore ---------- */
+
+// Quante volte il tavolo puo rifiutare un giocatore in tutta l'asta. Dopo,
+// chi esce va comprato. Tre e il numero delle regole di casa: si cambia qui.
+export const MAX_SKIP = 3;
+
+// Chi ha ancora voce in capitolo: chi ha almeno un posto libero. Una squadra
+// con la rosa piena non puo comprare, quindi non ha senso che il suo voto
+// blocchi gli altri.
+export function puoVotare(s) {
+  return attive(s).filter((k) => slotsLeft(s, k) > 0);
+}
+
+export function skipRimasti(s) {
+  return Math.max(0, MAX_SKIP - (s.auction.skipUsati || 0));
+}
+
+// Il voto e una manifestazione di disinteresse, non un comando: il giocatore
+// salta solo se lo rifiutano TUTTI quelli che potrebbero comprarlo.
+export function votaSkip(s, teamKey, now) {
+  if (s.phase !== 'auction' || !s.auction.running || s.auction.paused) return undefined;
+  if (!puoVotare(s).includes(teamKey)) return undefined;
+  if (skipRimasti(s) <= 0) return undefined;
+
+  const voti = { ...(s.auction.skipVoti || {}) };
+  if (voti[teamKey]) delete voti[teamKey]; else voti[teamKey] = true;
+
+  const tutti = puoVotare(s).every((k) => voti[k]);
+  if (!tutti) return { ...s, auction: { ...s.auction, skipVoti: voti } };
+
+  // Unanimita: si salta, e se ne consuma uno dei tre.
+  return passLot({
+    ...s,
+    auction: { ...s.auction, skipVoti: {}, skipUsati: (s.auction.skipUsati || 0) + 1 },
+  }, now);
+}
+
+// Finiti gli skip, un giocatore che nessuno vuole non puo restare per aria:
+// va a chi ne ha piu bisogno, al prezzo minimo. Senza questo, "il quarto
+// bisogna prenderlo per forza" non avrebbe modo di succedere davvero — il
+// tavolo potrebbe semplicemente non offrire e lasciarlo passare lo stesso.
+export function assegnaDufficio(s, now) {
+  const pid = currentPlayerId(s);
+  if (!pid) return s;
+  const candidati = puoVotare(s).filter((k) => maxBid(s, k) >= 1);
+  if (!candidati.length) return passLot(s, now);
+  const scelto = candidati.slice().sort((a, b) =>
+    slotsLeft(s, b) - slotsLeft(s, a)              // chi ha piu posti vuoti
+    || s.teams[b].credits - s.teams[a].credits     // poi chi ha piu cassa
+    || (a < b ? -1 : 1))[0];                       // poi un ordine stabile
+  return award(s, pid, scelto, 1, now);
+}
+
 // Chiamata dal banditore quando il cronometro e scaduto.
 export function resolveLot(s, now) {
   const pid = currentPlayerId(s);
   const bid = s.auction.bid;
   if (!pid) return s;
-  if (!bid) return passLot(s, now);
-  return award(s, pid, bid.team, bid.amount, now);
+  if (bid) return award(s, pid, bid.team, bid.amount, now);
+  // Nessuna offerta e nessuno skip: il giocatore non sparisce, lo prende
+  // qualcuno. Finche restano skip il tavolo puo ancora rifiutarlo votando,
+  // ma lasciar scadere il tempo non e un modo per farlo.
+  return assegnaDufficio(s, now);
 }
 
 export function currentPlayerId(s) {

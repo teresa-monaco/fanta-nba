@@ -322,6 +322,27 @@ export function offerta(st, k, S, momento, memoria) {
   return S.canBid(st, k, minimo) ? minimo : null;
 }
 
+// Un bot vota per saltare quando il giocatore non gli interessa davvero:
+// il suo tetto e al minimo. Senza questo il tavolo non raggiungerebbe mai
+// l'unanimita con dei bot in partita, e ogni lotto finirebbe assegnato
+// d'ufficio a qualcuno.
+export function vuoleSaltare(st, k, S, memoria) {
+  const bot = BOT[st.bots?.[k]];
+  if (!bot || st.phase !== 'auction') return false;
+  const a = st.auction;
+  if (!a.running || a.paused) return false;
+  if (S.slotsLeft(st, k) <= 0) return false;
+  const pid = S.currentPlayerId(st);
+  if (!pid) return false;
+  // Se sta gia conducendo lui, evidentemente lo vuole.
+  if (a.bid?.team === k) return false;
+  const m = memoria[k] || (memoria[k] = {});
+  const tetto = m.lotto === a.idx ? m.tetto : bot.tetto(st, k, pid, S);
+  // Con l'ultimo posto da riempire non si salta: meglio chiunque di un buco.
+  if (S.slotsLeft(st, k) === 1) return false;
+  return tetto <= 1;
+}
+
 /* ==========================================================
    La tattica
    ========================================================== */

@@ -250,7 +250,6 @@ function viewAuction({ state: s, session }) {
       <button class="sm ${paused ? 'primary' : 'ghost'}" data-act="toggle-pause"
               title="${paused ? 'Riprendi' : 'Ferma'} il cronometro">${paused ? '&#9654;' : '&#9632;'}</button>
       ${bid ? `<button class="sm" data-act="resolve">Assegna</button>` : ''}
-      <button class="sm ghost" data-act="pass">Salta</button>
       <button class="sm ghost" data-act="toggle-manual">${ui.manualOpen ? 'Annulla' : 'Assegna a mano'}</button>
     </div>
     ${ui.manualOpen ? `
@@ -409,7 +408,30 @@ function bidBar(s, bidders, bid, paused) {
       : '';
 
     return `<div class="bidrow">${tag}${step(1)}${step(2)}${step(3)}${allIn}</div>`;
-  }).join('')}</div>`;
+  }).join('')}${skipRow(s, bidders, paused)}</div>`;
+}
+
+// Saltare un giocatore e una decisione del tavolo, non di chi ospita: il
+// lotto salta solo se lo rifiutano tutti quelli che potrebbero comprarlo.
+// Il conteggio si vede mentre si vota, cosi si sa chi manca.
+function skipRow(s, bidders, paused) {
+  if (paused) return '';
+  const votanti = S.puoVotare(s);
+  const voti = Object.keys(s.auction.skipVoti || {}).filter((k) => votanti.includes(k));
+  const rimasti = S.skipRimasti(s);
+  const miei = bidders.filter((k) => votanti.includes(k));
+  if (!miei.length) return '';
+
+  if (rimasti <= 0) {
+    return `<div class="skiprow finiti">Skip finiti — questo giocatore va comprato</div>`;
+  }
+  const hoVotato = miei.every((k) => s.auction.skipVoti?.[k]);
+  return `<div class="skiprow">
+    <button class="skipbtn ${hoVotato ? 'on' : ''}" data-act="vota-skip" data-team="${miei[0]}">
+      ${hoVotato ? 'Non lo voglio' : 'Salta'} <b>${voti.length}/${votanti.length}</b>
+    </button>
+    <span class="tiny muted">${rimasti} ${rimasti === 1 ? 'skip rimasto' : 'skip rimasti'} · serve l'accordo di tutti</span>
+  </div>`;
 }
 
 function auctionLog(s, D) {

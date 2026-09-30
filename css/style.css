@@ -564,6 +564,22 @@ details summary {
   padding: 14px 8px; background: var(--surface-2);
 }
 .flatnote.lead { color: var(--gold); font-weight: 700; }
+.skiprow {
+  max-width: 700px; margin: 7px auto 0; display: flex; align-items: center;
+  gap: 9px; justify-content: center;
+}
+.skipbtn {
+  padding: 7px 12px; background: transparent; border: 1px dashed var(--line-2);
+  border-radius: var(--r); color: var(--muted-2);
+  font: 700 11px var(--cond); letter-spacing: 1.6px; text-transform: uppercase;
+}
+.skipbtn b { color: var(--gold); font-size: 13px; margin-left: 3px; }
+.skipbtn.on { border-style: solid; border-color: var(--gold); color: var(--gold); }
+.skiprow.finiti {
+  font: 700 10.5px var(--cond); letter-spacing: 1.4px; text-transform: uppercase;
+  color: var(--red); opacity: .9;
+}
+
 /* spazio sotto il contenuto: la barra è fixed e altrimenti coprirebbe il fondo.
    Include lo scostamento della toolbar, così anche l'ultima riga resta leggibile. */
 .bidbar-spacer { height: calc(124px + var(--vv-bottom, 0px)); }

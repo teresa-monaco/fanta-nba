@@ -137,6 +137,88 @@ for (const quante of NUMERI_SQUADRE) {
 ok(fails === 0, 'nessuno stato si rompe passando dal database', `${NUMERI_SQUADRE.length} formati x 7 fasi`);
 
 console.log('\n' + '='.repeat(70));
+console.log('1b. SALTARE UN GIOCATORE');
+console.log('='.repeat(70) + '\n');
+{
+  const nuova = () => {
+    let s = S.newGame('skip', 'host');
+    for (let i = 0; i < 4; i++) s = S.joinGame(s, 'u' + i, 'P' + i);
+    return S.startAuction(s, tick(), S.attive(s));
+  };
+
+  // Un voto solo non basta: serve l'accordo di tutti quelli che possono comprare.
+  {
+    let s = nuova();
+    const [a, b] = S.attive(s);
+    const prima = S.currentPlayerId(s);
+    s = S.votaSkip(s, a, tick());
+    ok(S.currentPlayerId(s) === prima, 'un voto solo non salta il giocatore');
+    ok(Object.keys(s.auction.skipVoti).length === 1, 'ma il voto resta registrato');
+    s = S.votaSkip(s, a, tick());
+    ok(Object.keys(s.auction.skipVoti).length === 0, 'e si puo ritirare');
+  }
+
+  // Unanimita: salta, e ne consuma uno dei tre.
+  {
+    let s = nuova();
+    const prima = S.currentPlayerId(s);
+    for (const k of S.puoVotare(s)) s = S.votaSkip(s, k, tick());
+    ok(S.currentPlayerId(s) !== prima, 'con tutti d\'accordo il giocatore salta');
+    ok(s.auction.skipUsati === 1, 'e se ne consuma uno', `usati ${s.auction.skipUsati}`);
+    ok(Object.keys(s.auction.skipVoti).length === 0, 'i voti si azzerano sul lotto nuovo');
+    ok(s.auction.unsold.includes(prima), 'e il giocatore finisce fra i non venduti');
+  }
+
+  // Tre e poi basta.
+  {
+    let s = nuova();
+    for (let giro = 0; giro < S.MAX_SKIP; giro++) {
+      for (const k of S.puoVotare(s)) s = S.votaSkip(s, k, tick());
+    }
+    ok(s.auction.skipUsati === S.MAX_SKIP, `si arriva a ${S.MAX_SKIP} skip`);
+    ok(S.skipRimasti(s) === 0, 'e poi non ne restano');
+    const rifiutato = S.votaSkip(s, S.puoVotare(s)[0], tick());
+    ok(rifiutato === undefined, 'il quarto voto viene rifiutato');
+  }
+
+  // Finiti gli skip, il tempo che scade NON fa passare il giocatore.
+  {
+    let s = nuova();
+    for (let giro = 0; giro < S.MAX_SKIP; giro++) {
+      for (const k of S.puoVotare(s)) s = S.votaSkip(s, k, tick());
+    }
+    const pid = S.currentPlayerId(s);
+    const rosePrima = S.attive(s).reduce((a, k) => a + s.teams[k].roster.length, 0);
+    s = S.resolveLot(s, tick());   // nessuna offerta
+    const roseDopo = S.attive(s).reduce((a, k) => a + s.teams[k].roster.length, 0);
+    ok(roseDopo === rosePrima + 1, 'senza offerte il giocatore viene assegnato d\'ufficio');
+    ok(!s.auction.unsold.includes(pid), 'e non finisce fra i non venduti');
+    const chi = S.attive(s).find((k) => s.teams[k].roster.includes(pid));
+    ok(!!chi && 50 - s.teams[chi].credits === 1, 'al prezzo minimo', chi);
+  }
+
+  // Chi ha la rosa piena non deve votare: non potrebbe comprarlo comunque.
+  {
+    let s = nuova();
+    const [a] = S.attive(s);
+    // Si riempie la rosa di una squadra a mano.
+    const ids = D.players.slice(0, 5).map((p) => p.id);
+    s = { ...s, teams: { ...s.teams, [a]: { credits: 20, roster: ids } } };
+    ok(!S.puoVotare(s).includes(a), 'una squadra al completo non ha voto');
+    const altri = S.puoVotare(s);
+    const prima = S.currentPlayerId(s);
+    for (const k of altri) s = S.votaSkip(s, k, tick());
+    ok(S.currentPlayerId(s) !== prima, 'e gli altri bastano da soli per saltare');
+  }
+
+  // Con l'asta in pausa non si vota.
+  {
+    let s = S.pauseAuction(nuova(), tick());
+    ok(S.votaSkip(s, S.puoVotare(s)[0], tick()) === undefined, 'in pausa il voto e rifiutato');
+  }
+}
+
+console.log('\n' + '='.repeat(70));
 console.log('2. NUMERI DI SQUADRE NON AMMESSI');
 console.log('='.repeat(70) + '\n');
 {

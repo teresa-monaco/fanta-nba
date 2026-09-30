@@ -54,8 +54,24 @@ C'è una **regola di riserva** automatica: non puoi spendere tanto da non
 poterti più permettere gli slot che ti restano. Se ti mancano 3 giocatori,
 almeno 3 crediti restano bloccati. Nessuno rimane a secco.
 
+**Saltare un giocatore.** Esce un nome che non interessa a nessuno? C'è il
+tasto **Salta**, ma è una decisione del tavolo: il giocatore passa solo se lo
+rifiutano **tutti** quelli che hanno ancora un posto libero. Mentre si vota si
+vede il conteggio — *Salta 2/4* — così si sa chi manca. Chi ha la rosa piena
+non vota: non potrebbe comprarlo comunque.
+
+Gli skip sono **tre per asta**. Finiti quelli, chi esce va comprato: il tasto
+sparisce e compare *"Skip finiti — questo giocatore va comprato"*. E se il
+cronometro scade senza offerte, il giocatore **non passa**: viene assegnato al
+prezzo minimo a chi ha più posti liberi (a parità, a chi ha più crediti).
+Senza questo, "il quarto bisogna prenderlo per forza" non avrebbe modo di
+succedere — basterebbe che nessuno offrisse.
+
+Per cambiare quanti skip avete, una riga in `js/state.js`: `MAX_SKIP`.
+
 Chi ospita può sempre scavalcare l'asta e assegnare un giocatore a mano al
-prezzo che decide — utile se vi mettete d'accordo a voce.
+prezzo che decide — utile se vi mettete d'accordo a voce. Non può invece
+saltare da solo: sarebbe un modo per aggirare il voto.
 
 **2. Le squadre.** Una schermata sola, con tutte le impostazioni tecniche:
 
