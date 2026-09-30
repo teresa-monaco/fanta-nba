@@ -299,19 +299,16 @@ function viewAuction({ state: s, session }) {
 
   return `
     <div class="jumbo lotto-jumbo">
-      <div class="tabellina">Lotto ${fatti + 1}${quanti ? '' : ''} · ${S.skipRimasti(s)} skip al tavolo</div>
-      ${pallina(p, arc)}
-    </div>
-
-    ${skipRow(s, bidders, paused)}
-
-    <div class="card lot">
-      <div class="ovr-riga">
-        <span>Overall</span><b>${p.ovr}</b>
+      <div class="tabellina">
+        <span>Lotto ${fatti + 1}</span>
+        <span>${S.skipRimasti(s)} skip al tavolo</span>
       </div>
+      ${pallina(p, arc)}
+      <div class="ovr-riga"><span>Overall</span><b>${p.ovr}</b></div>
       <div class="attrs">${attrs}</div>
-      ${hostBar}
     </div>
+
+    ${hostBar ? `<div class="card tight">${hostBar}</div>` : ''}
 
     <div class="card bidbox ${paused ? 'paused' : ''}" data-bidbox>
       <div class="bid-info">
@@ -492,31 +489,30 @@ function bidBar(s, bidders, bid, paused) {
          </button>`
       : '';
 
-    return `<div class="bidrow">${tag}${step(1)}${step(2)}${step(3)}${allIn}</div>`;
+    return `<div class="bidrow">${tag}${step(1)}${step(2)}${step(3)}${allIn}${skipBtn(s, bidders, k)}</div>`;
   }).join('')}</div>`;
 }
 
 // Saltare un giocatore e una decisione del tavolo, non di chi ospita: il
 // lotto salta solo se lo rifiutano tutti quelli che potrebbero comprarlo.
-// Il conteggio si vede mentre si vota, cosi si sa chi manca.
-function skipRow(s, bidders, paused) {
-  if (paused) return '';
+//
+// STA FRA I TASTI DI RILANCIO, non in una riga sua. E' un'alternativa al
+// rilanciare — o lo compri o lo butti — e come riga a se prendeva spazio
+// sopra la piega a scapito dei valori del giocatore. Solo il simbolo e il
+// conteggio: la spiegazione lunga la si legge una volta e poi da fastidio.
+function skipBtn(s, bidders, k) {
+  if (s.auction.paused) return '';
   const votanti = S.puoVotare(s);
-  const voti = Object.keys(s.auction.skipVoti || {}).filter((k) => votanti.includes(k));
+  if (!votanti.includes(k)) return '';
+  const voti = Object.keys(s.auction.skipVoti || {}).filter((x) => votanti.includes(x));
   const rimasti = S.skipRimasti(s);
-  const miei = bidders.filter((k) => votanti.includes(k));
-  if (!miei.length) return '';
-
   if (rimasti <= 0) {
-    return `<div class="skiprow finiti">Skip finiti — questo giocatore va comprato</div>`;
+    return `<button class="bidbtn skip" disabled title="Skip finiti: questo giocatore va comprato">&#9197;<small>0</small></button>`;
   }
-  const hoVotato = miei.every((k) => s.auction.skipVoti?.[k]);
-  return `<div class="skiprow">
-    <button class="skipbtn ${hoVotato ? 'on' : ''}" data-act="vota-skip" data-team="${miei[0]}">
-      ${hoVotato ? 'Non lo voglio' : 'Salta'} <b>${voti.length}/${votanti.length}</b>
-    </button>
-    <span class="tiny muted">${rimasti} ${rimasti === 1 ? 'skip rimasto' : 'skip rimasti'} · serve l'accordo di tutti</span>
-  </div>`;
+  const hoVotato = !!s.auction.skipVoti?.[k];
+  return `<button class="bidbtn skip ${hoVotato ? 'on' : ''}" data-act="vota-skip" data-team="${k}"
+    title="${hoVotato ? 'Ritira il voto' : 'Vota per saltarlo'}: serve l'accordo di tutti. ${rimasti} skip rimasti">
+    &#9197;<small>${voti.length}/${votanti.length}</small></button>`;
 }
 
 function auctionLog(s, D) {

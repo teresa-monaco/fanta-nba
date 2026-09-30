@@ -162,15 +162,25 @@ const now = () => Date.now();
 // giocatore invece che in fondo fra i tasti di rilancio.
 const controlliAsta = () => {
   ok(has('class="jumbo lotto-jumbo"', 'data-lotto'), 'l\'asta ha il tabellone con la pallina');
-  ok(html().indexOf('data-act="vota-skip"') < html().indexOf('class="card lot"'),
-    'e il voto per saltare sta attaccato al giocatore, sopra tutto il resto');
-  ok(html().lastIndexOf('data-act="vota-skip"') === html().indexOf('data-act="vota-skip"'),
-    'una volta sola: non e rimasto anche in fondo');
+  // Il salta e uno dei tasti della barra in basso: o compri o butti, e come
+  // riga a se rubava spazio sopra la piega ai valori del giocatore.
+  ok(html().indexOf('data-act="vota-skip"') > html().indexOf('class="bidbar"'),
+    'il voto per saltare sta fra i tasti di rilancio, in fondo');
+  ok(has('class="bidbtn skip'), 'ed e un tasto stretto come gli altri');
+  ok(!has('class="skiprow"'), 'la vecchia riga a se stante non c\'e piu');
 };
 // Esplicito: senza sedie occupate il default sarebbe "tutte e dieci".
 await F.session.apply((s) => S.startAuction(s, now(), TEAM_KEYS.slice(0, 4)));
 // Agganciato alla struttura, non a una parola: le etichette cambiano con la grafica.
-ok(clean() && has('class="card lot"', 'class="ovr-riga"', 'crediti'), 'la schermata d\'asta si disegna');
+ok(clean() && has('class="jumbo lotto-jumbo"', 'class="ovr-riga"', 'crediti'), 'la schermata d\'asta si disegna');
+// Tutta la scheda del giocatore sta DENTRO il tabellone: nome, overall e
+// tessere. Erano tre blocchi diversi e su un telefono non ci stavano.
+{
+  const j = html().indexOf('class="jumbo lotto-jumbo"');
+  const fine = html().indexOf('</div>', html().indexOf('class="attrs"'));
+  ok(j >= 0 && html().indexOf('class="ovr-riga"') > j && html().indexOf('class="attrs"') > j && fine > j,
+    'overall e tessere stanno dentro al tabellone, non in un blocco a parte');
+}
 // Il nome del giocatore sta sul tabellone e NON si ripete sotto: su un
 // telefono rileggere le stesse tre cose costava mezzo schermo di scroll.
 {

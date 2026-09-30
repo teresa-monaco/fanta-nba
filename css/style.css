@@ -570,6 +570,14 @@ details summary {
 }
 .bidbtn span:first-child { font: 800 21px/1 var(--cond); }
 .bidbtn small { font: 600 10.5px Barlow, sans-serif; color: var(--muted); }
+/* Il salta sta fra i rilanci: e l'altra cosa che puoi fare con questo
+   giocatore. Stretto, perche e un simbolo e un conteggio, non una frase. */
+.bidbtn.skip {
+  flex: 0 0 52px; font-size: 19px; line-height: 1;
+  border-color: var(--line-2); color: var(--muted-2);
+}
+.bidbtn.skip.on { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+.bidbtn.skip.on small { color: var(--gold-ink); }
 .bidbtn.allin { background: var(--red); border-color: var(--red); }
 .bidbtn.allin span:first-child { font-size: 15px; letter-spacing: 1.4px; }
 .bidbtn.allin small { color: rgba(255, 255, 255, .85); }
@@ -703,10 +711,11 @@ details summary {
 /* Un rettangolo basso e largo, non un quadrato: sopra la piega devono
    starci anche i valori e la propria squadra, e ogni pixel qui e uno in
    meno la. La scheda esce dalla pallina e occupa tutta la larghezza. */
-.lotto-jumbo { margin-bottom: 9px; padding: 9px 10px 10px; }
+.lotto-jumbo { margin-bottom: 9px; padding: 8px 9px 9px; }
 .tabellina {
-  text-align: center; font: 700 10px var(--cond); letter-spacing: 2.2px;
-  text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+  display: flex; justify-content: space-between; gap: 10px;
+  font: 700 10px var(--cond); letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 4px;
 }
 .lotto { position: relative; min-height: 86px; display: grid; place-items: center; }
 .sfera { position: relative; width: 78px; height: 78px; }
@@ -741,16 +750,25 @@ details summary {
   color: var(--muted-2); margin-top: 3px;
 }
 
-/* L'overall da solo, sopra le barre: il nome e la provenienza stavano gia
-   nel tabellone, e ripeterli qui voleva dire mezzo schermo per niente. */
+/* Overall e tessere stanno DENTRO il tabellone: sono la scheda del
+   giocatore, e tenerli in un blocco a parte voleva dire un secondo riquadro
+   che diceva la stessa cosa in un altro posto. */
 .ovr-riga {
-  display: flex; align-items: baseline; justify-content: space-between;
-  padding: 9px 13px 0;
+  display: flex; align-items: baseline; justify-content: center; gap: 8px;
+  margin-top: 2px; position: relative; z-index: 2;
 }
 .ovr-riga span {
   font: 800 10px var(--cond); letter-spacing: 2.4px; text-transform: uppercase; color: var(--muted);
 }
-.ovr-riga b { font: 800 30px/1 var(--cond); color: var(--gold); }
+.ovr-riga b { font: 800 26px/1 var(--cond); color: var(--gold); text-shadow: 0 0 14px rgba(255, 209, 102, .3); }
+
+/* Le tessere dentro al tabellone prendono i colori del led wall, o
+   sembrerebbero cartoncini bianchi appoggiati sopra. */
+.jumbo .attrs {
+  position: relative; z-index: 2;
+  margin-top: 8px; gap: 1px; background: #1c2233; border-top: 1px solid #1c2233;
+}
+.jumbo .attr { background: #0b0e15; padding: 6px 3px; }
 
 /* ---- ti hanno superato ----
    Prima te ne accorgevi solo fissando il numero. Il lampo dura mezzo secondo

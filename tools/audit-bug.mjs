@@ -381,7 +381,13 @@ console.log('\nIL NOME SI CAMBIA IN LOBBY\n');
     visti.add(TEAM_NAMES[mio]);
   }
   ok(doppioni === 0, 'zappando trenta volte non si prende mai il nome di un altro', `${doppioni} collisioni`);
-  ok(visti.size >= 15, 'e si gira per davvero fra i nomi, non fra due o tre',
+  // La soglia e bassa di proposito. Pescando a caso fra i ~19 nomi liberi,
+  // in 30 pressioni ne escono in media 15 diversi, con uno scarto di circa
+  // 1.6: una soglia a 15 faceva fallire il test una volta su due per puro
+  // caso. Qui serve solo a distinguere "gira davvero" da "rimbalza fra due o
+  // tre", e 9 e a quattro scarti dalla media: non capita mai per sbaglio, e
+  // uno zapping incastrato lo becca comunque.
+  ok(visti.size >= 9, 'e si gira per davvero fra i nomi, non fra due o tre',
     `${visti.size} nomi diversi in 30 pressioni`);
 
   // 2b. SI PESCA, NON SI SCORRE. Prima il tasto dava il successivo in elenco:
