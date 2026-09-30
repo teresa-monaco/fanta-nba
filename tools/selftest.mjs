@@ -378,6 +378,36 @@ console.log('\n6. Accoppiamenti e narrazione');
   ok(teamIdentity(T[K0]).length > 3, 'identita di squadra generata', teamIdentity(T[K0]));
 }
 
+/* ---------- 1c. Le facce degli allenatori ---------- */
+// Un avatar serve a riconoscere chi stai guardando mentre scorri. Se due
+// allenatori hanno la stessa faccia non serve a niente, e per un po' e stato
+// cosi: i tratti scritti a mano erano 30 combinazioni su 65 allenatori, e
+// "corti,castano" da solo ne copriva 11.
+console.log('\n1c. Le facce degli allenatori');
+{
+  const { avatarSVG } = await import('../js/avatar.js');
+  const all = readJson('data/coaches.json').allenatori;
+  const facce = new Map();
+  for (const c of all) {
+    const svg = avatarSVG(c, 72);
+    if (!facce.has(svg)) facce.set(svg, []);
+    facce.get(svg).push(c.n);
+  }
+  const gemelli = [...facce.values()].filter((v) => v.length > 1);
+  ok(gemelli.length === 0, 'nessun allenatore ha la faccia di un altro',
+    gemelli.length ? gemelli.slice(0, 3).map((g) => g.join(' = ')).join(' ; ') : `${all.length} facce tutte diverse`);
+
+  // La stessa persona deve avere la stessa faccia su ogni telefono, o due
+  // giocatori vedrebbero allenatori diversi con lo stesso nome.
+  ok(all.every((c) => avatarSVG(c, 72) === avatarSVG(c, 72)),
+    'e la stessa persona ha sempre la stessa faccia');
+
+  // Le variazioni devono essere usate davvero, non essere li per finta.
+  const conta = (re) => new Set(all.map((c) => (avatarSVG(c, 72).match(re) || [''])[0])).size;
+  ok(conta(/<path d="M36 1[57]c[^"]*"/) >= 3, 'si usano tutti e tre i tagli di volto');
+  ok(conta(/stroke="#8a4a42"[^/]*/) >= 3, 'e tutte e tre le bocche');
+}
+
 /* ---------- Esito ---------- */
 console.log(fails === 0 ? '\nTutti i controlli superati.\n' : `\n${fails} controlli FALLITI.\n`);
 process.exit(fails === 0 ? 0 : 1);

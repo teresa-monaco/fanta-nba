@@ -79,7 +79,9 @@
     .crono.rosso { color: var(--red); animation: battito 1s ease-in-out infinite; }
     @keyframes battito { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.13);opacity:.72} }
 
-    .bidbar { border: 1px solid var(--line-2); background: var(--surface-2); padding: 9px; margin-top: 10px; }
+    /* Fuori dallo schermo scorrevole: nel gioco e ancorata in fondo e resta
+       sotto il pollice mentre tutto il resto scorre. */
+    .bidbar { border-top: 2px solid var(--red); background: var(--surface); padding: 9px 13px 11px; }
     .bidbar.superato { animation: lampo .5s ease-out 2; }
     @keyframes lampo { 0%,100%{background:var(--surface-2);border-color:var(--line-2)}
       45%{background:rgba(224,27,46,.26);border-color:var(--red)} }
@@ -87,13 +89,56 @@
     .rilanci button { padding: 8px 2px; font: 800 14px var(--cond); }
     .rilanci button small { display: block; font: 400 10px Barlow; color: var(--muted); }
 
-    /* il voto per saltare sta attaccato al giocatore, sopra i nomi */
+    /* il voto per saltare sta attaccato al giocatore */
     .skiprow { display: flex; align-items: center; gap: 9px; margin-top: 8px;
       background: var(--surface-2); border-left: 3px solid var(--gold); padding: 8px 10px; }
     .skiprow .q { font: 800 13px var(--cond); letter-spacing: 1.2px; color: var(--gold); }
 
+    /* la tua squadra: l'unica aperta */
+    .mia { border: 1px solid var(--line-2); border-left: 3px solid var(--t1); padding: 10px; }
+    .mia .nmq { font: 800 16px var(--cond); letter-spacing: 1.2px; text-transform: uppercase; }
+    .mia .cr { font: 800 15px var(--cond); color: var(--gold); }
+    .rslots { display: grid; gap: 4px; }
+    .rslot { display: flex; align-items: center; gap: 9px; padding: 6px 9px;
+      background: var(--surface-2); border-left: 3px solid var(--tc, var(--line-2)); }
+    .rslot .pos { font: 800 10px var(--cond); letter-spacing: 1.4px; color: var(--muted); min-width: 22px; }
+    .rslot .gio { font: 700 13.5px var(--cond); letter-spacing: .5px; text-transform: uppercase; }
+    .rslot .pz { margin-left: auto; font: 800 12px var(--cond); color: var(--gold); }
+    .rslot.vuoto { opacity: .55; border-left-style: dashed; }
+    .rslot.vuoto .gio { color: var(--muted); }
+    /* Lo stacco che separa "la mia" da "le altre": e' quello che fa capire
+       a colpo d'occhio che sotto si cambia argomento. */
+    .altre { margin-top: 22px; }
+
+    /* ===== il mezzo campo ===== */
+    .campo { position: relative; margin-top: 8px; border: 1px solid var(--line-2); overflow: hidden; }
+    .campo svg { display: block; width: 100%; height: auto; }
+    .pedina {
+      position: absolute; transform: translate(-50%, -50%);
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      background: none; border: 0; padding: 0; cursor: pointer;
+    }
+    .pedina i {
+      width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--t1); color: #0e1119; border: 2px solid rgba(255,255,255,.85);
+      font: 800 12px var(--cond); letter-spacing: .6px; font-style: normal; position: relative;
+      box-shadow: 0 3px 9px rgba(0,0,0,.55);
+    }
+    .pedina span {
+      font: 800 9.5px var(--cond); letter-spacing: .8px; text-transform: uppercase;
+      color: #fff; background: rgba(6,10,8,.82); padding: 1px 5px; border-radius: 2px;
+      white-space: nowrap;
+    }
+    .pedina.scelta i { background: var(--gold); border-color: #fff; transform: scale(1.12); }
+    /* La fascia di violino si vede anche in campo: e li che stai guardando. */
+    .pedina.v1 i::after, .pedina.v2 i::after {
+      content: attr(data-v); position: absolute; margin: -26px 0 0 22px;
+      font: 800 8.5px var(--cond); letter-spacing: .4px;
+      background: var(--gold); color: var(--gold-ink); padding: 1px 3px; border-radius: 2px;
+    }
+
     /* ===== quintetto ===== */
-    .slot5 { display: grid; gap: 4px; margin-top: 7px; }
+    .slot5 { display: grid; gap: 4px; margin-top: 10px; }
     .slotr { display: flex; align-items: center; gap: 8px; background: var(--surface-2);
       border-left: 3px solid var(--tc); padding: 7px 9px; }
     .slotr .pos { font: 800 10px var(--cond); letter-spacing: 1.4px; color: var(--muted); min-width: 24px; }
@@ -159,36 +204,52 @@
                 </div>
               </div>
 
-              <!-- Attaccato al giocatore, sopra i nomi: e' una decisione su
-                   QUESTO giocatore, non una funzione della schermata. -->
+              <!-- Attaccato al giocatore: e' una decisione su QUESTO
+                   giocatore, non una funzione della schermata. -->
               <div class="skiprow">
                 <span class="small grow">Salta questo giocatore</span>
                 <span class="q">1/4</span>
                 <button class="sm ghost">Vota</button>
               </div>
-              <p class="tiny muted mt">Serve l'accordo di tutti. Restano 3 skip al tavolo.</p>
 
-              <div class="bidbar" id="bidbar">
-                <div class="row spread">
-                  <span class="tiny muted">In testa</span>
-                  <span class="small"><b id="chi-testa">Pornland</b> · <b style="color:var(--gold)" id="q-testa">14</b></span>
+              <!-- LA TUA SQUADRA E' L'UNICA APERTA. Le altre sono righe
+                   chiuse: quello che serve sapere di loro e quanto possono
+                   ancora spendere, non chi hanno preso. -->
+              <div class="mia mt">
+                <div class="row spread mb">
+                  <span class="nmq">Pornland</span>
+                  <span class="cr">14 crediti</span>
                 </div>
-                <div class="rilanci">
-                  <button>+1<small>15</small></button><button>+2<small>16</small></button>
-                  <button>+3<small>17</small></button><button class="primary">All in<small>46</small></button>
+                <div class="rslots">
+                  <div class="rslot pieno t-t1"><span class="pos">PG</span><span class="gio">Magic Johnson</span><span class="pz">18</span></div>
+                  <div class="rslot pieno t-t1"><span class="pos">SG</span><span class="gio">Dwyane Wade</span><span class="pz">11</span></div>
+                  <div class="rslot vuoto"><span class="pos">SF</span><span class="gio">—</span></div>
+                  <div class="rslot pieno t-t1"><span class="pos">PF</span><span class="gio">Tim Duncan</span><span class="pz">7</span></div>
+                  <div class="rslot vuoto"><span class="pos">C</span><span class="gio">—</span></div>
                 </div>
               </div>
 
-              <div class="card tight mt">
-                <p class="tiny muted mb">Crediti al tavolo</p>
-                <div class="strip t-t1"><span class="dot"></span><span class="nm">Pornland</span>
-                  <span class="grow"></span><span class="cr">14</span></div>
+              <div class="altre">
+                <p class="tiny muted mb">Le altre squadre</p>
                 <div class="strip t-t2"><span class="dot"></span><span class="nm">Estrema Unzione</span>
-                  <span class="grow"></span><span class="cr">31</span></div>
+                  <span class="grow"></span><span class="small muted">3/5</span><span class="cr">31</span></div>
                 <div class="strip t-t3"><span class="dot"></span><span class="nm">Darko Academy</span>
-                  <span class="grow"></span><span class="cr">22</span></div>
+                  <span class="grow"></span><span class="small muted">4/5</span><span class="cr">22</span></div>
                 <div class="strip t-t4"><span class="dot"></span><span class="nm">Terzo Tempo</span>
-                  <span class="grow"></span><span class="cr">8</span></div>
+                  <span class="grow"></span><span class="small muted">2/5</span><span class="cr">8</span></div>
+              </div>
+            </div>
+
+            <!-- Nel gioco questa e fissa in fondo allo schermo, sempre
+                 raggiungibile col pollice mentre il resto scorre. -->
+            <div class="bidbar" id="bidbar">
+              <div class="row spread">
+                <span class="tiny muted">In testa</span>
+                <span class="small"><b id="chi-testa">Pornland</b> · <b style="color:var(--gold)" id="q-testa">14</b></span>
+              </div>
+              <div class="rilanci">
+                <button>+1<small>15</small></button><button>+2<small>16</small></button>
+                <button>+3<small>17</small></button><button class="primary">All in<small>46</small></button>
               </div>
             </div>
           </div>
@@ -200,6 +261,10 @@
               <button class="sm grow" id="btn-superato">Ti superano</button>
             </div>
           </div>
+          <p class="nota"><b>L'ordine è quello che hai chiesto:</b> tabellone col giocatore e il voto per
+            saltarlo, poi la <b>tua</b> squadra aperta con le caselle per ruolo (piene e vuote), poi uno
+            stacco e le altre squadre chiuse a una riga — di loro serve sapere quanto possono ancora
+            spendere, non chi hanno preso. La barra dei rilanci è ancorata in fondo e non scorre.</p>
           <p class="nota"><b>"Ti superano" nel gioco non esiste</b> — hai ragione, non è un pulsante: il
             lampeggio parte da solo quando qualcuno ti scavalca. Qui serve solo a fartelo vedere.
             Anche il cronometro va da solo: sotto i 5 secondi diventa rosso e pulsa.</p>
@@ -241,14 +306,37 @@
                 <p class="tiny muted center" style="margin-bottom:6px;letter-spacing:1.6px">La tua squadra</p>
                 <div class="flap" id="flap-imp"></div>
               </div>
+              <!-- IL MEZZO CAMPO. Cinque righe una sotto l'altra dicono chi
+                   gioca; il campo dice anche DOVE, e quel "dove" e meta della
+                   decisione. Disegnato in SVG: nessuna immagine da scaricare
+                   e si ridimensiona da solo sui telefoni stretti. -->
+              <div class="campo" id="campo">
+                <svg viewBox="0 0 300 250" aria-hidden="true">
+                  <rect width="300" height="250" fill="#10251c"/>
+                  <g fill="none" stroke="#3f7a63" stroke-width="2">
+                    <path d="M4 6h292v238"/><path d="M4 6v238h292"/>
+                    <rect x="110" y="6" width="80" height="94"/>
+                    <circle cx="150" cy="100" r="34"/>
+                    <path d="M28 6v34a122 122 0 0 0 244 0V6"/>
+                    <path d="M128 22h44" stroke-width="3"/>
+                  </g>
+                  <circle cx="150" cy="31" r="7" fill="none" stroke="#e07a3a" stroke-width="2.5"/>
+                </svg>
+                <button class="pedina" style="left:50%;top:22%" data-ruolo="C"><i>C</i><span>Olajuwon</span></button>
+                <button class="pedina" style="left:24%;top:38%" data-ruolo="PF"><i>PF</i><span>Duncan</span></button>
+                <button class="pedina" style="left:76%;top:40%" data-ruolo="SF"><i>SF</i><span>Bird</span></button>
+                <button class="pedina" style="left:20%;top:66%" data-ruolo="SG"><i>SG</i><span>Wade</span></button>
+                <button class="pedina" style="left:52%;top:82%" data-ruolo="PG"><i>PG</i><span>Johnson</span></button>
+              </div>
+              <p class="tiny muted mt">Tocca due pedine per scambiarle di ruolo.</p>
+
               <div class="slot5">
-                <div class="slotr"><span class="pos">PG</span><span class="gio">Magic Johnson</span><span class="v" data-b-v1>1° violino</span></div>
-                <div class="slotr"><span class="pos">SG</span><span class="gio">Dwyane Wade</span><span class="v" data-b-v2>2° violino</span></div>
+                <div class="slotr"><span class="pos">PG</span><span class="gio">Magic Johnson</span><span class="v">1° violino</span></div>
+                <div class="slotr"><span class="pos">SG</span><span class="gio">Dwyane Wade</span><span class="v">2° violino</span></div>
                 <div class="slotr"><span class="pos">SF</span><span class="gio">Larry Bird</span></div>
                 <div class="slotr"><span class="pos">PF</span><span class="gio">Tim Duncan</span></div>
                 <div class="slotr"><span class="pos">C</span><span class="gio">Hakeem Olajuwon</span></div>
               </div>
-              <p class="tiny muted mt">Tocca due caselle per scambiarle.</p>
 
               <!-- Mancava del tutto: le fasce si vedevano ma non c'era modo di
                    spostarle. Sono due menu, come nel gioco di oggi. -->
@@ -437,20 +525,61 @@
       document.getElementById('q-testa').textContent = 14 + Math.ceil(Math.random() * 6);
     });
 
-    /* ---- i violini ---- */
+    /* ---- il quintetto: campo, righe e violini sono la stessa cosa ---- */
+    // Una lista sola comanda tutto. Tenendo campo e righe come due elenchi
+    // separati, al primo scambio direbbero due cose diverse.
+    const QUINTETTO = [
+      { pos: 'PG', n: 'Magic Johnson' }, { pos: 'SG', n: 'Dwyane Wade' },
+      { pos: 'SF', n: 'Larry Bird' }, { pos: 'PF', n: 'Tim Duncan' },
+      { pos: 'C', n: 'Hakeem Olajuwon' },
+    ];
+    const cognome = (n) => n.split(' ').slice(-1)[0];
     const v1 = document.getElementById('sel-v1'), v2 = document.getElementById('sel-v2');
-    function violini() {
-      document.querySelectorAll('.slotr').forEach((r) => {
-        const chi = r.querySelector('.gio').textContent;
+
+    function fascia(n) {
+      return n === v1.value ? '1° violino' : (n === v2.value ? '2° violino' : null);
+    }
+
+    function disegnaQuintetto() {
+      // le righe
+      document.querySelectorAll('.slotr').forEach((r, i) => {
+        const g = QUINTETTO[i];
+        r.querySelector('.pos').textContent = g.pos;
+        r.querySelector('.gio').textContent = g.n;
         let f = r.querySelector('.v');
-        const ruolo = chi === v1.value ? '1° violino' : (chi === v2.value ? '2° violino' : null);
+        const ruolo = fascia(g.n);
         if (!ruolo) { if (f) f.remove(); return; }
         if (!f) { f = document.createElement('span'); f.className = 'v'; r.appendChild(f); }
         f.textContent = ruolo;
       });
+      // le pedine in campo, ognuna al suo posto sul parquet
+      document.querySelectorAll('.pedina').forEach((p) => {
+        const g = QUINTETTO.find((x) => x.pos === p.dataset.ruolo);
+        p.querySelector('i').textContent = g.pos;
+        p.querySelector('span').textContent = cognome(g.n);
+        const r = fascia(g.n);
+        p.classList.toggle('v1', r === '1° violino');
+        p.classList.toggle('v2', r === '2° violino');
+        p.querySelector('i').dataset.v = r === '1° violino' ? '1°' : (r === '2° violino' ? '2°' : '');
+      });
     }
-    v1.addEventListener('change', violini);
-    v2.addEventListener('change', violini);
+    v1.addEventListener('change', disegnaQuintetto);
+    v2.addEventListener('change', disegnaQuintetto);
+
+    // Scambio: si tocca una pedina, poi un'altra. Lo stesso gesto delle
+    // caselle nel gioco di oggi, solo fatto sul campo.
+    let presa = null;
+    document.getElementById('campo').addEventListener('click', (ev) => {
+      const p = ev.target.closest('.pedina'); if (!p) return;
+      if (!presa) { presa = p; p.classList.add('scelta'); return; }
+      if (presa === p) { p.classList.remove('scelta'); presa = null; return; }
+      const a = QUINTETTO.find((x) => x.pos === presa.dataset.ruolo);
+      const b = QUINTETTO.find((x) => x.pos === p.dataset.ruolo);
+      const t = a.n; a.n = b.n; b.n = t;
+      presa.classList.remove('scelta'); presa = null;
+      disegnaQuintetto();
+    });
+    disegnaQuintetto();
 
     /* ---- la strategia ---- */
     const SDESC = ['Nessun estremo: niente bonus grossi, nessuna debolezza sfruttabile.',
@@ -475,26 +604,26 @@
     });
 
     /* ---- gli allenatori: la striscia vera ---- */
+    // Le facce sono quelle VERE, uscite da avatar.js: incollate qui perche
+    // questa pagina e statica. Prima ne avevo disegnata una sola uguale per
+    // tutti ed era il difetto che hai visto.
     const COACH = [
       { n: 'Phil Jackson', id: 'Il sistema è lui', d: 'Undici anelli e un libro di zen. Il triangolo non lo spiega a nessuno.',
-        e: '+10 realizzazione alla prima opzione · −4 playmaking a tutti gli altri', da: 'Kobe Bryant', f: '#d9b48c' },
+        e: '+10 realizzazione alla prima opzione · −4 playmaking a tutti gli altri', da: 'Kobe Bryant',
+        svg: '<svg class="avatar" viewBox="0 0 72 76" width="72" height="76"><rect width="72" height="76" rx="10" fill="#161a26"/><path d="M6 76c2-13 12-18 30-18s28 5 30 18z" fill="#2b3346"/><path d="M30 58l6 8 6-8 4 2-10 16-10-16z" fill="#e9edf3" opacity=".9"/><path d="M34 60h4l2 6-4 4-4-4z" fill="#8f2230"/><path d="M36 17c11 0 20 9 20 22 0 14-9 23-20 23s-20-9-20-23c0-13 9-22 20-22z" fill="#e8b58e"/><path d="M16 40c0 6 2 12 5 16-4-5-6-11-6-16z" fill="#d09a71"/><path d="M18 34c0-9 5-14 9-15-1 5-1 9 0 13z" fill="#e9edf3"/><path d="M54 34c0-9-5-14-9-15 1 5 1 9 0 13z" fill="#e9edf3"/><path d="M20 40c0 13 7 22 16 22s16-9 16-22c0 9-7 13-16 13s-16-4-16-13z" fill="#e9edf3" opacity=".95"/><g stroke="#d09a71" stroke-width="1.1" fill="none" opacity=".55" stroke-linecap="round"><path d="M26 27h20M28 24h16"/><path d="M31 44c-1 3-1 6 0 8M41 44c1 3 1 6 0 8"/></g><ellipse cx="28" cy="38" rx="2" ry="2.4" fill="#1b1f28"/><ellipse cx="44" cy="38" rx="2" ry="2.4" fill="#1b1f28"/><path d="M36 37v6c0 1-2 2-4 2m8 0c-2 0-4-1-4-2" stroke="#d09a71" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M24 34c2-2.5 6-2 8-.5M40 33.5c2-1.5 6-2 8 .5" stroke="#e9edf3" stroke-width="2.6" fill="none" stroke-linecap="round"/><g fill="none" stroke="#2c3340" stroke-width="2"><rect x="22" y="33.5" width="12" height="9" rx="1.5"/><rect x="38" y="33.5" width="12" height="9" rx="1.5"/><path d="M34 38h4M22 36l-4-1M50 36l4-1"/></g></svg>' },
       { n: 'Gregg Popovich', id: 'La squadra prima di tutto', d: 'Vince facendo giocare cinque persone come se fossero una.',
-        e: '+5 playmaking a tutti · −6 realizzazione alla prima opzione', da: 'Tim Duncan', f: '#c9a07a' },
+        e: '+5 playmaking a tutti · −6 realizzazione alla prima opzione', da: 'Tim Duncan',
+        svg: '<svg class="avatar" viewBox="0 0 72 76" width="72" height="76"><rect width="72" height="76" rx="10" fill="#161a26"/><path d="M6 76c2-13 12-18 30-18s28 5 30 18z" fill="#3d3524"/><path d="M30 58l6 8 6-8 4 2-10 16-10-16z" fill="#e9edf3" opacity=".9"/><path d="M34 60h4l2 6-4 4-4-4z" fill="#8f2230"/><ellipse cx="16" cy="41" rx="2.6" ry="4" fill="#e8b58e"/><ellipse cx="56" cy="41" rx="2.6" ry="4" fill="#e8b58e"/><path d="M36 17c11 0 20 9 20 22 0 14-9 23-20 23s-20-9-20-23c0-13 9-22 20-22z" fill="#e8b58e"/><path d="M16 40c0 6 2 12 5 16-4-5-6-11-6-16z" fill="#d09a71"/><path d="M18 34c0-9 5-14 9-15-1 5-1 9 0 13z" fill="#a8b0bd"/><path d="M54 34c0-9-5-14-9-15 1 5 1 9 0 13z" fill="#a8b0bd"/><path d="M30 50c2 3 10 3 12 0 1 4-2 8-6 8s-7-4-6-8z" fill="#a8b0bd"/><g stroke="#d09a71" stroke-width="1.1" fill="none" opacity=".55" stroke-linecap="round"><path d="M26 27h20M28 24h16"/><path d="M31 44c-1 3-1 6 0 8M41 44c1 3 1 6 0 8"/></g><ellipse cx="28" cy="38" rx="2" ry="2.4" fill="#1b1f28"/><ellipse cx="44" cy="38" rx="2" ry="2.4" fill="#1b1f28"/><path d="M35 37c2 3 3 5 2 7l-3 1" stroke="#d09a71" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 33c2-1.5 6-1.5 8 0M40 33c2-1.5 6-1.5 8 0" stroke="#a8b0bd" stroke-width="2" fill="none" stroke-linecap="round"/></svg>' },
       { n: 'Pat Riley', id: 'Il pugno di ferro', d: 'Difesa, fisico, e nessuna discussione. Gli anni Ottanta non sono mai finiti.',
-        e: '+7 protezione ferro, +5 difesa perimetro · −5 atletismo nel finale', da: 'Magic Johnson', f: '#e0bb92' },
+        e: '+7 protezione ferro, +5 difesa perimetro · −5 atletismo nel finale', da: 'Magic Johnson',
+        svg: '<svg class="avatar" viewBox="0 0 72 76" width="72" height="76"><rect width="72" height="76" rx="10" fill="#161a26"/><path d="M6 76c2-13 12-18 30-18s28 5 30 18z" fill="#2b3346"/><path d="M30 58l6 8 6-8 4 2-10 16-10-16z" fill="#e9edf3" opacity=".9"/><path d="M34 60h4l2 6-4 4-4-4z" fill="#8f2230"/><ellipse cx="18" cy="41" rx="2.6" ry="4" fill="#e8b58e"/><ellipse cx="54" cy="41" rx="2.6" ry="4" fill="#e8b58e"/><path d="M36 15c10 0 18 9 18 23 0 16-8 25-18 25s-18-9-18-25c0-14 8-23 18-23z" fill="#e8b58e"/><path d="M18 40c0 6 2 12 5 16-4-5-6-11-6-16z" fill="#d09a71"/><path d="M15 33c0-14 9-22 21-22s21 8 21 22c0-6-8-9-21-9s-21 3-21 9z" fill="#241d1a"/><path d="M14 33c-1 8 1 13 2 13-2-7-1-11 0-14z" fill="#241d1a"/><ellipse cx="29" cy="38" rx="2" ry="2.4" fill="#1b1f28"/><ellipse cx="43" cy="38" rx="2" ry="2.4" fill="#1b1f28"/><path d="M36 37v6c0 1-2 2-4 2m8 0c-2 0-4-1-4-2" stroke="#d09a71" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M31 52q5 -2 10 0" stroke="#8a4a42" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M25 34c2-2.5 6-2 8-.5M39 33.5c2-1.5 6-2 8 .5" stroke="#241d1a" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>' },
       { n: 'Erik Spoelstra', id: 'Adattarsi o perdere', d: 'Cambia difesa ogni possesso e ti fa sembrare il problema tuo.',
-        e: '+4 a tutto in difesa · −3 palla richiesta alla prima opzione', da: 'Dwyane Wade', f: '#b98e66' },
+        e: '+4 a tutto in difesa · −3 palla richiesta alla prima opzione', da: 'Dwyane Wade',
+        svg: '<svg class="avatar" viewBox="0 0 72 76" width="72" height="76"><rect width="72" height="76" rx="10" fill="#161a26"/><path d="M6 76c2-13 12-18 30-18s28 5 30 18z" fill="#1f3b3a"/><path d="M30 58l6 8 6-8 4 2-10 16-10-16z" fill="#e9edf3" opacity=".9"/><path d="M34 60h4l2 6-4 4-4-4z" fill="#8f2230"/><path d="M36 17c11 0 20 9 20 22 0 14-9 23-20 23s-20-9-20-23c0-13 9-22 20-22z" fill="#c98d63"/><path d="M16 40c0 6 2 12 5 16-4-5-6-11-6-16z" fill="#a9714b"/><path d="M16 32c0-12 9-19 20-19s20 7 20 19c-3-7-10-10-20-10s-17 3-20 10z" fill="#241d1a"/><path d="M50 26c-5-5-12-7-18-5" stroke="#c98d63" stroke-width="1.4" fill="none" opacity=".35"/><ellipse cx="28" cy="38" rx="2" ry="2.4" fill="#1b1f28"/><ellipse cx="44" cy="38" rx="2" ry="2.4" fill="#1b1f28"/><path d="M36 37v7l-3 2" stroke="#a9714b" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M31 52q5 -2 10 0" stroke="#8a4a42" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M24 34c2-2.5 6-2 8-.5M40 33.5c2-1.5 6-2 8 .5" stroke="#241d1a" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>' },
       { n: 'Rudy Tomjanovich', id: 'Mai sottovalutare', d: 'Non ha mai avuto la squadra più forte e ha vinto lo stesso due volte.',
-        e: '+6 tiro da 3 a tutti · −4 rimbalzi', da: 'Hakeem Olajuwon', f: '#d3a882' },
+        e: '+6 tiro da 3 a tutti · −4 rimbalzi', da: 'Hakeem Olajuwon',
+        svg: '<svg class="avatar" viewBox="0 0 72 76" width="72" height="76"><rect width="72" height="76" rx="10" fill="#161a26"/><path d="M6 76c2-13 12-18 30-18s28 5 30 18z" fill="#432a2a"/><path d="M30 58l6 8 6-8 4 2-10 16-10-16z" fill="#e9edf3" opacity=".9"/><path d="M34 60h4l2 6-4 4-4-4z" fill="#8f2230"/><path d="M36 17c11 0 20 9 20 22 0 14-9 23-20 23s-20-9-20-23c0-13 9-22 20-22z" fill="#e8b58e"/><path d="M16 40c0 6 2 12 5 16-4-5-6-11-6-16z" fill="#d09a71"/><path d="M16 32c0-12 9-19 20-19s20 7 20 19c-3-7-10-10-20-10s-17 3-20 10z" fill="#a8b0bd"/><path d="M50 26c-5-5-12-7-18-5" stroke="#e8b58e" stroke-width="1.4" fill="none" opacity=".35"/><path d="M27 46c3-2 6-2 9-1 3-1 6-1 9 1-3 2-6 2-9 1-3 1-6 1-9-1z" fill="#a8b0bd"/><g stroke="#d09a71" stroke-width="1.1" fill="none" opacity=".55" stroke-linecap="round"><path d="M26 27h20M28 24h16"/><path d="M31 44c-1 3-1 6 0 8M41 44c1 3 1 6 0 8"/></g><ellipse cx="28" cy="38" rx="2" ry="2.4" fill="#1b1f28"/><ellipse cx="44" cy="38" rx="2" ry="2.4" fill="#1b1f28"/><path d="M35 37c2 3 3 5 2 7l-3 1" stroke="#d09a71" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M31 51h10" stroke="#8a4a42" stroke-width="1.7" fill="none" stroke-linecap="round"/><path d="M24 34c2-2.5 6-2 8-.5M40 33.5c2-1.5 6-2 8 .5" stroke="#a8b0bd" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>' },
     ];
-    // Faccia semplificata: nel gioco la disegna avatar.js dai tratti veri.
-    const faccia = (c) => `<svg class="avatar" width="72" height="72" viewBox="0 0 72 72">
-      <rect width="72" height="72" rx="10" fill="#1c2030"/>
-      <circle cx="36" cy="31" r="16" fill="${c.f}"/>
-      <path d="M20 29a16 16 0 0 1 32 0c0-9-7-13-16-13s-16 4-16 13z" fill="#3a3129"/>
-      <circle cx="30" cy="32" r="2" fill="#241a12"/><circle cx="42" cy="32" r="2" fill="#241a12"/>
-      <path d="M31 40q5 3 10 0" stroke="#241a12" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      <path d="M16 72c2-13 9-19 20-19s18 6 20 19z" fill="#2a3145"/></svg>`;
 
     let sceltoCoach = 0;
     const cstrip = document.getElementById('cstrip');
@@ -502,7 +631,7 @@
       cstrip.innerHTML = COACH.map((c, i) => `
         <article class="ccard ${i === sceltoCoach ? 'on' : ''}">
           <div class="ctesta">
-            <div class="cface">${faccia(c)}</div>
+            <div class="cface">${c.svg}</div>
             <span class="cconta">${i + 1}/${COACH.length}</span>
           </div>
           <div class="cinfo">
