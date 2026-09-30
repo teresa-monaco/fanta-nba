@@ -1,6 +1,6 @@
 // app.js — avvio, risoluzione della stanza, un solo handler per tutti i click.
 
-import { loadData, TEAM_KEYS, TEAM_NAMES, applicaNomi } from './core.js';
+import { loadData, TEAM_KEYS, TEAM_NAMES, applicaNomi, NOMI_SQUADRE } from './core.js';
 import { simSeriesUpTo, componiTabellone, costruisciBracket, giriStagione, tabelloneDaStagione, RITMI } from './engine.js';
 import * as S from './state.js';
 import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
@@ -32,28 +32,93 @@ async function boot() {
   landing();
 }
 
+// Le lettere a paletta, come stringa. Il tabellone nasce gia scritto: se lo
+// riempisse il javascript dopo il disegno ci sarebbe un istante con i due
+// pannelli vuoti, ed e la prima cosa che si vede aprendo il gioco.
+function flapHTML(testo) {
+  return String(testo).toUpperCase().split('')
+    .map((c) => `<span>${c === ' ' ? '&nbsp;' : esc(c)}</span>`).join('');
+}
+
+// Le stesse lettere, ma su un tabellone gia a schermo: una per volta da
+// sinistra, o sarebbe un lampeggio invece di un tabellone che gira.
+function scriviFlap(box, testo, animare) {
+  if (!box) return;
+  box.innerHTML = flapHTML(testo);
+  if (!animare) return;
+  box.querySelectorAll('span').forEach((s, i) => setTimeout(() => s.classList.add('gira'), i * 45));
+}
+
+// Il tabellone della schermata d'ingresso vive di suo: due squadre e i
+// ventiquattro secondi che scorrono. Non e decorazione — i nomi sono quelli
+// veri che puoi ricevere, quindi si impara cosa aspettarsi prima di entrare.
+let vetrinaTimer = null;
+let sfida = null;
+
+function pescaNome(fuori) {
+  const liberi = NOMI_SQUADRE.filter((n) => n !== fuori);
+  return liberi[Math.floor(Math.random() * liberi.length)];
+}
+
+function fermaVetrina() {
+  if (vetrinaTimer) { clearInterval(vetrinaTimer); vetrinaTimer = null; }
+}
+
+function avviaVetrina() {
+  fermaVetrina();
+  let sec = 24;
+  vetrinaTimer = setInterval(() => {
+    const casaEl = document.getElementById('flap-casa');
+    const ospEl = document.getElementById('flap-ospiti');
+    // Se la schermata e cambiata il tabellone non c'e piu: si spegne da solo
+    // invece di lasciare un timer acceso a vuoto.
+    if (!casaEl || !ospEl) { fermaVetrina(); return; }
+    if (sec <= 1) {
+      sec = 24;
+      sfida = { casa: pescaNome(sfida.ospiti), ospiti: null };
+      sfida.ospiti = pescaNome(sfida.casa);
+      scriviFlap(casaEl, sfida.casa, true);
+      scriviFlap(ospEl, sfida.ospiti, true);
+    } else sec -= 1;
+    const nEl = document.getElementById('clock24');
+    if (nEl) nEl.textContent = sec;
+  }, 1000);
+}
+
 function landing(errMsg) {
+  const casa = pescaNome(null);
+  sfida = { casa, ospiti: pescaNome(casa) };
   root.innerHTML = `
-    <h1>Fanta NBA</h1>
-    <p class="muted mb">Asta a crediti, quintetti, playoff simulati. Da 2 a 12 squadre, 50 crediti, 5 giocatori a testa.</p>
     ${errMsg ? `<div class="banner err">${esc(errMsg)}</div>` : ''}
-    <div class="card">
-      <h3 class="mb">Crea una partita</h3>
-      <p class="small muted mb">Generi un codice e lo passi agli altri.</p>
-      <button class="primary wide" data-act="create-room">Crea la stanza</button>
-    </div>
-    <div class="card">
-      <h3 class="mb">Entra in una partita</h3>
-      <div class="row">
-        <input id="join-code" placeholder="CODICE" maxlength="4"
-               style="text-transform:uppercase;letter-spacing:4px;font-weight:800" autocomplete="off">
-        <button data-act="join-room">Entra</button>
+    <div class="jumbo">
+      <div class="insegna">Fanta NBA</div>
+      <div class="pannelli">
+        <div class="pan casa">
+          <div class="lab">Casa</div>
+          <div class="flap mini" id="flap-casa">${flapHTML(sfida.casa)}</div>
+        </div>
+        <div class="clock24"><div class="n" id="clock24">24</div><div class="lab">sec</div></div>
+        <div class="pan ospiti">
+          <div class="lab">Ospiti</div>
+          <div class="flap mini" id="flap-ospiti">${flapHTML(sfida.ospiti)}</div>
+        </div>
       </div>
+    </div>
+    <p class="small muted center mt">Asta a crediti, quintetti, playoff simulati.
+      Da 2 a 12 squadre, 50 crediti e 5 giocatori a testa.</p>
+    <button class="primary wide mt" data-act="create-room">Crea la stanza</button>
+    <div class="oppure">oppure</div>
+    <div class="row">
+      <input id="join-code" placeholder="CODICE" maxlength="4" class="grow"
+             style="text-transform:uppercase;letter-spacing:4px;font-weight:800" autocomplete="off">
+      <button data-act="join-room">Entra</button>
     </div>`;
   topbar.innerHTML = '<div class="brand">FANTA<span>NBA</span></div>';
+  avviaVetrina();
 }
 
 async function start({ code, create }) {
+  fermaVetrina();   // si esce dalla schermata d'ingresso: il tabellone non serve piu
   session = await openRoom({
     code, create,
     initialState: S.newGame(`${code}-${Date.now()}`, null),
@@ -626,4 +691,9 @@ window.FANTA = {
   get state() { return state; },
   get session() { return session; },
   TEAM_KEYS,
+  // In modalita locale la schermata d'ingresso non si vede mai: si entra
+  // dritti nella stanza. Senza questo aggancio il collaudo non potrebbe
+  // controllarla, ed e la prima cosa che vede chi apre il gioco.
+  landing,
+  fermaVetrina,
 };

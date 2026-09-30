@@ -95,6 +95,30 @@ const { SLOTS: SLOTS_D } = await import('../js/core.js');
 
 console.log('\nCollaudo interfaccia (modalita locale, DOM simulato)\n');
 
+/* 0. La schermata d'ingresso — il tabellone dell'arena */
+// In locale non si vede mai (si entra dritti nella stanza), ma e la prima
+// cosa che vede chiunque apra il gioco: si disegna a mano e si controlla.
+{
+  F.landing();
+  const h = els.app.innerHTML;
+  ok(h.includes('class="jumbo"') && h.includes('class="insegna"'), 'l\'ingresso e il tabellone dell\'arena');
+  ok(h.includes('class="pan casa"') && h.includes('class="pan ospiti"'),
+    'con i due pannelli casa e ospiti');
+  ok(h.includes('id="clock24"'), 'e i ventiquattro secondi in mezzo');
+  // I pannelli devono contenere NOMI, non etichette di menu: il tabellone
+  // mostra una partita, non due scelte.
+  const nomi = [...els.app.innerHTML.matchAll(/id="flap-(casa|ospiti)"[^>]*>(.*?)<\/div>/gs)]
+    .map((m) => m[2].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim());
+  ok(nomi.length === 2 && nomi.every((n) => n.length > 2),
+    'e i pannelli portano due squadre vere, non due voci di menu', nomi.join(' / '));
+  ok(nomi[0] !== nomi[1], 'e non sono la stessa squadra contro se stessa', nomi.join(' vs '));
+  ok(h.includes('data-act="create-room"') && h.includes('data-act="join-room"'),
+    'si puo ancora creare una stanza o entrare con il codice');
+  ok(!h.includes('<h1>'), 'il titolo grande sparisce: adesso lo fa l\'insegna del tabellone');
+  F.fermaVetrina();
+  render(els.app, { state: F.state, session: F.session });
+}
+
 /* 1. Lobby */
 ok(!!F?.session, 'l\'app si avvia e apre una sessione', F?.session?.mode);
 ok(clean() && has('Fanta NBA', 'Inizia'), 'la lobby si disegna');
