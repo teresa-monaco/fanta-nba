@@ -4,7 +4,7 @@ import { loadData, TEAM_KEYS, TEAM_NAMES, applicaNomi, NOMI_SQUADRE } from './co
 import { simSeriesUpTo, componiTabellone, costruisciBracket, giriStagione, tabelloneDaStagione, RITMI } from './engine.js';
 import * as S from './state.js';
 import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
-import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc } from './ui.js';
+import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc, flapHTML } from './ui.js';
 import { sblocca, commutaAudio, tic, martelletto, nuovoLotto } from './suono.js';
 import * as BotAI from './bot.js';
 
@@ -32,15 +32,7 @@ async function boot() {
   landing();
 }
 
-// Le lettere a paletta, come stringa. Il tabellone nasce gia scritto: se lo
-// riempisse il javascript dopo il disegno ci sarebbe un istante con i due
-// pannelli vuoti, ed e la prima cosa che si vede aprendo il gioco.
-function flapHTML(testo) {
-  return String(testo).toUpperCase().split('')
-    .map((c) => `<span>${c === ' ' ? '&nbsp;' : esc(c)}</span>`).join('');
-}
-
-// Le stesse lettere, ma su un tabellone gia a schermo: una per volta da
+// Le lettere a paletta su un tabellone gia a schermo: una per volta da
 // sinistra, o sarebbe un lampeggio invece di un tabellone che gira.
 function scriviFlap(box, testo, animare) {
   if (!box) return;
@@ -394,8 +386,13 @@ function effettiNomi() {
   if (nomiVisti) {
     for (const k of TEAM_KEYS) {
       if (ora[k] === nomiVisti[k]) continue;
-      document.querySelectorAll(`[data-nome-team="${k}"]`)
-        .forEach((el) => el.classList.add('scambia'));
+      document.querySelectorAll(`[data-nome-team="${k}"]`).forEach((el) => {
+        // Sul tabellone il nome e fatto di palette che si ribaltano; altrove
+        // e una riga di testo che scorre. Stesso marcatore, due modi di
+        // dire la stessa cosa a seconda di dove sta scritto.
+        if (el.classList.contains('flap')) scriviFlap(el, ora[k], true);
+        else el.classList.add('scambia');
+      });
     }
   }
   nomiVisti = ora;

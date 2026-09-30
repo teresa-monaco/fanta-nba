@@ -87,6 +87,14 @@ export function renderTopbar(el, ctx) {
    1. Lobby
    ========================================================== */
 
+// Le lettere a paletta, come stringa. Il tabellone nasce gia scritto: se lo
+// riempisse il javascript dopo il disegno ci sarebbe un istante di vuoto.
+// Sta qui e non in app.js perche la usano tutte e due.
+export function flapHTML(testo) {
+  return String(testo).toUpperCase().split('')
+    .map((c) => `<span>${c === ' ' ? '&nbsp;' : esc(c)}</span>`).join('');
+}
+
 function viewLobby({ state: s, session }) {
   const isHost = s.host === session.uid;
   const local = session.mode === 'local';
@@ -138,61 +146,67 @@ function viewLobby({ state: s, session }) {
         : `Si va dritti al tabellone.${q < n ? ` In ${n}, ${n - q} squadre salteranno il primo turno per sorteggio.` : ''}`}</p>
     </div>`;
 
+  // IL TABELLONE DELL'ATTESA. Era l'ultima schermata rimasta a card grigie,
+  // in mezzo a un gioco che ovunque parla per tabelloni. Qui il numero che
+  // conta e quanti siete, e il nome della propria squadra e proprio la cosa
+  // che si sta guardando mentre si aspetta: va sulle lettere a paletta, e
+  // quando lo cambi si ribaltano.
+  const mia = s.seats[session.uid];
+  const insegna = local ? 'Modalità locale' : `Stanza ${esc(session.code)}`;
+
+  const dentroAlTabellone = !mia ? `
+      <p class="tiny muted center" style="letter-spacing:1.6px;margin-bottom:6px">
+        ${pieno ? 'Tutte le squadre sono assegnate' : 'Entra e ti viene assegnata una squadra'}</p>
+      ${pieno ? '<p class="small muted center">Puoi guardare.</p>' : `
+        <div class="row" style="max-width:420px;margin:0 auto">
+          <input id="nick" class="grow" value="${esc(ui.nickname)}" placeholder="il tuo nome" maxlength="14" autocomplete="off">
+          <button class="primary" data-act="join">Entra</button>
+        </div>`}` : `
+      <p class="tiny muted center" style="letter-spacing:1.6px;margin-bottom:6px">La tua squadra</p>
+      <div class="flap" data-nome-team="${mia}">${flapHTML(TEAM_NAMES[mia])}</div>
+      <div class="row center" style="justify-content:center;margin-top:9px">
+        <button class="sm" data-act="cambia-nome" title="Te ne dà un'altra: il nome non si scrive, si pesca">Cambia</button>
+        <button class="sm ghost" data-act="leave">Esci</button>
+      </div>`;
+
   return `
-    <h1>Fanta NBA</h1>
-    <p class="muted mb">Asta a crediti, quintetti, playoff simulati. Da 2 a 12 squadre, 50 crediti a testa, 5 giocatori ciascuna.</p>
+    <div class="jumbo lobby-jumbo">
+      <div class="insegna">${insegna}</div>
+      <div class="tabellina">
+        <span>${n} ${n === 1 ? 'squadra' : 'squadre'} dentro</span>
+        <span>50 crediti · 5 giocatori</span>
+      </div>
+      ${dentroAlTabellone}
+    </div>
 
     ${local ? `
-      <div class="card">
-        <h3 class="mb">Modalità locale</h3>
-        <p class="small muted">Firebase non è configurato: la partita gira su questo solo schermo.
-        Per giocare ognuno dal proprio telefono servono 3 minuti di setup — vedi SETUP.md.</p>
-      </div>
+      <p class="tiny muted center mb">Firebase non è configurato: la partita gira su questo solo schermo.
+      Per giocare ognuno dal proprio telefono servono 3 minuti di setup — vedi SETUP.md.</p>
       ${sceltaLocale}` : `
-      <div class="card">
-        <h3>Codice stanza: <span class="code-pill">${esc(session.code)}</span></h3>
-        <p class="small muted mt">Gli altri aprono lo stesso link e inseriscono questo codice. Si gioca in 2, 3, 4, 6, 8, 10 o 12: si parte con chi c'è.</p>
-        <button class="sm ghost mt" data-act="copy-link">Copia il link della stanza</button>
-      </div>
-
-      <div class="card">
-        ${sonoDentro ? `
-          <div class="row spread">
-            <h3>Sei dentro</h3>
-            <button class="sm ghost" data-act="leave">Esci</button>
-          </div>
-          <div class="nome-mio mt t-${s.seats[session.uid]}">
-            <div class="grow">
-              <p class="tiny muted">La tua squadra</p>
-              <div class="rullo"><span class="nm-grande" data-nome-team="${s.seats[session.uid]}">${esc(TEAM_NAMES[s.seats[session.uid]])}</span></div>
-            </div>
-            <button class="sm" data-act="cambia-nome" title="Te ne dà un altro">Cambia</button>
-          </div>
-          <p class="tiny muted mt">Finché siete in attesa puoi cambiarla quante volte vuoi: il nome non si scrive, si pesca.</p>
-        ` : `
-          <label class="field"><span>Il tuo nome</span>
-            <input id="nick" value="${esc(ui.nickname)}" placeholder="il tuo nome" maxlength="14" autocomplete="off">
-          </label>
-          ${pieno
-            ? '<p class="small muted">Tutte le squadre sono già assegnate: puoi guardare.</p>'
-            : '<button class="primary wide" data-act="join">Entra in partita</button>'}
-        `}
+      <div class="row mb" style="justify-content:center">
+        <button class="sm ghost" data-act="copy-link">Copia il link della stanza</button>
       </div>
 
       ${dentro ? `<div class="card tight">
-        <p class="tiny muted mb">In partita (${n})</p>${dentro}
+        <p class="tiny muted mb">Al tavolo (${n})</p>${dentro}
         ${isHost ? botCard(s, n) : ''}
-      </div>` : '<p class="small muted center mb">Ancora nessuno dentro.</p>'}`}
+      </div>` : `<div class="card tight">
+        <p class="small muted center">Ancora nessuno dentro.</p>
+        ${isHost ? botCard(s, n) : ''}
+      </div>`}`}
 
     ${sceltaFormato}
-
-    ${isHost ? `
-      <button class="primary wide" data-act="start-auction" ${S.numeroValido(n) ? '' : 'disabled'}>
-        Inizia l'asta${S.numeroValido(n) ? ` con ${n} squadre` : ''}
-      </button>
-      ${S.numeroValido(n) ? '' : `<p class="small muted center mt">Siete in ${n}: si gioca in 2, 3, 4, 6, 8, 10 o 12. Sopra i quattro servono numeri pari, altrimenti mezzo tabellone salta il primo turno.</p>`}
-    ` : `<p class="small muted center">In attesa che ${esc(s.names[s.host] || 'chi ospita')} avvii l'asta...</p>`}
     ${alboCard(s)}
+
+    <div class="azione-spacer"></div>
+    <div class="azione-fissa">
+      ${isHost ? `
+        <button class="primary wide" data-act="start-auction" ${S.numeroValido(n) ? '' : 'disabled'}>
+          Inizia l'asta${S.numeroValido(n) ? ` con ${n} squadre` : ''}
+        </button>
+        ${S.numeroValido(n) ? '' : `<p class="tiny muted center mt">Siete in ${n}: si gioca in 2, 3, 4, 6, 8, 10 o 12.</p>`}
+      ` : `<p class="small muted center">In attesa che ${esc(s.names[s.host] || 'chi ospita')} avvii l'asta...</p>`}
+    </div>
   `;
 }
 

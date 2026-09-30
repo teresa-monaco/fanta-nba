@@ -126,7 +126,11 @@ console.log('\nCollaudo interfaccia (modalita locale, DOM simulato)\n');
 
 /* 1. Lobby */
 ok(!!F?.session, 'l\'app si avvia e apre una sessione', F?.session?.mode);
-ok(clean() && has('Fanta NBA', 'Inizia'), 'la lobby si disegna');
+// La lobby e un tabellone come il resto del gioco: il titolo grande e
+// sparito, al suo posto c'e l'insegna con il codice stanza.
+ok(clean() && has('class="jumbo lobby-jumbo"', 'Inizia'), 'la lobby si disegna');
+ok(has('class="azione-fissa"'),
+  'e il tasto per iniziare sta in una barra fissa, non in fondo alla pagina');
 ok(els.topbar.innerHTML.includes('FANTA'), 'la barra in alto si disegna');
 ok(cssVars['--vv-bottom'] === '114px',
   'la barra dei rilanci si alza sopra la toolbar di Safari', `--vv-bottom = ${cssVars['--vv-bottom']}`);
@@ -147,6 +151,15 @@ ok(cssVars['--vv-bottom'] === '114px',
   ok(h.includes('data-act="cambia-nome"'), 'chi e dentro puo cambiare nome alla squadra');
   ok(h.includes(`data-nome-team="${mio}"`),
     'e il nome porta il marcatore che accende l\'animazione solo quando cambia');
+  // Sul tabellone il nome e fatto di palette, una per lettera: e' quello che
+  // si ribalta quando lo cambi.
+  {
+    const box = h.match(new RegExp(`<div class="flap" data-nome-team="${mio}">(.*?)</div>`, 's'));
+    const lettere = box ? (box[1].match(/<span>/g) || []).length : 0;
+    ok(lettere === TEAM_NAMES[mio].length,
+      'ed e scritto a palette sul tabellone, una per lettera',
+      `${lettere} palette per "${TEAM_NAMES[mio]}"`);
+  }
 
   s = S.cambiaNome(s, mio) || s;
   h = disegna();

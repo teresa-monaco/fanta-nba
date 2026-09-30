@@ -831,6 +831,17 @@ details summary {
   background: var(--gold); color: var(--gold-ink); padding: 1px 3px; border-radius: 2px;
 }
 
+/* ---- il tabellone dell'attesa ----
+   L'ultima schermata rimasta a card grigie. Il nome della squadra e proprio
+   la cosa che si guarda mentre si aspetta: sta sulle palette, e quando lo
+   cambi si ribaltano. */
+.lobby-jumbo { padding: 11px 10px 12px; margin-bottom: 10px; }
+.lobby-jumbo .insegna { font-size: 21px; padding-bottom: 7px; margin-bottom: 8px; }
+.lobby-jumbo .tabellina { margin-bottom: 10px; }
+.lobby-jumbo .flap { position: relative; z-index: 2; }
+.lobby-jumbo .row { position: relative; z-index: 2; }
+.lobby-jumbo input { background: #0b0e15; border-color: #202737; }
+
 /* ---- il tabellone della serie ----
    Uno per serie: con due semifinali aperte se ne vedono due, uno sotto
    l'altro, e ognuno ha il suo tasto. */
