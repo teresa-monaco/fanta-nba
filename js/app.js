@@ -139,6 +139,8 @@ function paint() {
   renderTopbar(topbar, ctx);
   render(root, ctx);
   effettiNomi();
+  effettoPallina();
+  effettoSuperato();
   tickClock(state);
   suoniDiStato();
   // Anche a ogni ridisegno, non solo sul timer: cosi un bot reagisce subito
@@ -180,6 +182,9 @@ function seguiLaPartita() {
   if (el?.scrollIntoView) {
     try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch { el.scrollIntoView(); }
   }
+  // Solo i punteggi della gara appena scoperta: e' l'unica dove qualcosa e
+  // cambiato, e farli ripartire tutti sarebbe un tabellone impazzito.
+  el?.querySelectorAll?.('[data-pt]').forEach(contaPunteggio);
 }
 
 // L'albo si scrive da se quando le Finals si chiudono. Il risultato non sta
@@ -268,6 +273,7 @@ function startClock() {
     // ospita smetteva di chiudere i lotti, in silenzio.
     const left = S.tempoRimasto(state, now());
     tickClock(state);
+    effettoPallina();   // l'apertura dipende dal tempo, quindi va seguita a ogni tic
     if (state.auction.paused) return; // il cronometro è fermo per tutti
 
     // Un tic per ogni secondo degli ultimi cinque, una volta sola.
@@ -366,6 +372,61 @@ function effettiNomi() {
     }
   }
   nomiVisti = ora;
+}
+
+// La pallina si apre leggendo il tempo che manca, non un timer locale: e uno
+// stato condiviso. Va rimessa a ogni ridisegno e a ogni tic, perche render()
+// riscrive l'HTML e la classe se ne andrebbe con il resto.
+function effettoPallina() {
+  const el = root.querySelector('[data-lotto]');
+  if (!el) return;
+  el.classList.toggle('aperto', !S.inRivelazione(state, now()));
+}
+
+// Ti hanno superato. Prima te ne accorgevi solo se stavi fissando il numero.
+// Lampeggia solo a CHI e stato scavalcato: a chi ha appena rilanciato non
+// serve, e a chi sta guardando e basta nemmeno.
+let offertaVista = null;
+
+function effettoSuperato() {
+  if (!state || state.phase !== 'auction') { offertaVista = null; return; }
+  const mia = state.seats[session.uid];
+  const bid = state.auction.bid;
+  const firma = `${state.auction.idx}:${bid ? bid.team + ':' + bid.amount : '-'}`;
+  const prima = offertaVista;
+  offertaVista = { firma, team: bid?.team ?? null };
+  if (!prima || prima.firma === firma) return;
+  // Ero io in testa e adesso non piu: e' stato un sorpasso.
+  if (!mia || prima.team !== mia || bid?.team === mia) return;
+  const box = root.querySelector('[data-bidbox]');
+  if (box) { box.classList.remove('superato'); void box.offsetWidth; box.classList.add('superato'); }
+}
+
+// IL PUNTEGGIO SALE invece di comparire, ma solo sulla gara appena scoperta:
+// far ripartire tutti i punteggi a ogni ridisegno sarebbe un tabellone
+// impazzito. Dura settecento millisecondi e parte forte per poi frenare —
+// un contatore lineare sembra rotto.
+//
+// Il numero finale e gia nel markup: se questa funzione non gira, o se si e
+// chiesto meno movimento, si legge il risultato invece di due zeri.
+const MENO_MOVIMENTO = typeof matchMedia === 'function'
+  && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function contaPunteggio(el) {
+  const fine = Number(el.dataset.pt);
+  if (!Number.isFinite(fine) || MENO_MOVIMENTO) return;
+  const t0 = performance.now();
+  el.classList.add('conta');
+  const passo = (ora) => {
+    // Il ridisegno ha buttato via questo elemento: si smette invece di
+    // scrivere su un nodo che non e piu nella pagina.
+    if (!el.isConnected) return;
+    const k = Math.min(1, (ora - t0) / 700);
+    el.textContent = Math.round(fine * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) requestAnimationFrame(passo);
+    else el.classList.remove('conta');
+  };
+  requestAnimationFrame(passo);
 }
 
 // Il suono segue lo STATO, non il click: cosi lo sentono tutti e quattro,

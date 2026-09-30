@@ -292,7 +292,19 @@ function viewAuction({ state: s, session }) {
       </div></div>`;
   };
 
+  // Il numero del lotto sul tabellone: dice a che punto e l'asta senza dover
+  // contare le righe del registro.
+  const quanti = s.auction.order?.length || 0;
+  const fatti = s.auction.log.length + (s.auction.unsold?.length || 0);
+
   return `
+    <div class="jumbo lotto-jumbo">
+      <div class="tabellina">Lotto ${fatti + 1}${quanti ? '' : ''} · ${S.skipRimasti(s)} skip al tavolo</div>
+      ${pallina(p, arc)}
+    </div>
+
+    ${skipRow(s, bidders, paused)}
+
     <div class="card lot">
       <div class="lot-head">
         <div>
@@ -306,7 +318,7 @@ function viewAuction({ state: s, session }) {
       ${hostBar}
     </div>
 
-    <div class="card bidbox ${paused ? 'paused' : ''}">
+    <div class="card bidbox ${paused ? 'paused' : ''}" data-bidbox>
       <div class="bid-info">
         <div class="bidnow">${bid ? bid.amount : 0}<small> crediti</small></div>
         <div class="bidder">${bid ? `offerta di <b>${TEAM_NAMES[bid.team]}</b>` : '<span class="muted">nessuna offerta</span>'}</div>
@@ -324,6 +336,74 @@ function viewAuction({ state: s, session }) {
     ${auctionLog(s, D)}
     ${bidBar(s, bidders, bid, paused)}
   `;
+}
+
+// La pallina del draft che si apre sul nome. La classe "aperto" la mette e la
+// toglie app.js leggendo il tempo che manca: e uno stato condiviso, non
+// un'animazione locale, cosi chi entra a meta lotto vede la scheda scoperta.
+function pallina(p, arc) {
+  return `<div class="lotto" data-lotto>
+    <div class="sfera">
+      <div class="mezzo su"></div><div class="cuc"></div><div class="mezzo giu"></div>
+      <div class="scheda">
+        <div class="ruolo">${p.pos}${p.alt?.length ? ' / ' + p.alt.join('/') : ''} · ${esc(p.tm)} ${p.era}</div>
+        <div class="nome">${esc(p.n)}</div>
+        <div class="ovr-min">${esc(arc?.label || p.arc)} · OVR ${p.ovr}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// IL MEZZO CAMPO. Cinque righe una sotto l'altra dicono chi gioca; il campo
+// dice anche DOVE, e quel "dove" e meta della decisione — un centro schierato
+// da playmaker si vede a colpo d'occhio invece di doverlo leggere.
+//
+// Le pedine usano la stessa azione delle caselle (pick-slot): sono due modi
+// di toccare la stessa cosa, non due funzioni diverse che possono divergere.
+// E' disegnato in SVG, quindi nessuna immagine da scaricare e si adatta da
+// solo ai telefoni stretti.
+const POSTI = {
+  C: [50, 22], PF: [24, 38], SF: [76, 40], SG: [20, 66], PG: [52, 82],
+};
+
+function campo(s, k, attivo) {
+  const D = db();
+  const lu = s.lineups[k] || {};
+  const pedine = SLOTS.map((sl) => {
+    const p = D.byId[lu[sl]];
+    const [x, y] = POSTI[sl];
+    const sel = ui.selSlot && ui.selSlot.team === k && ui.selSlot.slot === sl;
+    const fuori = p && p.pos !== sl && !(p.alt || []).includes(sl);
+    const t = s.tactics[k] || {};
+    const v = p && p.id === t.v1 ? '1°' : (p && p.id === t.v2 ? '2°' : '');
+    return `<button class="pedina ${sel ? 'scelta' : ''} ${fuori ? 'fuori' : ''}"
+      style="left:${x}%;top:${y}%"
+      ${attivo ? `data-act="pick-slot" data-team="${k}" data-slot="${sl}"` : 'disabled'}>
+      <i data-v="${v}">${sl}</i>
+      <span>${p ? esc(cognome(p.n)) : '—'}</span>
+    </button>`;
+  }).join('');
+
+  return `<div class="campo ${attivo ? 'vivo' : ''}">
+    <svg viewBox="0 0 300 250" aria-hidden="true">
+      <rect width="300" height="250" fill="#10251c"/>
+      <g fill="none" stroke="#3f7a63" stroke-width="2">
+        <path d="M4 6h292v238"/><path d="M4 6v238h292"/>
+        <rect x="110" y="6" width="80" height="94"/>
+        <circle cx="150" cy="100" r="34"/>
+        <path d="M28 6v34a122 122 0 0 0 244 0V6"/>
+        <path d="M128 22h44" stroke-width="3"/>
+      </g>
+      <circle cx="150" cy="31" r="7" fill="none" stroke="#e07a3a" stroke-width="2.5"/>
+    </svg>
+    ${pedine}
+  </div>`;
+}
+
+// Sul campo c'e spazio per una parola: il cognome basta a riconoscerlo.
+function cognome(n) {
+  const p = String(n).trim().split(/\s+/);
+  return p.length > 1 ? p.slice(1).join(' ') : p[0];
 }
 
 // La tua squadra: crediti, slot, rosa e quanto puoi spingere. Sta sopra gli
@@ -415,7 +495,7 @@ function bidBar(s, bidders, bid, paused) {
       : '';
 
     return `<div class="bidrow">${tag}${step(1)}${step(2)}${step(3)}${allIn}</div>`;
-  }).join('')}${skipRow(s, bidders, paused)}</div>`;
+  }).join('')}</div>`;
 }
 
 // Saltare un giocatore e una decisione del tavolo, non di chi ospita: il
@@ -467,7 +547,9 @@ export function tickClock(s) {
   }
   if (!s.auction.running || !s.auction.deadline) { scrivi('in attesa', false, false); return null; }
   const left = Math.max(0, s.auction.deadline - now());
-  const sec = Math.ceil(left / 1000);
+  // Il tempo della pallina e in piu: durante l'apertura il cronometro resta
+  // fermo sul massimo invece di mostrare sedici secondi su quindici.
+  const sec = Math.min(S.BID_SECONDS, Math.ceil(left / 1000));
   scrivi(sec > 0 ? `${sec}s` : 'chiuso', sec <= 5, false);
   return left;
 }
@@ -520,8 +602,9 @@ function viewSquadra({ state: s, session }) {
         ${canEdit ? `<button class="sm ghost" data-act="toggle-lineup" data-team="${k}">${editLineup ? 'Fatto' : 'Modifica'}</button>` : ''}
       </div>
       ${identity ? `<p class="identita">${esc(identity)}</p>` : ''}
+      ${campo(s, k, editLineup && canEdit)}
       <div class="slots mt">${slots}</div>
-      ${editLineup ? '<p class="tiny muted mt">Tocca due caselle per scambiarle.</p>' : ''}
+      ${editLineup ? '<p class="tiny muted mt">Tocca due pedine, o due caselle, per scambiarle.</p>' : ''}
       <div class="tattica">
         <div class="row">
           <label class="field grow"><span>Primo violino</span>
@@ -904,9 +987,13 @@ export function alboCard(s) {
 // fermo su gara 1 mentre il tavolo era gia a gara 6, e non se ne accorgeva.
 function gameBlock(A, B, g, aperta = true, ultima = null) {
   const aWon = g.scoreA > g.scoreB;
+  // I due punteggi sono marcati perche app.js possa farli salire quando la
+  // gara e appena stata scoperta. Il numero finale sta gia nel markup: se il
+  // javascript non parte, o se si e chiesto meno movimento, si legge lo
+  // stesso il risultato invece di due zeri.
   const testa = `<div class="line">
       <span class="gname">Gara ${g.n}${g.ot ? ' · OT' : ''}</span>
-      <span class="res"><span class="${aWon ? 'w' : ''}">${A.name} ${g.scoreA}</span> — <span class="${aWon ? '' : 'w'}">${g.scoreB} ${B.name}</span></span>
+      <span class="res"><span class="${aWon ? 'w' : ''}">${A.name} <b class="pt" data-pt="${g.scoreA}">${g.scoreA}</b></span> — <span class="${aWon ? '' : 'w'}"><b class="pt" data-pt="${g.scoreB}">${g.scoreB}</b> ${B.name}</span></span>
     </div>`;
 
   if (!aperta) {

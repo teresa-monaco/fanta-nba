@@ -10,6 +10,18 @@ import { BOT, prossimoBot, uidBot, eBot } from './bot.js';
 
 export const BID_SECONDS = 15;
 
+// Quanto dura l'apertura della pallina del draft fra un giocatore e l'altro.
+//
+// SI AGGIUNGE AL CRONOMETRO, non si toglie: i quindici secondi per offrire
+// restano interi e nessuno perde tempo di decisione guardando un'animazione.
+// Su una ventina di lotti sono una quindicina di secondi in piu sull'asta.
+//
+// Sta nello stato e non nel foglio di stile perche tutti i telefoni devono
+// essere d'accordo su quando la pallina e aperta: si ricava dal tempo che
+// manca, quindi chi entra a meta lotto vede la scheda gia scoperta invece di
+// una pallina chiusa che non si apre piu.
+export const RIVELA_MS = 600;
+
 export function newGame(seed, hostUid) {
   const teams = {};
   for (const k of TEAM_KEYS) teams[k] = { credits: START_CREDITS, roster: [] };
@@ -255,7 +267,9 @@ export function openLot(s, now) {
   for (let step = 0; step < a.order.length; step++) {
     idx = (idx + 1) % a.order.length;
     if (!owned.has(a.order[idx])) {
-      return { ...s, auction: { ...fresh, idx, deadline: now + BID_SECONDS * 1000, running: true } };
+      // Il tempo della pallina si aggiunge: i quindici secondi per offrire
+      // partono quando la scheda e scoperta, non prima.
+      return { ...s, auction: { ...fresh, idx, deadline: now + BID_SECONDS * 1000 + RIVELA_MS, running: true } };
     }
   }
   // Non dovrebbe succedere: il pool e molto piu grande dei 20 posti totali.
@@ -373,6 +387,14 @@ export function tempoRimasto(s, now) {
   const a = s?.auction;
   if (!a?.running || a.paused || !a.deadline) return null;
   return Math.max(0, a.deadline - now);
+}
+
+// La pallina e ancora chiusa? Si ricava dal tempo che manca, quindi tutti i
+// telefoni sono d'accordo senza scambiarsi niente, e chi entra a meta lotto
+// vede la scheda gia scoperta invece di una pallina che non si apre piu.
+export function inRivelazione(s, now) {
+  const left = tempoRimasto(s, now);
+  return left !== null && left > BID_SECONDS * 1000;
 }
 
 // Chiamata dal banditore quando il cronometro e scaduto.

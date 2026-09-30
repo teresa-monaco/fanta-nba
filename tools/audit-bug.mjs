@@ -505,9 +505,15 @@ console.log('\nUNA SQUADRA HA FINITO, LE ALTRE NO\n');
     sx = S.joinGame(sx, 'u1', 'P1');
     sx = S.joinGame(sx, 'u2', 'P2');
     sx = S.startAuction(sx, t0, S.attive(sx));
-    ok(S.tempoRimasto(sx, t0) === S.BID_SECONDS * 1000,
-      'a lotto appena aperto resta tutto il tempo', `${S.tempoRimasto(sx, t0)} ms`);
-    ok(S.tempoRimasto(sx, t0 + S.BID_SECONDS * 1000 + 1) === 0, 'e a tempo finito vale zero, non null');
+    // Il tempo del lotto e i quindici secondi per offrire PIU l'apertura
+    // della pallina, che si aggiunge e non si toglie.
+    const pieno = S.BID_SECONDS * 1000 + S.RIVELA_MS;
+    ok(S.tempoRimasto(sx, t0) === pieno,
+      'a lotto appena aperto c\'e il tempo per offrire piu quello della pallina',
+      `${S.tempoRimasto(sx, t0)} ms`);
+    ok(S.inRivelazione(sx, t0), 'e la pallina risulta ancora chiusa');
+    ok(!S.inRivelazione(sx, t0 + S.RIVELA_MS + 1), 'passata l\'apertura, la scheda e scoperta');
+    ok(S.tempoRimasto(sx, t0 + pieno + 1) === 0, 'e a tempo finito vale zero, non null');
     ok(S.tempoRimasto(S.pauseAuction(sx, t0 + 1000), t0 + 9000) === null, 'in pausa non scorre');
     ok(S.tempoRimasto({ auction: { running: false } }, t0) === null, 'e senza asta in corso non esiste');
   }

@@ -257,10 +257,36 @@ function tettoRagionato(st, k, pid, S, tr) {
   const quando = fascia <= 2 ? Math.pow(tr.fretta, fase * 2 - 1) : 1;
 
   let tetto = Math.round(quota * peso * tr.spinta * quando);
-  // Tenere crediti a fine asta non serve a niente: se nessuno me li contende
-  // piu, tanto vale spenderli sull'ultimo che vale qualcosa.
-  if (slotAltrui === 0) tetto = Math.min(max, 1);
-  else if (liberi === 1) tetto = max;
+
+  // I CREDITI CHE RESTANO IN TASCA A FINE ASTA NON VALGONO NIENTE, e piu ci
+  // si avvicina alla fine piu la cosa pesa. Su un giocatore che vale davvero
+  // si sale verso il massimo; su un riempitivo no, o sarebbe solo un modo
+  // elaborato di buttare la cassa.
+  const avidita = 1 - (liberi - 1) / (ROSTER_SIZE - 1);      // 0 a rosa vuota, 1 sull'ultimo posto
+  const merita = Math.max(0, (perc - 0.45) / 0.55);          // 0 sotto la media, 1 in cima
+  tetto = Math.round(tetto + (max - tetto) * avidita * merita);
+
+  if (slotAltrui === 0) {
+    // Nessuno me lo contende piu: tutto costa 1, pagare di piu e regalare.
+    tetto = Math.min(max, 1);
+  } else if (liberi === 1) {
+    // L'ULTIMO POSTO SI ASPETTA, POI SI DA TUTTO.
+    //
+    // Prima qui il tetto era sempre il massimo, il che sembra giusto e non
+    // lo e: con il tetto al massimo il bot offriva un credito sul PRIMO
+    // giocatore che passava, se lo aggiudicava perche nessuno lo voleva, e
+    // chiudeva l'asta con venti crediti in mano e un riempitivo in quintetto.
+    // Una persona fa il contrario: tiene il posto libero finche non esce
+    // quello giusto, e a quel punto spinge fino in fondo perche i crediti
+    // risparmiati non se li porta da nessuna parte.
+    //
+    // Aspettare non costa quasi niente: i giocatori liberi sono centinaia e i
+    // lotti continuano finche tutte le rose non sono piene. Si diventa di
+    // bocca buona solo quando agli altri restano pochi posti, cioe quando
+    // l'asta sta per chiudersi davvero.
+    const esigente = slotAltrui > 2 ? 0.70 : 0;
+    tetto = perc >= esigente ? max : 0;
+  }
   return Math.max(0, Math.min(max, tetto));
 }
 
@@ -350,6 +376,9 @@ function giudizio(st, k, S, memoria, pid) {
     m.prossima = 0;
   }
   m.salta = m.tetto <= 1 && S.slotsLeft(st, k) > 1;
+  // L'affondo: ultimo posto libero, giocatore voluto, e cassa da spendere.
+  // Vedi offerta() per il perche non si sale un credito alla volta.
+  m.affondo = S.slotsLeft(st, k) === 1 && m.tetto >= S.maxBid(st, k) && S.maxBid(st, k) > 3;
   return m;
 }
 
@@ -367,6 +396,10 @@ export function offerta(st, k, S, momento, memoria) {
   if (cur && cur.team === k) return null;          // non si rilancia su se stessi
   const minimo = cur ? cur.amount + 1 : 1;
 
+  // La pallina si sta ancora aprendo: nessuno ha visto chi e. Un bot che
+  // offre prima che la scheda sia scoperta e un bot che bara.
+  if (S.inRivelazione?.(st, momento)) return null;
+
   const m = giudizio(st, k, S, memoria, pid);
   if (m.salta) return null;                        // non lo vuole: non ci prova nemmeno
   if (m.tetto < minimo) return null;
@@ -379,6 +412,23 @@ export function offerta(st, k, S, momento, memoria) {
     m.prossima = momento + pensata(bot, minimo, m.tetto);
   }
   if (momento < m.prossima) return null;
+
+  // L'AFFONDO SULL'ULTIMO POSTO. Una volta sola per lotto, e solo qui.
+  //
+  // In un'asta al rialzo si paga quello che serve, non il proprio tetto: col
+  // tetto al massimo ma offrendo un credito alla volta, il bot si aggiudicava
+  // l'ultimo giocatore a 1 e chiudeva con venti crediti in mano. Tenerli non
+  // serve a niente — non c'e nessun altro posto da riempire — mentre salire
+  // un credito alla volta lascia aperta la porta a chi rilancia all'ultimo
+  // secondo. Quindi si mette subito quasi tutto: costa zero e chiude la
+  // questione. E' anche il motivo per cui ogni tanto un fuoriclasse va via a
+  // ventiquattro quando ne valeva quindici.
+  if (m.affondo && !m.affondato) {
+    m.affondato = true;
+    const max = S.maxBid(st, k);
+    const secco = Math.max(minimo, Math.round(max * (0.82 + Math.random() * 0.18)));
+    if (S.canBid(st, k, secco)) return secco;
+  }
   return S.canBid(st, k, minimo) ? minimo : null;
 }
 

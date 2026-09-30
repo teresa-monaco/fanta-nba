@@ -710,9 +710,96 @@ details summary {
 }
 .oppure::before, .oppure::after { content: ''; flex: 1; height: 1px; background: var(--line-2); }
 
+/* ---- la pallina del draft ----
+   Fra un giocatore e l'altro la pallina si apre sul nome. Il tempo se lo
+   prende in piu, non lo toglie ai quindici secondi per offrire: e la classe
+   "aperto" la mette app.js leggendo il tempo che manca, perche e uno stato
+   condiviso e non un'animazione locale. */
+.lotto-jumbo { margin-bottom: var(--gap); }
+.tabellina {
+  text-align: center; font: 700 10px var(--cond); letter-spacing: 2.2px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+}
+.lotto { position: relative; min-height: 138px; display: grid; place-items: center; }
+.sfera { position: relative; width: 108px; height: 108px; }
+.mezzo {
+  position: absolute; left: 0; width: 108px; height: 54px;
+  background: radial-gradient(circle at 36% 40%, #f5924a, #cf5f1c 60%, #7d340a);
+  transition: transform .3s cubic-bezier(.3, .9, .3, 1), opacity .2s linear .2s;
+}
+.mezzo.su { top: 0; border-radius: 108px 108px 0 0; box-shadow: inset 0 3px 8px rgba(255, 255, 255, .2); }
+.mezzo.giu { top: 54px; border-radius: 0 0 108px 108px; box-shadow: inset 0 -4px 9px rgba(0, 0, 0, .4); }
+.cuc { position: absolute; left: 0; top: 52px; width: 108px; height: 4px; background: #2a1405; z-index: 2; }
+.lotto.aperto .mezzo.su { transform: translateY(-48px) rotate(-10deg); opacity: 0; }
+.lotto.aperto .mezzo.giu { transform: translateY(48px) rotate(8deg); opacity: 0; }
+.lotto.aperto .cuc { opacity: 0; transition: opacity .15s; }
+
+.scheda {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+  opacity: 0; transform: scale(.9);
+  transition: opacity .24s ease-out .18s, transform .3s cubic-bezier(.2, .9, .3, 1) .18s;
+}
+.lotto.aperto .scheda { opacity: 1; transform: none; }
+.scheda .ruolo { font: 800 10px var(--cond); letter-spacing: 2px; color: var(--gold); }
+.scheda .nome {
+  font: 800 25px/1.04 var(--cond); letter-spacing: .6px; text-transform: uppercase;
+  margin-top: 3px; padding: 0 6px;
+}
+.scheda .ovr-min { font: 700 11px var(--cond); letter-spacing: 1px; color: var(--muted-2); margin-top: 3px; }
+
+/* ---- ti hanno superato ----
+   Prima te ne accorgevi solo fissando il numero. Il lampo dura mezzo secondo
+   e si ripete due volte: abbastanza da vederlo con la coda dell'occhio,
+   troppo poco per dare fastidio a chi sta gia guardando. */
+.bidbox.superato { animation: lampo .5s ease-out 2; }
+@keyframes lampo {
+  0%, 100% { background: var(--surface); border-color: var(--line); }
+  45% { background: rgba(224, 27, 46, .26); border-color: var(--red); }
+}
+
+/* ---- il mezzo campo ----
+   Le righe dicono chi gioca, il campo dice dove: un centro schierato da
+   playmaker si vede a colpo d'occhio invece di doverlo leggere. */
+.campo {
+  position: relative; margin-top: var(--gap);
+  border: 1px solid var(--line-2); overflow: hidden;
+}
+.campo svg { display: block; width: 100%; height: auto; }
+.pedina {
+  position: absolute; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: none; border: 0; padding: 0; border-radius: 0;
+}
+.pedina:disabled { opacity: 1; cursor: default; }
+.pedina i {
+  position: relative;
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--tc); color: #0e1119; border: 2px solid rgba(255, 255, 255, .85);
+  font: 800 12px var(--cond); letter-spacing: .6px; font-style: normal;
+  box-shadow: 0 3px 9px rgba(0, 0, 0, .55);
+}
+.pedina span {
+  font: 800 9.5px var(--cond); letter-spacing: .8px; text-transform: uppercase;
+  color: #fff; background: rgba(6, 10, 8, .82); padding: 1px 5px; border-radius: 2px;
+  white-space: nowrap; max-width: 92px; overflow: hidden; text-overflow: ellipsis;
+}
+.campo.vivo .pedina:not(:disabled) i { cursor: pointer; }
+.pedina.scelta i { background: var(--gold); border-color: #fff; transform: scale(1.14); }
+.pedina.fuori i { border-color: var(--warning); border-style: dashed; }
+/* La fascia di violino si legge sul campo: e li che stai guardando. */
+.pedina i[data-v]:not([data-v=""])::after {
+  content: attr(data-v); position: absolute; top: -7px; right: -12px;
+  font: 800 8.5px var(--cond); letter-spacing: .4px;
+  background: var(--gold); color: var(--gold-ink); padding: 1px 3px; border-radius: 2px;
+}
+
+/* ---- il punteggio che sale ---- */
+.pt.conta { color: var(--gold); }
+
 /* Chi ha chiesto meno movimento vede i cambiamenti, non le animazioni. */
 @media (prefers-reduced-motion: reduce) {
-  .flap span.gira, .jumbo .insegna { animation: none; }
+  .flap span.gira, .jumbo .insegna, .bidbox.superato { animation: none; }
+  .mezzo, .scheda, .pedina i { transition: none; }
 }
 
 @media (min-width: 600px) {

@@ -158,6 +158,15 @@ ok(cssVars['--vv-bottom'] === '114px',
 
 /* 2. Asta */
 const now = () => Date.now();
+// Il tabellone con la pallina del draft, e il voto per saltare attaccato al
+// giocatore invece che in fondo fra i tasti di rilancio.
+const controlliAsta = () => {
+  ok(has('class="jumbo lotto-jumbo"', 'data-lotto'), 'l\'asta ha il tabellone con la pallina');
+  ok(html().indexOf('data-act="vota-skip"') < html().indexOf('class="card lot"'),
+    'e il voto per saltare sta attaccato al giocatore, sopra tutto il resto');
+  ok(html().lastIndexOf('data-act="vota-skip"') === html().indexOf('data-act="vota-skip"'),
+    'una volta sola: non e rimasto anche in fondo');
+};
 // Esplicito: senza sedie occupate il default sarebbe "tutte e dieci".
 await F.session.apply((s) => S.startAuction(s, now(), TEAM_KEYS.slice(0, 4)));
 // Agganciato alla struttura, non a una parola: le etichette cambiano con la grafica.
@@ -177,6 +186,7 @@ ok(has('data-act="vota-skip"'), 'c\'è il tasto per saltare il giocatore');
 ok(has(`0/${S.attive(F.state).length}`), 'con il conteggio dei voti',
   `0 su ${S.attive(F.state).length}`);
 ok(has(`${S.MAX_SKIP} skip rimasti`), 'e quanti skip restano al tavolo');
+controlliAsta();
 // Il cronometro deve stare ANCHE nella barra fissa: i tasti sono li, e con
 // la pagina scrollata il conto alla rovescia in cima non si vede piu.
 ok((html().match(/data-clock/g) || []).length >= 2,
@@ -221,7 +231,10 @@ ok(F.state.auction.paused, 'la pausa entra nello stato condiviso, non solo nel b
 ok(!S.canBid(F.state, TEAM_KEYS[0], valido()), 'in pausa un rilancio per il resto valido viene rifiutato');
 ok(has('Cronometro fermo'), 'la barra dice chiaramente che è fermo');
 const rimasto = F.state.auction.remaining;
-ok(rimasto > 0 && rimasto <= 15000, 'il tempo residuo viene conservato', `${Math.round(rimasto / 1000)}s`);
+// Il tetto comprende anche l'apertura della pallina, che si aggiunge al tempo
+// per offrire invece di toglierglielo.
+ok(rimasto > 0 && rimasto <= S.BID_SECONDS * 1000 + S.RIVELA_MS,
+  'il tempo residuo viene conservato', `${Math.round(rimasto / 1000)}s`);
 await F.session.apply((s) => S.resumeAuction(s, now()));
 ok(!F.state.auction.paused && S.canBid(F.state, TEAM_KEYS[0], valido()), 'alla ripresa si torna a poter rilanciare');
 ok(els.topbar.innerHTML.includes('new-game'), 'la barra in alto ha il tasto per ricominciare');
@@ -331,6 +344,15 @@ ok((html().match(/class="story"/g) || []).length < (html().match(/class="gname"/
   'e non sono tutte aperte insieme',
   `${(html().match(/class="story"/g) || []).length} cronache su ${(html().match(/class="gname"/g) || []).length} gare`);
 ok(has('Box score'), 'il box score e consultabile');
+// Il punteggio sale invece di comparire. Il numero finale deve stare COMUNQUE
+// nel markup: se il javascript non gira, o si e chiesto meno movimento, si
+// deve leggere il risultato e non due zeri.
+{
+  const pt = [...html().matchAll(/data-pt="(\d+)"[^>]*>(\d+)</g)];
+  ok(pt.length >= 2, 'i punteggi sono marcati per poter salire', `${pt.length} numeri`);
+  ok(pt.every(([, a, b]) => a === b),
+    'e il risultato vero e gia scritto: senza javascript si legge lo stesso');
+}
 ok(has('Finale') && has('Vai — Gara 1'), 'la finale si apre da sola quando le semifinali sono chiuse');
 
 // Una gara alla volta, come chiedono le regole.
