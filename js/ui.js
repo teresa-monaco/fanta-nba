@@ -306,13 +306,8 @@ function viewAuction({ state: s, session }) {
     ${skipRow(s, bidders, paused)}
 
     <div class="card lot">
-      <div class="lot-head">
-        <div>
-          <div class="eyebrow">In asta ora</div>
-          <div class="nm">${esc(p.n)}</div>
-          <div class="meta">${p.pos}${p.alt?.length ? ' / ' + p.alt.join('/') : ''} · ${esc(arc?.label || p.arc)} · ${esc(p.tm)}, ${p.era}</div>
-        </div>
-        <div class="ovr"><b>${p.ovr}</b><i>Overall</i></div>
+      <div class="ovr-riga">
+        <span>Overall</span><b>${p.ovr}</b>
       </div>
       <div class="attrs">${attrs}</div>
       ${hostBar}
@@ -341,6 +336,9 @@ function viewAuction({ state: s, session }) {
 // La pallina del draft che si apre sul nome. La classe "aperto" la mette e la
 // toglie app.js leggendo il tempo che manca: e uno stato condiviso, non
 // un'animazione locale, cosi chi entra a meta lotto vede la scheda scoperta.
+// Tre righe e basta: dove gioca e da dove viene, come si chiama, che
+// giocatore e. Tutto il resto stava anche nel blocco sotto, e su un telefono
+// leggere due volte la stessa cosa e solo scroll in piu.
 function pallina(p, arc) {
   return `<div class="lotto" data-lotto>
     <div class="sfera">
@@ -348,7 +346,7 @@ function pallina(p, arc) {
       <div class="scheda">
         <div class="ruolo">${p.pos}${p.alt?.length ? ' / ' + p.alt.join('/') : ''} · ${esc(p.tm)} ${p.era}</div>
         <div class="nome">${esc(p.n)}</div>
-        <div class="ovr-min">${esc(arc?.label || p.arc)} · OVR ${p.ovr}</div>
+        <div class="arche">${esc(arc?.label || p.arc)}</div>
       </div>
     </div>
   </div>`;

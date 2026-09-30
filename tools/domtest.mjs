@@ -170,7 +170,15 @@ const controlliAsta = () => {
 // Esplicito: senza sedie occupate il default sarebbe "tutte e dieci".
 await F.session.apply((s) => S.startAuction(s, now(), TEAM_KEYS.slice(0, 4)));
 // Agganciato alla struttura, non a una parola: le etichette cambiano con la grafica.
-ok(clean() && has('class="card lot"', 'class="lot-head"', 'crediti'), 'la schermata d\'asta si disegna');
+ok(clean() && has('class="card lot"', 'class="ovr-riga"', 'crediti'), 'la schermata d\'asta si disegna');
+// Il nome del giocatore sta sul tabellone e NON si ripete sotto: su un
+// telefono rileggere le stesse tre cose costava mezzo schermo di scroll.
+{
+  const p = db().byId[S.currentPlayerId(F.state)];
+  const volte = (html().match(new RegExp(esc(p.n).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+  ok(volte === 1, 'il nome del giocatore compare una volta sola, sul tabellone', `${volte} volte`);
+  ok(!has('class="lot-head"'), 'la vecchia testata rossa che lo ripeteva non c\'e piu');
+}
 ok(has('Realizzazione', 'Protezione ferro'), 'gli attributi del giocatore sono visibili');
 ok(has('Assegna a mano'), 'i comandi del banditore stanno nel blocco del giocatore');
 ok(!has('data-act="pass"'), 'ma chi ospita non puo piu saltare da solo: si vota');
