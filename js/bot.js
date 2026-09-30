@@ -148,127 +148,134 @@ export function valorePer(rosa, id) {
 
 /* ==========================================================
    Le quattro teste
-   ========================================================== */
+   ==========================================================
 
-// Ognuna dice solo una cosa: fino a quanto sale su questo giocatore. Il
-// resto — riserva, slot, validita — lo impone lo stato, non il bot.
-// Quanto spinge Ada sui giocatori che valgono. Non e un numero scelto a
-// occhio: esce dal confronto in tools/bot-arena.mjs, che misura anche i
-// crediti lasciati in tasca a fine asta — la spia che aveva mancato il
-// difetto la prima volta.
-const AGGRESSIVITA = 1.5;
+   Tutte e quattro ragionano allo stesso modo: stessa valutazione dei
+   giocatori, stessa ricerca della tattica. Quello che cambia e il CARATTERE —
+   quanto concentrano i soldi sui primi, se li spendono presto o tardi, quanto
+   rischiano quando scelgono come giocare.
+
+   E' un cambio, non la prima stesura. Prima calcolava solo Ada e gli altri
+   tre andavano a formule grezze sull'overall. Misurato in bot-arena: Ada
+   vinceva il 90% contro gli avversari simulati, Bruno il 69%, Dino il 64%,
+   Cleo il 53% — e Cleo chiudeva l'asta con 45 crediti su 50 ancora in tasca.
+   Non erano tre avversari diversi, erano tre modi di perdere.
+
+   Perche differenziarli sul carattere e non sulla bravura: se due bot
+   valutassero i giocatori in modo diverso, uno dei due li valuterebbe male —
+   il valore di un giocatore per una rosa e una cosa sola. Sul prezzo e sul
+   momento invece si puo davvero non essere d'accordo, e li nascono rose
+   diverse da teste ugualmente competenti. */
+
+// curva     quanto si concentra la spesa sui migliori, per fasce di rango:
+//           [oltre il 95%, oltre l'85%, oltre il 70%, oltre il 45%, il resto]
+// spinta    moltiplicatore secco sul tetto
+// fretta    sopra 1 paga di piu a rosa vuota, sotto 1 tiene i soldi per dopo
+// prudenza  in tattica: 0 guarda solo la media, 1 solo il caso peggiore
+// gusti     preferenza a parita di conti, per non sembrare tutti lo stesso
+const TRATTI = {
+  ada: {
+    curva: [2.6, 1.9, 1.3, 0.70, 0.25], spinta: 1.50, fretta: 1.00, prudenza: 0.50,
+    gusti: {},
+  },
+  // La spinta e il totale, la curva e come lo distribuisce: sono due cose
+  // diverse e all'inizio le avevo confuse. Bruno con la curva ripida E la
+  // spinta alta spendeva 43 crediti su 50 e finiva con la rosa peggiore dei
+  // quattro. Adesso resta il cacciatore di stelle — concentra quasi tutto sui
+  // primi — ma proprio per questo deve avere meno da spendere.
+  bruno: {
+    curva: [3.4, 2.3, 1.05, 0.45, 0.18], spinta: 1.35, fretta: 1.15, prudenza: 0.20,
+    gusti: { strategy: 'palla-star', ritmo: 'veloce' },
+  },
+  cleo: {
+    curva: [1.9, 1.6, 1.30, 0.95, 0.45], spinta: 1.38, fretta: 0.85, prudenza: 0.80,
+    gusti: { strategy: 'equilibrato', ritmo: 'lento' },
+  },
+  dino: {
+    curva: [2.8, 2.05, 1.20, 0.60, 0.28], spinta: 1.52, fretta: 1.15, prudenza: 0.30,
+    gusti: { strategy: 'transizione', ritmo: 'run-gun' },
+  },
+};
+
+// Fino a quanto sale questo bot su questo giocatore. Il resto — riserva,
+// slot, validita dell'offerta — lo impone lo stato, non il bot.
+//
+// I CREDITI SI SPALMANO SUI LOTTI CONTESI, NON SUGLI SLOT.
+//
+// La prima versione divideva la cassa per gli slot da riempire e finiva
+// l'asta con 28 crediti su 50 in tasca, avendo lasciato un 96 a undici e un
+// 89 a dieci. Sbagliava due cose insieme.
+//
+// La prima: quando l'avversario ha riempito la rosa, tutto quello che resta
+// costa 1. Quindi i crediti non vanno divisi per i MIEI slot, ma per i lotti
+// in cui qualcuno mi contendera ancora il giocatore. Gli ultimi posti si
+// riempiono con gli avanzi, e vanno preventivati a 1.
+//
+// La seconda: misurava il valore come rapporto con la mediana. Ma i valori
+// sono compresi fra 13 e 56 con mediana 31, quindi un 96 usciva "appena sopra
+// la media" e il moltiplicatore restava a 1.1. Il rango fra i giocatori
+// ancora liberi separa molto meglio il fuoriclasse dal riempitivo.
+function tettoRagionato(st, k, pid, S, tr) {
+  const D = db();
+  const t = st.teams[k];
+  const liberi = ROSTER_SIZE - t.roster.length;
+  const max = S.maxBid(st, k);
+  if (liberi <= 0 || max < 1) return 0;
+  const v = valorePer(t.roster, pid);
+  if (v <= 0) return Math.min(max, 1);
+
+  const presi = new Set(S.attive(st).flatMap((x) => st.teams[x].roster));
+  const restanti = D.players.filter((p) => !presi.has(p.id));
+  const passo = Math.max(1, Math.ceil(restanti.length / 60));
+  const valori = restanti.filter((_, i) => i % passo === 0)
+    .map((p) => valorePer(t.roster, p.id)).sort((a, b) => a - b);
+  const perc = valori.length ? valori.filter((x) => x < v).length / valori.length : 0.5;
+
+  // Quanti lotti mi verranno ancora contesi: non piu di quanti slot restano
+  // agli altri, e non piu dei miei. Oltre quelli si compra a 1.
+  const slotAltrui = S.attive(st).filter((x) => x !== k)
+    .reduce((a, x) => a + Math.max(0, ROSTER_SIZE - st.teams[x].roster.length), 0);
+  const contesi = Math.max(1, Math.min(liberi, slotAltrui));
+  const quota = max / contesi;
+
+  const fascia = perc >= 0.95 ? 0 : perc >= 0.85 ? 1 : perc >= 0.70 ? 2 : perc >= 0.45 ? 3 : 4;
+  const peso = tr.curva[fascia];
+
+  // Presto o tardi. Chi ha fretta paga sopra la propria quota finche la rosa
+  // e vuota e si accontenta in fondo; chi ha pazienza fa il contrario e
+  // aspetta che gli altri restino senza cassa. A meta asta l'esponente e zero
+  // e la fretta non conta: cambia QUANDO escono i soldi, non quanti.
+  //
+  // VALE SOLO SUI GIOCATORI CHE CONTANO, e la seconda stesura. Applicandola a
+  // tutti, Dino pagava il premio da fretta su chiunque capitasse a inizio
+  // asta — e l'ordine dei lotti e casuale, quindi era un premio pagato a caso.
+  // Misurato: spendeva 39 crediti su 50, piu di tutti, e si ritrovava il
+  // fuoriclasse piu scarso dei quattro (93.0 contro 94.6). Legata alla fascia
+  // alta, "svuota la cassa subito" vuol dire quello che promette: si butta sul
+  // primo fenomeno che passa, invece di buttarsi sul primo nome che passa.
+  const fase = liberi / ROSTER_SIZE;            // 1 all'inizio, 0.2 in fondo
+  const quando = fascia <= 2 ? Math.pow(tr.fretta, fase * 2 - 1) : 1;
+
+  let tetto = Math.round(quota * peso * tr.spinta * quando);
+  // Tenere crediti a fine asta non serve a niente: se nessuno me li contende
+  // piu, tanto vale spenderli sull'ultimo che vale qualcosa.
+  if (slotAltrui === 0) tetto = Math.min(max, 1);
+  else if (liberi === 1) tetto = max;
+  return Math.max(0, Math.min(max, tetto));
+}
+
+// `attesa` e solo il tempo di reazione: entrano scaglionati, o si vedrebbe
+// che sono finti. Non cambia quanto sono bravi.
+function creaBot(id, nome, stile, attesa) {
+  const tr = TRATTI[id];
+  return { nome, stile, tr, attesa, tetto: (st, k, pid, S) => tettoRagionato(st, k, pid, S, tr) };
+}
 
 export const BOT = {
-  ada: {
-    nome: 'Ada',
-    stile: 'calcola il valore di ogni giocatore per la sua rosa',
-    forte: true,
-    attesa: [900, 2600],
-    // I CREDITI SI SPALMANO SUI LOTTI CONTESI, NON SUGLI SLOT.
-    //
-    // La prima versione divideva la cassa per gli slot da riempire e finiva
-    // l'asta con 28 crediti su 50 in tasca, avendo lasciato un 96 a undici e
-    // un 89 a dieci. Sbagliava due cose insieme.
-    //
-    // La prima: quando l'avversario ha riempito la rosa, tutto quello che
-    // resta costa 1. Quindi i crediti non vanno divisi per i MIEI slot, ma
-    // per i lotti in cui qualcuno mi contendera ancora il giocatore. Gli
-    // ultimi posti si riempiono con gli avanzi, e vanno preventivati a 1.
-    //
-    // La seconda: misurava il valore come rapporto con la mediana. Ma i
-    // valori sono compresi fra 13 e 56 con mediana 31, quindi un 96 usciva
-    // "appena sopra la media" e il moltiplicatore restava a 1.1. Il rango
-    // fra i disponibili separa molto meglio il fuoriclasse dal riempitivo.
-    tetto(st, k, pid, S) {
-      const D = db();
-      const t = st.teams[k];
-      const liberi = ROSTER_SIZE - t.roster.length;
-      const max = S.maxBid(st, k);
-      if (liberi <= 0 || max < 1) return 0;
-      const v = valorePer(t.roster, pid);
-      if (v <= 0) return Math.min(max, 1);
-
-      const presi = new Set(S.attive(st).flatMap((x) => st.teams[x].roster));
-      const restanti = D.players.filter((p) => !presi.has(p.id));
-      const passo = Math.max(1, Math.ceil(restanti.length / 60));
-      const valori = restanti.filter((_, i) => i % passo === 0)
-        .map((p) => valorePer(t.roster, p.id)).sort((a, b) => a - b);
-      const perc = valori.length ? valori.filter((x) => x < v).length / valori.length : 0.5;
-
-      // Quanti lotti mi verranno ancora contesi: non piu di quanti slot
-      // restano agli altri, e non piu dei miei. Oltre quelli si compra a 1.
-      const slotAltrui = S.attive(st).filter((x) => x !== k)
-        .reduce((a, x) => a + Math.max(0, ROSTER_SIZE - st.teams[x].roster.length), 0);
-      const contesi = Math.max(1, Math.min(liberi, slotAltrui));
-      const quota = max / contesi;
-
-      // Il peso viene dal rango, non dal rapporto: i primi vanno pagati.
-      let peso;
-      if (perc >= 0.95) peso = 2.6;
-      else if (perc >= 0.85) peso = 1.9;
-      else if (perc >= 0.70) peso = 1.3;
-      else if (perc >= 0.45) peso = 0.7;
-      else peso = 0.25;
-
-      let tetto = Math.round(quota * peso * AGGRESSIVITA);
-      // Tenere crediti a fine asta non serve a niente: se nessuno me li
-      // contende piu, tanto vale spenderli sull'ultimo che vale qualcosa.
-      if (slotAltrui === 0) tetto = Math.min(max, 1);
-      else if (liberi === 1) tetto = max;
-      return Math.max(0, Math.min(max, tetto));
-    },
-  },
-
-  bruno: {
-    nome: 'Bruno',
-    stile: 'compra i nomi grossi e si innamora delle stelle',
-    forte: false,
-    attesa: [400, 1500],
-    tetto(st, k, pid, S) {
-      const D = db();
-      const p = D.byId[pid];
-      const max = S.maxBid(st, k);
-      if (max < 1) return 0;
-      return Math.min(max, Math.round((p.ovr - 85) * 2.8));
-    },
-  },
-
-  cleo: {
-    nome: 'Cleo',
-    stile: 'caccia le occasioni e non paga mai il prezzo pieno',
-    forte: false,
-    attesa: [1800, 3400],
-    tetto(st, k, pid, S) {
-      const t = st.teams[k];
-      const liberi = ROSTER_SIZE - t.roster.length;
-      const max = S.maxBid(st, k);
-      if (liberi <= 0 || max < 1) return 0;
-      const v = valorePer(t.roster, pid);
-      // Paga poco per tutti, e si sveglia solo quando restano pochi posti.
-      let tetto = Math.round(Math.max(1, v) * 0.22);
-      if (liberi <= 2) tetto = Math.max(tetto, Math.floor(t.credits * 0.5));
-      if (liberi === 1) tetto = max;
-      return Math.max(0, Math.min(max, tetto));
-    },
-  },
-
-  dino: {
-    nome: 'Dino',
-    stile: 'svuota la cassa sui primi due che gli piacciono',
-    forte: false,
-    attesa: [300, 1100],
-    tetto(st, k, pid, S) {
-      const D = db();
-      const p = D.byId[pid];
-      const t = st.teams[k];
-      const liberi = ROSTER_SIZE - t.roster.length;
-      const max = S.maxBid(st, k);
-      if (liberi <= 0 || max < 1) return 0;
-      if (liberi >= 4 && p.ovr >= 92) return max;       // tutto e subito
-      if (liberi >= 3) return Math.min(max, Math.round((p.ovr - 88) * 3));
-      return Math.min(max, liberi === 1 ? max : 3);      // poi si tira a campare
-    },
-  },
+  ada: creaBot('ada', 'Ada', 'non sbaglia un prezzo e non si affeziona a nessuno', [900, 2600]),
+  bruno: creaBot('bruno', 'Bruno', 'punta tutto su due fuoriclasse e riempie con gli avanzi', [400, 1500]),
+  cleo: creaBot('cleo', 'Cleo', 'spende poco su tanti e aspetta che finiate i crediti', [1800, 3400]),
+  dino: creaBot('dino', 'Dino', 'svuota la cassa subito, prima che ci pensiate voi', [300, 1100]),
 };
 
 export const ID_BOT = Object.keys(BOT);
@@ -357,36 +364,24 @@ function permutazioni(arr) {
   return out;
 }
 
-// Ada calcola: prova le combinazioni e tiene quella che regge meglio contro
-// TUTTE le strategie che gli avversari potrebbero scegliere, non solo contro
-// quella che hanno adesso. Gli altri tre scelgono come sceglierebbe una
-// persona di fretta.
+// A parita di conti, ognuno tira verso il basket che gli piace. Il numero e
+// piccolo di proposito: sposta le scelte quasi pari e nient'altro, cosi il
+// carattere si vede senza che nessuno giochi male apposta.
+const GUSTO = 0.35;
+
+// Prova le combinazioni e tiene quella che regge meglio contro TUTTE le
+// strategie che gli avversari potrebbero scegliere, non solo contro quella
+// che hanno adesso. Quanto pesi il caso peggiore rispetto alla media lo dice
+// il carattere: Bruno rischia, Cleo si copre.
 export function tatticaBot(st, k, S) {
   const D = db();
   const bot = BOT[st.bots?.[k]];
   const rosa = st.teams[k].roster;
   if (!bot || rosa.length < ROSTER_SIZE) return null;
 
+  const tr = bot.tr;
   const ord = rosa.map((id) => D.byId[id]).sort((a, b) => b.attrs.sco - a.attrs.sco);
   const sbloccati = allenatoriDi(rosa);
-
-  if (!bot.forte) {
-    // Scelte di pancia, diverse per ognuno: servono a non farli sembrare
-    // tutti lo stesso avversario.
-    const rng = makeRng(`${st.seed}:${k}:tat`);
-    const perStile = {
-      bruno: { strategy: 'palla-star', ritmo: 'veloce' },
-      cleo: { strategy: 'equilibrato', ritmo: 'lento' },
-      dino: { strategy: 'transizione', ritmo: 'run-gun' },
-    }[st.bots[k]] || { strategy: 'equilibrato', ritmo: 'medio' };
-    return {
-      lu: S.autoLineup(rosa),
-      tac: {
-        v1: ord[0].id, v2: ord[1].id, ...perStile,
-        coach: sbloccati.length ? sbloccati[Math.floor(rng() * sbloccati.length)].id : null,
-      },
-    };
-  }
 
   const avversari = [];
   for (const o of S.attive(st)) {
@@ -437,7 +432,9 @@ export function tatticaBot(st, k, S) {
               const d = (m.offA - m.defB) - (m.offB - m.defA);
               somma += d; if (d < peggio) peggio = d;
             }
-            s = (somma / avversari.length) * 0.5 + peggio * 0.5;
+            s = (somma / avversari.length) * (1 - tr.prudenza) + peggio * tr.prudenza;
+            if (strategy === tr.gusti.strategy) s += GUSTO;
+            if (ritmo === tr.gusti.ritmo) s += GUSTO;
           }
           if (!best || s > best.s) best = { s, lu, tac };
         }

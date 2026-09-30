@@ -61,7 +61,7 @@ function partita(seed, chi) {
   for (const k of keys) {
     const prima = new Set(Object.values(s.seats));
     if (Bot.BOT[chi[k]]) {
-      const dopo = S.aggiungiBot(s);
+      const dopo = S.aggiungiBot(s, chi[k]);
       if (!dopo) { male('aggiungiBot rifiutato', k); continue; }
       s = dopo;
     } else {
@@ -224,27 +224,160 @@ for (const b of Bot.ID_BOT) {
 console.log('\n  L\'ultima colonna sono i crediti rimasti in tasca a fine asta, su 50.');
 console.log('  Sopra i 12 il bot sta giocando con meno budget di quello che ha.');
 
-console.log('\n  Ada e l\'unica che calcola: deve vincere spesso ma non sempre.');
-console.log('  Gli altri tre devono restare intorno alla meta, o non sono avversari');
-console.log('  ma vittime — e giocare contro un bot che perde sempre non diverte.\n');
+console.log('\n  E\' la colonna che somiglia di piu a una persona vera, quindi e quella che');
+console.log('  conta per chi gioca. Devono stare vicini fra loro: un bot che perde sempre');
+console.log('  non e un avversario, e un modo lungo di vincere.\n');
 
 /* ==========================================================
-   3. I bot fra loro
-   ========================================================== */
-console.log('3. I QUATTRO BOT FRA LORO  (60 tornei in quattro)\n');
+   2b. Uno contro uno, ogni coppia
+   ==========================================================
+
+   E' il confronto che conta. La media contro gli stili simulati nasconde il
+   divario: contro un avversario che offre nove crediti fissi sembrano tutti
+   bravi. Qui ognuno affronta ognuno, e si vede chi regge davvero. */
+console.log('\n2b. OGNI BOT CONTRO OGNI ALTRO BOT  (50 serie per coppia)\n');
 {
-  const titoli = {};
-  for (let i = 0; i < 60; i++) {
+  const N = 50;
+  const vinte = {}; const giocate = {};
+  for (const b of Bot.ID_BOT) { vinte[b] = 0; giocate[b] = 0; }
+  const griglia = {};
+  for (const a of Bot.ID_BOT) {
+    griglia[a] = {};
+    for (const b of Bot.ID_BOT) {
+      if (a === b) { griglia[a][b] = null; continue; }
+      let v = 0, n = 0;
+      for (let i = 0; i < N; i++) {
+        const r = partita(`${a}-vs-${b}-${i}`, { x: a, y: b });
+        if (!r) continue;
+        n++;
+        // aggiungiBot sceglie la sedia in ordine: la prima e di `a`.
+        const chiVince = r.s.bots[r.campione];
+        if (chiVince === a) v++;
+      }
+      griglia[a][b] = n ? v / n * 100 : 0;
+      vinte[a] += v; giocate[a] += n;
+    }
+  }
+  const nomi = Bot.ID_BOT.map((b) => Bot.BOT[b].nome);
+  console.log('           ' + nomi.map((n) => n.padStart(9)).join('') + '     media');
+  console.log('  ' + '-'.repeat(11 + nomi.length * 9 + 10));
+  for (const a of Bot.ID_BOT) {
+    const celle = Bot.ID_BOT.map((b) => (griglia[a][b] === null ? '—'.padStart(9)
+      : `${griglia[a][b].toFixed(0)}%`.padStart(9)));
+    const media = giocate[a] ? vinte[a] / giocate[a] * 100 : 0;
+    console.log(`  ${Bot.BOT[a].nome.padEnd(9)}${celle.join('')}   ${media.toFixed(0).padStart(6)}%`);
+  }
+  // Ogni coppia si gioca nei due ordini di sedia, e le due caselle dovrebbero
+  // sommare a cento. Ne misura una decina di meno, sempre: in questo banco di
+  // prova le squadre offrono in ordine fisso, quindi chi sta nella prima sedia
+  // rilancia per primo e si lascia superare di un credito. E' un difetto del
+  // banco, non del gioco — nell'app i bot si svegliano a tempi diversi. Vale
+  // per tutte le righe allo stesso modo, quindi confrontarle resta lecito: e
+  // l'altezza assoluta della tabella a essere bassa di qualche punto. Il
+  // controllo serve a sapere se quel difetto cresce.
+  let somma = 0, coppie = 0;
+  for (let i = 0; i < Bot.ID_BOT.length; i++) {
+    for (let j = i + 1; j < Bot.ID_BOT.length; j++) {
+      somma += griglia[Bot.ID_BOT[i]][Bot.ID_BOT[j]] + griglia[Bot.ID_BOT[j]][Bot.ID_BOT[i]];
+      coppie++;
+    }
+  }
+  const sedia = somma / coppie;
+  console.log(`\n  Peso della sedia: le caselle speculari sommano a ${sedia.toFixed(0)} invece di 100`);
+  console.log('  (chi offre per primo si fa superare di un credito — difetto del banco).');
+  if (sedia < 80 || sedia > 110) male('la sedia conta troppo', `somma ${sedia.toFixed(0)}`);
+
+  const medie = Bot.ID_BOT.map((b) => (giocate[b] ? vinte[b] / giocate[b] * 100 : 0));
+  console.log(`  Divario fra il migliore e il peggiore: ${(Math.max(...medie) - Math.min(...medie)).toFixed(0)} punti.`);
+  console.log('  Sotto i 15 sono avversari dello stesso livello con teste diverse;');
+  console.log('  sopra i 25 due di loro sono li solo per perdere.');
+}
+
+console.log('\n3. I QUATTRO BOT FRA LORO  (120 tornei in quattro)\n');
+{
+  const titoli = {}; const st = {};
+  for (const b of Bot.ID_BOT) st[b] = { n: 0, ovr: 0, top: 0, caro: 0, spesi: 0, quinto: 0 };
+  for (let i = 0; i < 120; i++) {
     const r = partita('tutti-' + i, { a: 'ada', b: 'bruno', c: 'cleo', d: 'dino' });
     if (!r) continue;
     const chi = r.s.bots[r.campione];
     titoli[chi] = (titoli[chi] || 0) + 1;
+    // Che rosa hanno costruito. E' la domanda che chiude le discussioni sul
+    // perche uno perde: se compra peggio o se schiera peggio.
+    for (const k of r.inGioco) {
+      const id = r.s.bots[k]; if (!id) continue;
+      const ovr = r.s.teams[k].roster.map((x) => D.byId[x].ovr).sort((a, b) => b - a);
+      const prezzi = (r.s.auction.log || []).filter((v) => v.team === k).map((v) => v.price);
+      const a = st[id];
+      a.n++; a.ovr += ovr.reduce((x, y) => x + y, 0) / ovr.length;
+      a.top += ovr[0]; a.quinto += ovr[ovr.length - 1];
+      a.caro += prezzi.length ? Math.max(...prezzi) : 0;
+      a.spesi += 50 - r.s.teams[k].credits;
+    }
   }
+  console.log('  bot        titoli   ovr medio   il migliore   il quinto   sul piu caro   spesi');
+  console.log('  ' + '-'.repeat(76));
   for (const b of Bot.ID_BOT) {
-    const n = titoli[b] || 0;
-    console.log(`  ${Bot.BOT[b].nome.padEnd(8)} ${String(n).padStart(2)} titoli  ${'#'.repeat(n)}`);
+    const a = st[b]; const n = a.n || 1;
+    console.log(`  ${Bot.BOT[b].nome.padEnd(9)} ${String(titoli[b] || 0).padStart(4)}`
+      + `   ${(a.ovr / n).toFixed(1).padStart(9)}   ${(a.top / n).toFixed(1).padStart(11)}`
+      + `   ${(a.quinto / n).toFixed(1).padStart(9)}   ${(a.caro / n).toFixed(0).padStart(12)}`
+      + `   ${(a.spesi / n).toFixed(0).padStart(5)}`);
   }
-  console.log('\n  Con quattro squadre la quota equa e 15.');
+  console.log('\n  Con quattro squadre la quota equa e 30 titoli.');
+}
+
+/* ==========================================================
+   4. Quanto costano al telefono di chi ospita
+   ==========================================================
+
+   Misura nuova, e serve da quando calcolano tutti e quattro. I bot li guida
+   un device solo: se il conto di un tetto dura mezzo secondo, con quattro bot
+   ogni lotto l'asta va a scatti su chi ospita e su nessun altro — un difetto
+   che nessuna partita di prova farebbe vedere, perche i test non hanno una
+   interfaccia da ridisegnare. */
+console.log('\n4. QUANTO CI METTONO A PENSARE\n');
+{
+  let s = S.newGame('tempi', 'host');
+  for (const b of Bot.ID_BOT) s = S.aggiungiBot(s, b);
+  const keys = S.attive(s);
+  s = S.startAuction(s, tick(), keys);
+
+  const pid = S.currentPlayerId(s);
+  let t0 = performance.now();
+  for (const k of keys) Bot.BOT[s.bots[k]].tetto(s, k, pid, S);
+  const perLotto = performance.now() - t0;
+
+  // Una rosa piena per ognuno, per misurare la scelta della tattica.
+  const memoria = {};
+  let g = 0;
+  while (s.phase === 'auction' && g++ < 4000) {
+    let momento = clock, fermiDa = 0;
+    for (let giro = 0; giro < 30 && fermiDa < 6; giro++) {
+      momento += 700;
+      let mosso = false;
+      for (const k of keys) {
+        const q = Bot.offerta(s, k, S, momento, memoria);
+        if (q != null && S.canBid(s, k, q)) { s = S.placeBid(s, k, q, tick()); mosso = true; }
+      }
+      fermiDa = mosso ? 0 : fermiDa + 1;
+    }
+    clock = momento;
+    s = S.resolveLot(s, tick());
+  }
+
+  t0 = performance.now();
+  for (const k of keys) Bot.tatticaBot(s, k, S);
+  const perTattica = performance.now() - t0;
+
+  console.log(`  tutti e quattro decidono un'offerta:  ${perLotto.toFixed(0)} ms`);
+  console.log(`  tutti e quattro scelgono la tattica:  ${perTattica.toFixed(0)} ms`);
+  console.log('\n  Il primo si paga a ogni lotto, una ventina di volte: sopra i 400 ms');
+  console.log('  l\'asta va a scatti per chi ospita. Il secondo si paga una volta sola,');
+  console.log('  su una schermata dove si sta gia leggendo: li ci sta fino a due secondi.');
+  console.log('  Un telefono e circa quattro volte piu lento di questa macchina.');
+  if (perLotto > 400) male('offerte troppo lente', `${perLotto.toFixed(0)} ms per lotto`);
+  if (perTattica > 2000) male('scelta tattica troppo lenta', `${perTattica.toFixed(0)} ms`);
 }
 
 console.log(fails === 0 ? '\nTutto in regola.\n' : `\n${fails} PROBLEMI.\n`);

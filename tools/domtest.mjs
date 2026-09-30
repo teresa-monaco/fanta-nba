@@ -508,20 +508,39 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
     // SCEGLIEREBBE, che e diversa dal valore di partenza.
     const atteso = BotAI.tatticaBot(F.state, k, S);
     ok(!!atteso, 'il bot sa cosa scegliere');
-    const diDefault = { strategy: 'equilibrato', ritmo: 'medio' };
-    const sceltaVera = atteso.tac.strategy !== diDefault.strategy || atteso.tac.ritmo !== diDefault.ritmo;
+    // SI CONFRONTANO TUTTI I CAMPI, non solo strategia e ritmo. Guardandone
+    // due soli il controllo si e rivelato cieco: il giorno in cui il conto del
+    // bot ha dato davvero equilibrato/medio — cioe proprio i valori che
+    // toSquadra mette di partenza — passava anche a bot spenti. Provato
+    // disattivando guidaBot: verde lo stesso. Allenatore e quintetto no: li il
+    // bot cerca a lungo e finisce quasi sempre altrove.
+    //
+    // I valori di partenza si leggono da `s`, lo stato PRIMA di darlo all'app:
+    // in F.state il bot potrebbe gia essersi mosso, e sarebbe un confronto con
+    // se stesso.
+    const p = s.tactics[k];
+    const luP = s.lineups[k];
+    const cambi = (t, lu) => (!t ? [] : [
+      t.strategy !== p.strategy && 'strategia', t.ritmo !== p.ritmo && 'ritmo',
+      t.coach !== p.coach && 'allenatore', (t.v1 !== p.v1 || t.v2 !== p.v2) && 'violini',
+      lu && SLOTS_D.some((sl) => lu[sl] !== luP[sl]) && 'quintetto',
+    ].filter(Boolean));
+    const sceltaVera = cambi(atteso.tac, atteso.lu).length > 0;
+    const uguale = (t, lu) => !!t && t.strategy === atteso.tac.strategy && t.ritmo === atteso.tac.ritmo
+      && t.coach === atteso.tac.coach && t.v1 === atteso.tac.v1 && t.v2 === atteso.tac.v2
+      && !!lu && SLOTS_D.every((sl) => lu[sl] === atteso.lu[sl]);
 
     for (let i = 0; i < 20; i++) {
-      const t = F.state.tactics[k];
-      if (t?.strategy === atteso.tac.strategy && t?.ritmo === atteso.tac.ritmo) break;
+      if (uguale(F.state.tactics[k], F.state.lineups[k])) break;
       await new Promise((r) => setTimeout(r, 60));
     }
     const t = F.state.tactics[k];
-    ok(t?.strategy === atteso.tac.strategy && t?.ritmo === atteso.tac.ritmo,
+    ok(uguale(t, F.state.lineups[k]),
       'l\'app muove il bot: la tattica applicata e quella che il bot ha scelto',
-      `nello stato ${t?.strategy}/${t?.ritmo}, il bot voleva ${atteso.tac.strategy}/${atteso.tac.ritmo}`);
-    ok(sceltaVera, 'e non e il valore di partenza, altrimenti il controllo non proverebbe niente',
-      `${atteso.tac.strategy} · ${atteso.tac.ritmo}`);
+      `il bot ha cambiato ${cambi(atteso.tac, atteso.lu).join(', ') || 'niente'},`
+      + ` nello stato risulta cambiato ${cambi(t, F.state.lineups[k]).join(', ') || 'niente'}`);
+    ok(sceltaVera, 'e non e quella di partenza, altrimenti il controllo non proverebbe niente',
+      `il bot ha scelto ${atteso.tac.strategy} · ${atteso.tac.ritmo}, in partenza c'era ${p.strategy} · ${p.ritmo}`);
     ok(SLOTS_D.every((sl) => F.state.lineups[k][sl]), 'e schiera un quintetto completo');
   }
 

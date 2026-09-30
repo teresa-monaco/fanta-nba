@@ -128,11 +128,16 @@ export function leaveSeat(s, uid) {
 // Un bot e una sedia occupata da nessuno. Serve quando siete in tre e volete
 // giocare in quattro: se ne aggiunge uno e il tabellone torna pari. Li guida
 // chi ospita, come gia fa per la chiusura dei lotti.
-export function aggiungiBot(s) {
+// `chiedi` serve solo alle misure: in partita non lo passa nessuno e il bot lo
+// sceglie la rotazione. Senza, l'arena non poteva mettere Ada contro Bruno —
+// chiedeva Ada e si sedeva chi capitava, e le quattro righe della tabella
+// finivano per misurare tutte la stessa cosa.
+export function aggiungiBot(s, chiedi) {
   if (s.phase !== 'lobby') return undefined;
   const libera = TEAM_KEYS.find((k) => !Object.values(s.seats).includes(k));
   if (!libera) return undefined;
-  const quale = prossimoBot(s);
+  const presi = Object.values(s.bots || {});
+  const quale = (chiedi && BOT[chiedi] && !presi.includes(chiedi)) ? chiedi : prossimoBot(s);
   if (!quale) return undefined; // finiti: sono quattro
   const uid = uidBot(libera);
   return {
