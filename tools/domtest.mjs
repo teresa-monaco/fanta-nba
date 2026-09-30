@@ -287,13 +287,16 @@ const tab = componiTabellone(T, F.state.seed);
 ok(tab.serie.join(',') === '2,1', 'con quattro squadre: due semifinali e una finale');
 await F.session.apply((s) => S.toPlayoffs(s, tab));
 ok(clean() && has('Playoff', 'Semifinale 1', 'Semifinale 2'), 'il tabellone si disegna');
-ok(has('Vai — le prime due gare'), 'le semifinali partono a due gare per volta');
-ok(!has('Vai — Gara'), 'in semifinale non si va una gara alla volta: quello e riservato alle Finals');
+// Una gara per volta in TUTTI i turni. Prima i turni prima della finale ne
+// scoprivano due: con il punteggio che si anima diventavano due punteggi che
+// salgono insieme, per due serie aperte, e non se ne seguiva nessuno.
+ok(has('Vai — Gara 1'), 'anche le semifinali vanno una gara alla volta');
+ok(!has('le prime due gare'), 'e non c\'e piu il passo doppio da nessuna parte');
 
-// Semifinali: due gare a tocco, finché entrambe non sono chiuse.
-for (let i = 0; i < 5; i++) {
-  await F.session.apply((s) => S.advanceSeries(s, 0, 0, S.PASSO_SEMI));
-  await F.session.apply((s) => S.advanceSeries(s, 0, 1, S.PASSO_SEMI));
+// Sette tocchi bastano a chiudere qualunque serie al meglio delle sette.
+for (let i = 0; i < 7; i++) {
+  await F.session.apply((s) => S.advanceSeries(s, 0, 0, S.PASSO_GARA));
+  await F.session.apply((s) => S.advanceSeries(s, 0, 1, S.PASSO_GARA));
 }
 ok(clean() && has('Gara 1', 'MVP della serie', 'Perché ha vinto'), 'le semifinali mostrano gare, MVP e spiegazione');
 // Le gare gia lette si richiudono: aperte tutte, chi guarda senza toccare
@@ -309,7 +312,7 @@ ok(has('Finale') && has('Vai — Gara 1'), 'la finale si apre da sola quando le 
 // Una gara alla volta, come chiedono le regole.
 let steps = 0, sawStop = false;
 while (steps++ < 8) {
-  await F.session.apply((s) => S.advanceSeries(s, 1, 0, S.PASSO_FINALE));
+  await F.session.apply((s) => S.advanceSeries(s, 1, 0, S.PASSO_GARA));
   if (html().includes('Campione')) { sawStop = true; break; }
 }
 ok(sawStop, 'la finale si chiude e proclama il campione', `${steps} gare`);
@@ -331,7 +334,7 @@ ok(has('finale 3°/4° posto'), 'viene proposta la finalina fra le due eliminate
   const turni = costruisciBracket(F.state.po, T);
   const perdenti = turni[0].map((m) => (m.res.winner === m.a ? m.b : m.a));
   await F.session.apply((s) => S.openThird(s, perdenti[0], perdenti[1]));
-  for (let i = 0; i < 5; i++) await F.session.apply((s) => S.advanceThird(s, S.PASSO_SEMI));
+  for (let i = 0; i < 5; i++) await F.session.apply((s) => S.advanceThird(s, S.PASSO_GARA));
   ok(clean() && has('Finale 3° / 4° posto'), 'la finalina si simula');
 }
 

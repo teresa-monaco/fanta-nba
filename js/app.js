@@ -334,8 +334,7 @@ document.addEventListener('click', async (ev) => {
   // si indirizza con la posizione invece che con un nome fisso.
   if (act.startsWith('avanza:')) {
     const [, r, i] = act.split(':').map(Number);
-    const ultimo = r === (state.po?.turni?.length ?? 1) - 1;
-    await session.apply((s) => S.advanceSeries(s, r, i, ultimo ? S.PASSO_FINALE : S.PASSO_SEMI));
+    await session.apply((s) => S.advanceSeries(s, r, i, S.PASSO_GARA));
     return;
   }
 
@@ -565,7 +564,7 @@ document.addEventListener('click', async (ev) => {
       }
 
       case 'avanza-third':
-        await session.apply((s) => S.advanceThird(s, S.PASSO_SEMI));
+        await session.apply((s) => S.advanceThird(s, S.PASSO_GARA));
         break;
 
       // Il tabellone ha un numero variabile di turni: la serie si identifica

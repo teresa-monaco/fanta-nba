@@ -197,7 +197,7 @@ function playFullGame(seed, quante = 4, conStagione = false) {
   const totTurni = s.po.turni.length;
   let ultimo = null;
   for (let r = 0; r < totTurni; r++) {
-    const passo = r === totTurni - 1 ? S.PASSO_FINALE : S.PASSO_SEMI;
+    const passo = S.PASSO_GARA;
     for (let i = 0; i < s.po.turni[r].length; i++) {
       let res = null;
       for (let k = 0; k < 10; k++) {

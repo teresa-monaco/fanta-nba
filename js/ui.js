@@ -739,7 +739,7 @@ function viewPlayoffs({ state: s, session }) {
   let campione = null;
   for (let r = 0; r < tot; r++) {
     const ultimo = r === tot - 1;
-    const passo = ultimo ? S.PASSO_FINALE : S.PASSO_SEMI;
+    const passo = S.PASSO_GARA;
     const nome = nomeTurno(r, tot, conTeste);
     const round = turni[r];
 
@@ -768,7 +768,7 @@ function viewPlayoffs({ state: s, session }) {
     if (semi && semi.length === 2) {
       if (po.third) {
         const t3 = simSeriesUpTo(T[po.third.a], T[po.third.b], po.third.seed, po.third.gamesPlayed);
-        out += serieCard('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], t3, po.third, S.PASSO_SEMI, isHost, 'avanza-third');
+        out += serieCard('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], t3, po.third, S.PASSO_GARA, isHost, 'avanza-third');
       } else if (isHost) {
         out += `<button class="wide ghost" data-act="open-third">Giocare anche la finale 3°/4° posto?</button>`;
       }
@@ -830,12 +830,15 @@ function serieCard(titolo, A, B, f, meta, passo, isHost, act) {
       <div class="vs muted">in attesa del turno precedente</div></div></div></div>`;
   }
   const n = meta.gamesPlayed;
+  // Il ramo a due gare non serve piu da quando si scopre una gara alla volta,
+  // ma l'etichetta resta costruita sul passo: se un domani si torna indietro
+  // non bisogna ricordarsi anche di questa riga.
   const etichetta = passo === 1
     ? `Vai — Gara ${n + 1}`
     : (n === 0 ? 'Vai — le prime due gare' : `Vai — Gare ${n + 1} e ${n + 2}`);
 
-  // Restano aperte le gare dell'ultimo giro (due in semifinale, una nelle
-  // Finals): quelle appena scoperte. Le precedenti si richiudono a una riga.
+  // Resta aperta solo l'ultima gara scoperta, quella appena giocata. Le
+  // precedenti si richiudono a una riga, o la pagina cresce sotto le dita.
   const daAprire = f.done ? 1 : passo;
   const games = f.games.map((g, i) =>
     gameBlock(A, B, g, i >= f.games.length - daAprire,

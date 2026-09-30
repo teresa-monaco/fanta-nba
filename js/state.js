@@ -532,11 +532,14 @@ export function giocaStagione(s, giri) {
 
 /* ---------- Playoff ---------- */
 
-// Ogni serie si scopre un pezzo alla volta. Le semifinali vanno a due gare per
-// volta, le Finals a una: cosi la tensione sale invece di restare piatta, e il
-// momento piu importante della serata e anche il piu lento.
-export const PASSO_SEMI = 2;
-export const PASSO_FINALE = 1;
+// Ogni serie si scopre una gara alla volta, in tutti i turni.
+//
+// I turni prima della finale andavano a due gare per volta, per non far durare
+// troppo la serata. Con il punteggio che si anima non regge piu: due gare
+// insieme vogliono dire due punteggi che salgono nello stesso momento, e in
+// semifinale le serie aperte sono due — quattro animazioni a schermo e nessuna
+// che si riesce a seguire. Meglio una gara sola e la si guarda davvero.
+export const PASSO_GARA = 1;
 
 // Nello stato finiscono solo l'ordine sorteggiato e, per ogni serie, quante
 // gare sono state scoperte. CHI gioca contro chi dal secondo turno in poi non

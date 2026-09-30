@@ -159,7 +159,7 @@ function partita(seed, chi) {
   s = S.toPlayoffs(s, tab);
   for (let r = 0; r < s.po.turni.length; r++) {
     for (let i = 0; i < s.po.turni[r].length; i++) {
-      for (let x = 0; x < 10; x++) s = S.advanceSeries(s, r, i, S.PASSO_SEMI);
+      for (let x = 0; x < 10; x++) s = S.advanceSeries(s, r, i, S.PASSO_GARA);
     }
   }
   const bracket = E.costruisciBracket(s.po, T);

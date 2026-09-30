@@ -87,7 +87,7 @@ function partitaFinoA(quante, fase, seed = 'bug') {
   for (let r = 0; r < s.po.turni.length; r++) {
     for (let i = 0; i < s.po.turni[r].length; i++) {
       for (let k = 0; k < 10; k++) {
-        s = S.advanceSeries(s, r, i, r === s.po.turni.length - 1 ? S.PASSO_FINALE : S.PASSO_SEMI);
+        s = S.advanceSeries(s, r, i, S.PASSO_GARA);
         if (costruisciBracket(s.po, T)[r][i].res?.done) break;
       }
     }

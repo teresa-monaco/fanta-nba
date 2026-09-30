@@ -114,7 +114,7 @@ const cattura = (titolo, nota, s, uid) => {
   const T = {};
   for (const k of S.attive(s)) T[k] = buildTeam(k, s.lineups[k], s.tactics[k]);
   s = S.toPlayoffs(s, componiTabellone(T, s.seed));
-  for (let i = 0; i < 3; i++) { s = S.advanceSeries(s, 0, 0, S.PASSO_SEMI); s = S.advanceSeries(s, 0, 1, S.PASSO_SEMI); }
+  for (let i = 0; i < 3; i++) { s = S.advanceSeries(s, 0, 0, S.PASSO_GARA); s = S.advanceSeries(s, 0, 1, S.PASSO_GARA); }
   cattura('Playoff in corso', 'Le gare gia lette si richiudono a una riga: la pagina non scappa piu in basso.', s, 'host');
 }
 
@@ -126,7 +126,7 @@ const cattura = (titolo, nota, s, uid) => {
   s = S.toPlayoffs(s, componiTabellone(T, s.seed));
   for (let r = 0; r < s.po.turni.length; r++) {
     for (let i = 0; i < s.po.turni[r].length; i++) {
-      for (let x = 0; x < 10; x++) s = S.advanceSeries(s, r, i, S.PASSO_SEMI);
+      for (let x = 0; x < 10; x++) s = S.advanceSeries(s, r, i, S.PASSO_GARA);
     }
   }
   cattura('Serie chiusa', 'MVP, perche ha vinto, e sotto il referto tattico (aperto qui per farlo vedere).', s, 'host');
