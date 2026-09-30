@@ -406,6 +406,42 @@ console.log('\n3b. COME SALE IL PREZZO IN UN LOTTO CONTESO\n');
    per saltare lo stesso giocatore. Erano due decisioni prese in due posti
    diversi che si contraddicevano, ed era sfruttabile: bastava lasciarglielo
    a 1 e si ritrovava in rosa uno che aveva appena dichiarato di non volere. */
+/* ==========================================================
+   3d. Chi si siede non e sempre lo stesso
+   ==========================================================
+
+   L'ordine era legato al seme della partita: dentro una stanza il seme non
+   cambia mai, quindi rigiocando con lo stesso codice usciva sempre lo stesso
+   avversario. In tre, con un bot solo, voleva dire la stessa testa ogni
+   volta. Si prova aggiungendo UN bot a duecento partite con lo STESSO seme:
+   se fosse ancora legato al seme uscirebbe duecento volte lo stesso. */
+console.log('\n3d. CHI SI SIEDE NON E SEMPRE LO STESSO\n');
+{
+  const conta = {};
+  for (let i = 0; i < 200; i++) {
+    let s = S.newGame('stanza-fissa', 'host');
+    s = S.joinGame(s, 'u1', 'Diego');
+    s = S.joinGame(s, 'u2', 'Teresa');
+    s = S.joinGame(s, 'u3', 'Fabio');
+    s = S.aggiungiBot(s);
+    const b = Object.values(s.bots)[0];
+    conta[b] = (conta[b] || 0) + 1;
+  }
+  const visti = Object.keys(conta).length;
+  const max = Math.max(...Object.values(conta));
+  console.log('  ' + Bot.ID_BOT.map((b) => `${Bot.BOT[b].nome} ${conta[b] || 0}`).join('  ·  '));
+  ok(visti === Bot.ID_BOT.length, 'con lo stesso codice stanza escono comunque tutti e quattro',
+    `${visti} bot diversi in 200 partite`);
+  ok(max < 90, 'e nessuno si siede quasi sempre', `il piu frequente ${max}/200`);
+
+  // Aggiungendone quattro devono essere quattro diversi, non quattro copie.
+  let s4 = S.newGame('quattro', 'host');
+  for (let i = 0; i < 4; i++) s4 = S.aggiungiBot(s4) || s4;
+  const dentro = Object.values(s4.bots || {});
+  ok(new Set(dentro).size === 4, 'e aggiungendone quattro sono quattro teste diverse', dentro.join(', '));
+  ok(S.aggiungiBot(s4) === undefined, 'il quinto non esiste: sono quattro');
+}
+
 console.log('\n3c. NESSUN BOT OFFRE PER UN GIOCATORE CHE VUOLE SALTARE\n');
 {
   let s = S.newGame('coerenza', 'host');

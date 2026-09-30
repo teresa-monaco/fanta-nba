@@ -146,12 +146,12 @@ export function leaveSeat(s, uid) {
 // sceglie la rotazione. Senza, l'arena non poteva mettere Ada contro Bruno —
 // chiedeva Ada e si sedeva chi capitava, e le quattro righe della tabella
 // finivano per misurare tutte la stessa cosa.
-export function aggiungiBot(s, chiedi) {
+export function aggiungiBot(s, chiedi, rnd) {
   if (s.phase !== 'lobby') return undefined;
   const libera = TEAM_KEYS.find((k) => !Object.values(s.seats).includes(k));
   if (!libera) return undefined;
   const presi = Object.values(s.bots || {});
-  const quale = (chiedi && BOT[chiedi] && !presi.includes(chiedi)) ? chiedi : prossimoBot(s);
+  const quale = (chiedi && BOT[chiedi] && !presi.includes(chiedi)) ? chiedi : prossimoBot(s, rnd);
   if (!quale) return undefined; // finiti: sono quattro
   const uid = uidBot(libera);
   return {

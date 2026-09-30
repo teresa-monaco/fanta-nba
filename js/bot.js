@@ -12,7 +12,7 @@
 // SONO QUATTRO E DIVERSI. Non per fare scena: quattro copie dello stesso bot
 // ottimo renderebbero ogni asta identica. Uno solo gioca bene davvero.
 
-import { db, allenatoriDi, makeRng, hashStr, SLOTS, STRATEGIES, ROSTER_SIZE } from './core.js';
+import { db, allenatoriDi, hashStr, SLOTS, STRATEGIES, ROSTER_SIZE } from './core.js';
 import { buildTeam, matchup, RITMI } from './engine.js';
 
 /* ==========================================================
@@ -317,17 +317,23 @@ export const ID_BOT = Object.keys(BOT);
 export const uidBot = (k) => `bot:${k}`;
 export const eBot = (uid) => String(uid || '').startsWith('bot:');
 
-// Quale bot tocca adesso: ruotano, e l'ordine dipende dal seed della partita,
-// cosi due serate di fila non hanno gli stessi avversari.
-export function prossimoBot(st) {
+// Quale bot si siede adesso: uno a caso fra quelli ancora liberi.
+//
+// L'ORDINE ERA LEGATO AL SEME DELLA PARTITA, e sembrava abbastanza. Non lo
+// era: dentro una stanza il seme non cambia mai, quindi chi rigioca sempre
+// nello stesso codice si ritrovava sempre lo stesso avversario. In tre, con
+// un bot solo aggiunto, voleva dire giocare ogni volta contro la stessa
+// testa.
+//
+// Il caso qui e lecito perche il risultato si SALVA nello stato: non viene
+// ricalcolato da nessuna parte, quindi non tocca la regola per cui la
+// partita si rigioca identica dal seme. `rnd` serve solo ai test.
+export function prossimoBot(st, rnd) {
   const usati = new Set(Object.values(st.bots || {}));
-  const rng = makeRng(`${st.seed}:bot`);
-  const ordine = ID_BOT.slice();
-  for (let i = ordine.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [ordine[i], ordine[j]] = [ordine[j], ordine[i]];
-  }
-  return ordine.find((b) => !usati.has(b)) || null;
+  const liberi = ID_BOT.filter((b) => !usati.has(b));
+  if (!liberi.length) return null;   // finiti: sono quattro
+  const r = typeof rnd === 'function' ? rnd() : Math.random();
+  return liberi[Math.min(liberi.length - 1, Math.floor(r * liberi.length))];
 }
 
 /* ==========================================================
