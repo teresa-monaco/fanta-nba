@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0c0d11">
+  <title>Fanta NBA — tre home a confronto</title>
+
+  <!-- Gli stessi font e lo stesso foglio di stile del gioco: e' l'unico modo
+       per giudicare davvero. Un mockup con altri font direbbe un'altra cosa. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="./css/style.css">
+
+  <style>
+    /* ==========================================================
+       Impalcatura dell'anteprima (non entra nel gioco)
+       ========================================================== */
+    body { padding-bottom: 40px; }
+    .wrap { max-width: 470px; margin: 0 auto; padding: 14px; }
+    .intro { border-left: 3px solid var(--red); padding: 2px 0 2px 12px; margin: 18px 0 26px; }
+    .opt { margin-bottom: 30px; }
+    .opt > .testa {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; margin-bottom: 8px;
+    }
+    .opt > .testa .lettera {
+      font: 800 13px var(--cond); letter-spacing: 2px; text-transform: uppercase;
+      color: var(--gold);
+    }
+    .telefono {
+      border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden;
+      background: var(--bg); box-shadow: 0 10px 30px rgba(0,0,0,.45);
+    }
+    .telefono .finta-topbar {
+      display: flex; align-items: center; gap: 9px;
+      padding: 10px 14px; background: var(--surface);
+      border-bottom: 3px solid var(--red);
+    }
+    .telefono .finta-topbar .brand {
+      font: 800 19px var(--cond); letter-spacing: 2px; text-transform: uppercase;
+    }
+    .telefono .finta-topbar .brand span { color: var(--red); }
+    .schermo { padding: 14px; }
+    .nota { font-size: 12.5px; color: var(--muted); margin-top: 9px; line-height: 1.45; }
+    .nota b { color: var(--muted-2); font-weight: 600; }
+
+    /* ==========================================================
+       A — Lower-third da telecronaca
+       ==========================================================
+       Tutto tipografia e una barra: nessuna immagine da scaricare, quindi
+       nessun peso in piu sul primo caricamento. */
+    .lt { position: relative; padding: 4px 0 4px 15px; margin-bottom: 16px; }
+    .lt::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+      background: var(--red); transform-origin: top;
+      transform: scaleY(0);
+    }
+    .on .lt::before { animation: barra .34s cubic-bezier(.2,.8,.3,1) forwards; }
+    @keyframes barra { to { transform: scaleY(1); } }
+
+    .lt .live {
+      display: inline-flex; align-items: center; gap: 6px;
+      font: 800 11px var(--cond); letter-spacing: 2.4px; text-transform: uppercase;
+      color: var(--muted-2); margin-bottom: 7px;
+      opacity: 0;
+    }
+    .on .lt .live { animation: entra .3s ease-out .30s forwards; }
+    .lt .live i {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--red);
+      display: block;
+    }
+    .on .lt .live i { animation: battito 1.9s ease-in-out .7s infinite; }
+    @keyframes battito {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(224,27,46,.55); }
+      50%      { opacity: .75; box-shadow: 0 0 0 6px rgba(224,27,46,0); }
+    }
+
+    .lt h1 {
+      font-size: 38px; line-height: .98; margin: 0;
+      letter-spacing: 1px;
+      opacity: 0; transform: translateX(-14px);
+    }
+    .on .lt h1 { animation: scorri .42s cubic-bezier(.2,.8,.3,1) .18s forwards; }
+    .lt .sotto {
+      font: 700 12px var(--cond); letter-spacing: 2.6px; text-transform: uppercase;
+      color: var(--muted); margin-top: 7px;
+      opacity: 0; transform: translateX(-10px);
+    }
+    .on .lt .sotto { animation: scorri .42s cubic-bezier(.2,.8,.3,1) .30s forwards; }
+
+    @keyframes scorri { to { opacity: 1; transform: none; } }
+    @keyframes entra  { to { opacity: 1; } }
+
+    /* Le card entrano a cascata: e' quello che fa sembrare la schermata
+       "montata" invece che semplicemente apparsa. */
+    .a-cascata > * { opacity: 0; transform: translateY(9px); }
+    .on .a-cascata > * { animation: sale .34s ease-out forwards; }
+    .on .a-cascata > :nth-child(1) { animation-delay: .40s; }
+    .on .a-cascata > :nth-child(2) { animation-delay: .46s; }
+    .on .a-cascata > :nth-child(3) { animation-delay: .52s; }
+    @keyframes sale { to { opacity: 1; transform: none; } }
+
+    /* ==========================================================
+       B — Tabellone dell'arena
+       ========================================================== */
+    .tab-titolo {
+      font-size: 24px; margin-bottom: 12px; opacity: 0;
+    }
+    .on .tab-titolo { animation: entra .3s ease-out forwards; }
+
+    .tabellone {
+      background: #07080b; border: 1px solid var(--line-2);
+      border-radius: var(--r); padding: 15px 13px 13px; margin-bottom: 16px;
+      position: relative; overflow: hidden;
+    }
+    /* Le righe di scansione del tabellone vero: bassissimo contrasto, si
+       sentono piu che vedersi. */
+    .tabellone::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px);
+    }
+    .tabellone .et {
+      font: 800 10.5px var(--cond); letter-spacing: 3px; text-transform: uppercase;
+      color: var(--gold); opacity: .8; text-align: center; margin-bottom: 10px;
+    }
+    .cifre { display: flex; gap: 7px; justify-content: center; }
+    .cifra {
+      flex: 1; max-width: 62px; aspect-ratio: 3/4;
+      background: #101218; border: 1px solid #2a3040; border-radius: 2px;
+      display: grid; place-items: center;
+      font: 800 34px var(--cond); color: var(--gold);
+      text-shadow: 0 0 14px rgba(255,209,102,.34);
+      opacity: 0; transform: translateY(-8px) scaleY(.72);
+    }
+    .on .cifra { animation: scatta .26s cubic-bezier(.2,.9,.3,1) forwards; }
+    .on .cifra:nth-child(1) { animation-delay: .10s; }
+    .on .cifra:nth-child(2) { animation-delay: .22s; }
+    .on .cifra:nth-child(3) { animation-delay: .34s; }
+    .on .cifra:nth-child(4) { animation-delay: .46s; }
+    @keyframes scatta { to { opacity: 1; transform: none; } }
+
+    .tabellone .sotto-tab {
+      text-align: center; margin-top: 11px;
+      font: 600 11.5px var(--cond); letter-spacing: 1.8px; text-transform: uppercase;
+      color: var(--muted); opacity: 0;
+    }
+    .on .tabellone .sotto-tab { animation: entra .3s ease-out .62s forwards; }
+
+    /* ==========================================================
+       C — Pallina del draft in copertina
+       ========================================================== */
+    .pallina-zona { text-align: center; padding: 10px 0 4px; margin-bottom: 14px; }
+    .pallina {
+      width: 132px; height: 132px; margin: 0 auto 14px; display: block;
+      cursor: pointer;
+    }
+    .on .pallina .gira { animation: giro 9s linear infinite; transform-origin: 66px 66px; }
+    @keyframes giro { to { transform: rotate(360deg); } }
+
+    /* L'apertura: le due mezze sfere si staccano e il nome esce dal mezzo.
+       E' la stessa animazione che poi userebbe ogni lotto dell'asta. */
+    .pallina .meta-su, .pallina .meta-giu { transition: transform .42s cubic-bezier(.3,.9,.3,1); }
+    .aperta .pallina .meta-su  { transform: translateY(-30px); }
+    .aperta .pallina .meta-giu { transform: translateY(30px); }
+    .aperta .pallina .gira { animation-play-state: paused; }
+    .pallina .dentro { opacity: 0; transition: opacity .3s ease-out .16s; }
+    .aperta .pallina .dentro { opacity: 1; }
+
+    .c-titolo { font-size: 30px; opacity: 0; }
+    .on .c-titolo { animation: entra .4s ease-out .1s forwards; }
+    .c-sotto {
+      font: 700 12px var(--cond); letter-spacing: 2.6px; text-transform: uppercase;
+      color: var(--muted); margin-top: 6px; opacity: 0;
+    }
+    .on .c-sotto { animation: entra .4s ease-out .24s forwards; }
+    .tocca {
+      font-size: 12px; color: var(--gold); margin-top: 10px; opacity: 0;
+    }
+    .on .tocca { animation: entra .4s ease-out .5s forwards; }
+    .aperta .tocca { visibility: hidden; }
+
+    /* ==========================================================
+       Chi ha chiesto meno movimento non lo riceve. Vale anche qui:
+       se l'anteprima ignorasse l'impostazione, non starei mostrando
+       quello che poi consegno.
+       ========================================================== */
+    @media (prefers-reduced-motion: reduce) {
+      .on .lt::before, .on .lt .live, .on .lt h1, .on .lt .sotto,
+      .on .a-cascata > *, .on .tab-titolo, .on .cifra,
+      .on .tabellone .sotto-tab, .on .c-titolo, .on .c-sotto, .on .tocca {
+        animation: none !important;
+        opacity: 1 !important; transform: none !important;
+      }
+      .on .pallina .gira { animation: none !important; }
+      .pallina .meta-su, .pallina .meta-giu, .pallina .dentro { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="intro">
+      <h2 style="margin-bottom:6px">Tre home a confronto</h2>
+      <p class="small muted">Font e foglio di stile sono quelli veri del gioco, non un mockup.
+        Tocca <b>Rigioca</b> per rivedere l'entrata. Nella <b>C</b> la pallina si apre al tocco.</p>
+    </div>
+
+    <!-- ============ A ============ -->
+    <section class="opt" id="opt-a">
+      <div class="testa">
+        <span class="lettera">A — Lower-third da telecronaca</span>
+        <button class="sm ghost" data-rigioca="opt-a">Rigioca</button>
+      </div>
+      <div class="telefono">
+        <div class="finta-topbar"><div class="brand">FANTA<span>NBA</span></div></div>
+        <div class="schermo">
+          <div class="lt">
+            <div class="live"><i></i>In diretta</div>
+            <h1>Fanta NBA</h1>
+            <div class="sotto">Asta · Quintetti · Playoff</div>
+          </div>
+          <div class="a-cascata">
+            <div class="card tight">
+              <h3>Codice stanza: <span class="code-pill">DDXD</span></h3>
+              <p class="tiny muted mt">Gli altri aprono lo stesso link e inseriscono questo codice.</p>
+            </div>
+            <div class="card tight">
+              <label class="field"><span>Il tuo nome</span>
+                <input value="Diego" readonly>
+              </label>
+              <button class="primary wide mt">Entra in partita</button>
+            </div>
+            <div class="card tight">
+              <p class="tiny muted mb">In partita (2)</p>
+              <div class="seats">
+                <div class="seat taken" style="--tc:var(--t1)"><div class="nm">Pornland</div><div class="who">Diego</div></div>
+                <div class="seat taken" style="--tc:var(--t2)"><div class="nm">Leuvenia</div><div class="who">Ada</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="nota"><b>Costa zero al caricamento:</b> è solo tipografia e una barra rossa, nessuna
+        immagine da scaricare. L'entrata dura 0,5s in tutto e il pallino rosso continua a battere piano.
+        È la più vicina al CSS che c'è già.</p>
+    </section>
+
+    <!-- ============ B ============ -->
+    <section class="opt" id="opt-b">
+      <div class="testa">
+        <span class="lettera">B — Tabellone dell'arena</span>
+        <button class="sm ghost" data-rigioca="opt-b">Rigioca</button>
+      </div>
+      <div class="telefono">
+        <div class="finta-topbar"><div class="brand">FANTA<span>NBA</span></div></div>
+        <div class="schermo">
+          <h1 class="tab-titolo">Fanta NBA</h1>
+          <div class="tabellone">
+            <div class="et">Codice stanza</div>
+            <div class="cifre">
+              <div class="cifra">D</div><div class="cifra">D</div>
+              <div class="cifra">X</div><div class="cifra">D</div>
+            </div>
+            <div class="sotto-tab">2 squadre dentro · 50 crediti a testa</div>
+          </div>
+          <div class="card tight">
+            <label class="field"><span>Il tuo nome</span>
+              <input value="Diego" readonly>
+            </label>
+            <button class="primary wide mt">Entra in partita</button>
+          </div>
+          <div class="card tight">
+            <p class="tiny muted mb">In partita (2)</p>
+            <div class="seats">
+              <div class="seat taken" style="--tc:var(--t1)"><div class="nm">Pornland</div><div class="who">Diego</div></div>
+              <div class="seat taken" style="--tc:var(--t2)"><div class="nm">Leuvenia</div><div class="who">Ada</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="nota"><b>Sposta il peso sul codice</b> invece che sul titolo: è la cosa che uno deve
+        leggere e dettare agli altri, e qui diventa impossibile sbagliarla. Le quattro cifre si accendono
+        una per volta come un tabellone vero. Costo: un po' di CSS in più, nessun file nuovo.</p>
+    </section>
+
+    <!-- ============ C ============ -->
+    <section class="opt" id="opt-c">
+      <div class="testa">
+        <span class="lettera">C — Pallina del draft in copertina</span>
+        <button class="sm ghost" data-rigioca="opt-c">Rigioca</button>
+      </div>
+      <div class="telefono">
+        <div class="finta-topbar"><div class="brand">FANTA<span>NBA</span></div></div>
+        <div class="schermo">
+          <div class="pallina-zona">
+            <svg class="pallina" viewBox="0 0 132 132" data-apri>
+              <defs>
+                <radialGradient id="cuoio" cx="38%" cy="32%">
+                  <stop offset="0%" stop-color="#f08a3c"/>
+                  <stop offset="62%" stop-color="#d2601c"/>
+                  <stop offset="100%" stop-color="#8a3a0c"/>
+                </radialGradient>
+                <clipPath id="su"><rect x="0" y="0" width="132" height="66"/></clipPath>
+                <clipPath id="giu"><rect x="0" y="66" width="132" height="66"/></clipPath>
+              </defs>
+
+              <!-- Quello che c'e' dentro la pallina: il nome estratto. -->
+              <g class="dentro">
+                <text x="66" y="61" text-anchor="middle"
+                      style="font:800 13px 'Saira Condensed',sans-serif;letter-spacing:2px;fill:#ffd166">SCELTA N.1</text>
+                <text x="66" y="80" text-anchor="middle"
+                      style="font:800 19px 'Saira Condensed',sans-serif;letter-spacing:1px;fill:#fff">LEBRON JAMES</text>
+              </g>
+
+              <g class="gira">
+                <g class="meta-su" clip-path="url(#su)">
+                  <circle cx="66" cy="66" r="52" fill="url(#cuoio)"/>
+                  <circle cx="66" cy="66" r="52" fill="none" stroke="#2a1405" stroke-width="2.5"/>
+                  <path d="M14 66 H118" stroke="#2a1405" stroke-width="2.5" fill="none"/>
+                  <path d="M66 14 V66" stroke="#2a1405" stroke-width="2.5" fill="none"/>
+                  <path d="M30 28 Q66 52 102 28" stroke="#2a1405" stroke-width="2.5" fill="none"/>
+                </g>
+                <g class="meta-giu" clip-path="url(#giu)">
+                  <circle cx="66" cy="66" r="52" fill="url(#cuoio)"/>
+                  <circle cx="66" cy="66" r="52" fill="none" stroke="#2a1405" stroke-width="2.5"/>
+                  <path d="M14 66 H118" stroke="#2a1405" stroke-width="2.5" fill="none"/>
+                  <path d="M66 66 V118" stroke="#2a1405" stroke-width="2.5" fill="none"/>
+                  <path d="M30 104 Q66 80 102 104" stroke="#2a1405" stroke-width="2.5" fill="none"/>
+                </g>
+              </g>
+            </svg>
+            <h1 class="c-titolo">Fanta NBA</h1>
+            <div class="c-sotto">Asta · Quintetti · Playoff</div>
+            <p class="tocca">Tocca la pallina</p>
+          </div>
+          <div class="card tight">
+            <h3>Codice stanza: <span class="code-pill">DDXD</span></h3>
+            <button class="primary wide mt">Entra in partita</button>
+          </div>
+        </div>
+      </div>
+      <p class="nota"><b>Lega la home all'asta con un oggetto solo:</b> questa è esattamente la pallina
+        che poi si aprirà a ogni lotto. In copertina ruota piano. Il rischio è che una cosa che gira
+        sembri un caricamento che non finisce mai — guarda se ti dà quella sensazione.</p>
+    </section>
+
+    <div class="intro" style="border-color:var(--gold)">
+      <p class="small muted">Si possono anche mescolare: per esempio la <b>A</b> per il titolo
+        e il tabellone della <b>B</b> al posto della riga del codice.</p>
+    </div>
+  </div>
+
+  <script>
+    // Riavvia l'animazione togliendo e rimettendo la classe. Il reflow in
+    // mezzo serve: senza, il browser non si accorge che e' cambiata.
+    function gioca(el) {
+      el.classList.remove('on', 'aperta');
+      void el.offsetWidth;
+      el.classList.add('on');
+    }
+    document.querySelectorAll('.opt').forEach(gioca);
+    document.addEventListener('click', (ev) => {
+      const r = ev.target.closest('[data-rigioca]');
+      if (r) { gioca(document.getElementById(r.dataset.rigioca)); return; }
+      const p = ev.target.closest('[data-apri]');
+      if (p) p.closest('.opt').classList.toggle('aperta');
+    });
+  </script>
+</body>
+</html>
