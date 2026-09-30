@@ -139,6 +139,7 @@ function paint() {
   renderTopbar(topbar, ctx);
   render(root, ctx);
   effettiNomi();
+  tornaInCima();
   effettoPallina();
   effettoSuperato();
   tickClock(state);
@@ -149,6 +150,29 @@ function paint() {
   seguiLaPartita();
   tieniIlPosto();
   registraAlbo();
+}
+
+// CAMBIANDO SCHERMATA SI TORNA IN CIMA.
+//
+// Lo schermo nero di due secondi passando ai playoff non era una
+// simulazione lenta — misurata, costa tre millisecondi. Era lo scroll: la
+// schermata delle squadre in quattro e lunghissima, quella dei playoff no, e
+// il browser si tiene la posizione. Ci si ritrovava sotto la fine del
+// contenuto, cioe sul fondo vuoto della pagina, finche non si scorreva su.
+//
+// Solo quando la FASE cambia: a ogni ridisegno strapperebbe via la pagina da
+// sotto le dita mentre la si sta leggendo.
+let faseVista = null;
+
+function tornaInCima() {
+  if (state.phase === faseVista) return;
+  faseVista = state.phase;
+  // Il ripiego chiamava la stessa funzione che era appena fallita, quindi
+  // rilanciava fuori dal catch: una riga di cortesia che poteva far cadere
+  // tutto il disegno. Si controlla prima che esista.
+  if (typeof window.scrollTo !== 'function') return;
+  try { window.scrollTo({ top: 0, behavior: 'auto' }); }
+  catch { try { window.scrollTo(0, 0); } catch { /* vecchi browser: pazienza */ } }
 }
 
 // Scegliere un allenatore ridisegna la schermata, e la striscia tornerebbe
@@ -182,9 +206,12 @@ function seguiLaPartita() {
   if (el?.scrollIntoView) {
     try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch { el.scrollIntoView(); }
   }
-  // Solo i punteggi della gara appena scoperta: e' l'unica dove qualcosa e
-  // cambiato, e farli ripartire tutti sarebbe un tabellone impazzito.
+  // Solo i punteggi della gara appena scoperta, e il tabellone della SUA
+  // serie: sono gli unici dove qualcosa e cambiato. Con due semifinali
+  // aperte, far ripartire anche l'altra sarebbe un tabellone impazzito.
   el?.querySelectorAll?.('[data-pt]').forEach(contaPunteggio);
+  el?.closest?.('.card.serie')?.querySelectorAll('.serie-jumbo [data-pt]')
+    .forEach(contaPunteggio);
 }
 
 // L'albo si scrive da se quando le Finals si chiudono. Il risultato non sta

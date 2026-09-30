@@ -647,10 +647,18 @@ function viewSquadra({ state: s, session }) {
     azione = `<button class="primary wide" data-act="to-playoffs" ${pronte ? '' : 'disabled'}>Componi il tabellone</button>`;
   }
 
+  // IL TASTO STA IN UNA BARRA FISSA, non in fondo alla pagina. Con quattro
+  // squadre le schede sono lunghissime: si leggeva la classifica in cima e
+  // poi bisognava scorrere oltre quattro quintetti, quattro campi e quattro
+  // allenatori per trovare "Ai playoff". Cosi resta sempre sotto il pollice,
+  // come i tasti di rilancio durante l'asta.
   return `
     ${testa}
     ${cards}
-    ${isHost ? azione : '<p class="small muted center">In attesa di chi ospita.</p>'}
+    <div class="azione-spacer"></div>
+    <div class="azione-fissa">
+      ${isHost ? azione : '<p class="small muted center">In attesa di chi ospita.</p>'}
+    </div>
   `;
 }
 
@@ -933,12 +941,34 @@ function serieCard(titolo, A, B, f, meta, passo, isHost, act) {
       ? `<button class="primary wide mt" data-act="${act}">${etichetta}</button>`
       : '<p class="small muted center mt">In attesa di chi ospita.</p>');
 
-  return `<div class="card">
-    <div class="series-hdr mb">
-      <div><div class="tiny muted" style="text-transform:uppercase;letter-spacing:.08em;font-weight:800">${esc(titolo)}</div>
-        <div class="vs">${A.name} <span class="muted">vs</span> ${B.name}</div></div>
-      <div class="score-big">${f.wins.a}-${f.wins.b}</div>
+  // IL TABELLONE DELLA SERIE. Ogni serie ha il suo, cosi con due semifinali
+  // aperte insieme si vedono due tabelloni uno sotto l'altro e ognuno ha il
+  // suo tasto: si gioca una gara per semifinale, senza doverne chiudere una
+  // per passare all'altra.
+  //
+  // In cima c'e l'ultima gara giocata, col punteggio grande. E' li che il
+  // numero sale quando si scopre una gara nuova — gli altri punteggi restano
+  // fermi, o sarebbe un tabellone impazzito.
+  const ultimaG = f.games[f.games.length - 1];
+  const board = `<div class="jumbo serie-jumbo">
+    <div class="tabellina"><span>${esc(titolo)}</span><span>${f.done ? 'chiusa' : `gara ${n} di 7`}</span></div>
+    <div class="punteggio" ${ultimaG ? `data-gara="${f.games.length}"` : ''}>
+      <div class="sq t-${A.key}">
+        <div class="pt ${ultimaG && ultimaG.scoreA > ultimaG.scoreB ? 'vince' : ''}"
+             ${ultimaG ? `data-pt="${ultimaG.scoreA}"` : ''}>${ultimaG ? ultimaG.scoreA : '—'}</div>
+        <div class="nm">${esc(A.name)}</div>
+      </div>
+      <div class="serie-conto">${f.wins.a}<span>-</span>${f.wins.b}</div>
+      <div class="sq t-${B.key}">
+        <div class="pt ${ultimaG && ultimaG.scoreB > ultimaG.scoreA ? 'vince' : ''}"
+             ${ultimaG ? `data-pt="${ultimaG.scoreB}"` : ''}>${ultimaG ? ultimaG.scoreB : '—'}</div>
+        <div class="nm">${esc(B.name)}</div>
+      </div>
     </div>
+  </div>`;
+
+  return `<div class="card serie">
+    ${board}
     <p class="tiny muted mb">${esc(teamIdentity(A))} &nbsp;·&nbsp; ${esc(teamIdentity(B))}</p>
     ${games}
     ${coda}

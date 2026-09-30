@@ -66,6 +66,11 @@ globalThis.document.documentElement = { style: { setProperty(k, v) { cssVars[k] 
 globalThis.innerHeight = 844;
 globalThis.visualViewport = { height: 730, offsetTop: 0, addEventListener() {} };
 globalThis.addEventListener = () => {};
+// Si tiene il conto delle risalite in cima: cambiando schermata la pagina
+// deve tornare su, o passando da una lunga a una corta ci si ritrova sul
+// fondo vuoto — e sembra uno schermo nero.
+let risalite = 0;
+globalThis.scrollTo = () => { risalite++; };
 
 let uncaught = null;
 process.on('unhandledRejection', (e) => { uncaught = e; });
@@ -158,6 +163,10 @@ ok(cssVars['--vv-bottom'] === '114px',
 
 /* 2. Asta */
 const now = () => Date.now();
+// Cambiando fase la pagina torna in cima. Senza, si passa dalla schermata
+// delle squadre (lunghissima in quattro) a una corta tenendo lo scroll, e si
+// resta sul fondo vuoto: e lo "schermo nero" di due secondi.
+const primaDelCambio = risalite;
 // Il tabellone con la pallina del draft, e il voto per saltare attaccato al
 // giocatore invece che in fondo fra i tasti di rilancio.
 const controlliAsta = () => {
@@ -204,6 +213,11 @@ ok(has('data-act="vota-skip"'), 'c\'è il tasto per saltare il giocatore');
 ok(has(`0/${S.attive(F.state).length}`), 'con il conteggio dei voti',
   `0 su ${S.attive(F.state).length}`);
 ok(has(`${S.MAX_SKIP} skip rimasti`), 'e quanti skip restano al tavolo');
+ok(risalite > primaDelCambio, 'cambiando schermata la pagina torna in cima',
+  `${risalite - primaDelCambio} risalite`);
+const dopoAsta = risalite;
+await F.session.apply((s) => ({ ...s }));   // un ridisegno senza cambio di fase
+ok(risalite === dopoAsta, 'ma non a ogni ridisegno: si strapperebbe la pagina da sotto le dita');
 controlliAsta();
 // Il cronometro deve stare ANCHE nella barra fissa: i tasti sono li, e con
 // la pagina scrollata il conto alla rovescia in cima non si vede piu.
@@ -362,6 +376,17 @@ ok((html().match(/class="story"/g) || []).length < (html().match(/class="gname"/
   'e non sono tutte aperte insieme',
   `${(html().match(/class="story"/g) || []).length} cronache su ${(html().match(/class="gname"/g) || []).length} gare`);
 ok(has('Box score'), 'il box score e consultabile');
+// Ogni serie ha il suo tabellone e il suo tasto: con due semifinali aperte
+// se ne vedono due, uno sotto l'altro, e si gioca una gara per semifinale
+// senza doverne chiudere una per passare all'altra.
+{
+  const board = (html().match(/class="jumbo serie-jumbo"/g) || []).length;
+  const tasti = (html().match(/data-act="avanza:0:/g) || []).length;
+  ok(board >= 2, 'ogni semifinale ha il suo tabellone', `${board} tabelloni`);
+  ok(tasti === 2 || html().includes('MVP della serie'),
+    'e il suo tasto, cosi si avanza una gara per semifinale', `${tasti} tasti`);
+  ok(has('class="serie-conto"'), 'il conto della serie sta sul tabellone');
+}
 // Il punteggio sale invece di comparire. Il numero finale deve stare COMUNQUE
 // nel markup: se il javascript non gira, o si e chiesto meno movimento, si
 // deve leggere il risultato e non due zeri.

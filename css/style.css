@@ -610,6 +610,21 @@ details summary {
 .bidbar-spacer { height: calc(124px + var(--vv-bottom, 0px)); }
 .bidbar-spacer.tall { height: calc(190px + var(--vv-bottom, 0px)); }
 
+/* L'azione che chiude una schermata lunga sta anche lei in fondo allo
+   schermo, non in fondo alla pagina. Con quattro squadre la schermata dei
+   quintetti e lunghissima: si leggeva la classifica in cima e poi toccava
+   scorrere oltre quattro quintetti, quattro campi e quattro allenatori per
+   trovare il tasto. */
+.azione-fissa {
+  position: fixed; left: 0; right: 0; bottom: var(--vv-bottom, 0px); z-index: 30;
+  background: var(--surface); border-top: 3px solid var(--red);
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  box-shadow: 0 -10px 26px rgba(0, 0, 0, .5);
+  transition: bottom .12s ease-out;
+}
+.azione-fissa > * { max-width: 700px; margin-left: auto; margin-right: auto; }
+.azione-spacer { height: calc(84px + var(--vv-bottom, 0px)); }
+
 /* Il selettore di squadra: compare solo quando chi ospita ne ha in mano più di
    tre. Scorre in orizzontale, così dodici squadre non alzano la barra. */
 .bidpick {
@@ -815,6 +830,31 @@ details summary {
   font: 800 8.5px var(--cond); letter-spacing: .4px;
   background: var(--gold); color: var(--gold-ink); padding: 1px 3px; border-radius: 2px;
 }
+
+/* ---- il tabellone della serie ----
+   Uno per serie: con due semifinali aperte se ne vedono due, uno sotto
+   l'altro, e ognuno ha il suo tasto. */
+.card.serie { padding: 10px; }
+.serie-jumbo { padding: 8px 9px 10px; margin-bottom: 10px; }
+.serie-jumbo .punteggio {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px;
+  position: relative; z-index: 2;
+}
+.serie-jumbo .sq { text-align: center; min-width: 0; }
+.serie-jumbo .pt {
+  font: 800 38px/1 var(--cond); color: var(--muted-2);
+}
+.serie-jumbo .pt.vince { color: var(--gold); text-shadow: 0 0 18px rgba(255, 209, 102, .32); }
+.serie-jumbo .sq .nm {
+  font: 800 10.5px var(--cond); letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--tc); margin-top: 3px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.serie-conto {
+  font: 800 19px var(--cond); color: #fff; letter-spacing: 1px;
+  background: #0b0e15; border: 1px solid #202737; padding: 5px 9px; white-space: nowrap;
+}
+.serie-conto span { color: var(--muted); margin: 0 1px; }
 
 /* ---- il punteggio che sale ---- */
 .pt.conta { color: var(--gold); }
