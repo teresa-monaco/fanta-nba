@@ -284,8 +284,11 @@ ok(has('class="referto"') && has('Strategia') && has('Ritmo') && has('Allenatore
   'e copre tutte e quattro le scelte misurabili');
 ok(html().indexOf('Perché ha vinto') < html().indexOf('Il referto'),
   'sta dopo la spiegazione, non prima: prima cosa e successo, poi di chi e la colpa');
-ok(!has('>Il referto') || has('punti a partita'),
-  'i numeri sono in punti a partita, non in unita del motore');
+// L'unita va cercata nell'intestazione del referto, che c'e sempre — non
+// nel verdetto, che cambia frase a seconda di come e andata. Cercandola li
+// il test falliva appena il verdetto prendeva un ramo diverso.
+ok(html().includes('unti a partita rispetto a scegliere a caso'),
+  'il referto dichiara l\'unita: punti a partita, non unita del motore');
 ok(has('finale 3°/4° posto'), 'viene proposta la finalina fra le due eliminate');
 {
   const turni = costruisciBracket(F.state.po, T);

@@ -119,8 +119,20 @@ const ATTR_KEYS = ['sco', 'tre', 'pla', 'reb', 'dif', 'dpe', 'atl', 'usg'];
 // OVR_MIN..OVR_MAX mappano su SCALA_MIN..SCALA_MAX: un 85 tiene il 90% del
 // suo profilo, un 100 lo supera dell'8%. Allargare la forbice rende i
 // giocatori scarsi piu scarsi; alzarla tutta gonfia i numeri.
+// La forbice decide QUANTO CONTA L'OVERALL rispetto all'archetipo, ed e la
+// manopola piu importante di tutto il gioco. Era 0.90-1.08, e con quella da
+// 85 a 99 gli attributi salivano di 8 punti in media mentre fra due archetipi
+// allo stesso overall la differenza arrivava a 50: l'archetipo contava sei
+// volte l'overall, e un 92 batteva regolarmente un 99.
+//
+// Allargata a 0.76-1.16 gli intoccabili tornano in cima (9 degli 11 nomi
+// grossi nei primi venti, il peggiore 24esimo invece che 72esimo) e le serie
+// restano plausibili: sweep dal 16% al 20%, sorprese ferme al 24%.
+// Allargarla ancora (0.66-1.22) porterebbe gli sweep al 26% e le sorprese al
+// 17%, cioe un gioco piu prevedibile: non vale il guadagno.
+// Verificabile con: node tools/balance.mjs e node tools/valutazioni.mjs
 const OVR_MIN = 85, OVR_MAX = 100;
-const SCALA_MIN = 0.90, SCALA_MAX = 1.08;
+const SCALA_MIN = 0.76, SCALA_MAX = 1.16;
 
 export function deriveAttrs(p, archetypes) {
   const arc = archetypes[p.arc];

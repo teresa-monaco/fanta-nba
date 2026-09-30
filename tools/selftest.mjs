@@ -265,6 +265,7 @@ console.log('\n2. Distribuzione dei risultati (400 serie)');
 console.log('\n3. Plausibilita delle statistiche individuali');
 {
   let maxPts = 0, maxReb = 0, maxAst = 0, minPts = 999, lines = 0;
+  let rebAlti = 0;
   let starSample = [];
   for (let i = 0; i < 120; i++) {
     const T = randomTeams('stat' + i);
@@ -274,6 +275,7 @@ console.log('\n3. Plausibilita delle statistiche individuali');
         lines++;
         maxPts = Math.max(maxPts, l.pts); minPts = Math.min(minPts, l.pts);
         maxReb = Math.max(maxReb, l.reb); maxAst = Math.max(maxAst, l.ast);
+        if (l.reb > 24) rebAlti++;
       }
       const v1 = T[K2].tactics.v1;
       const line = g.boxA.find((l) => l.id === v1);
@@ -281,7 +283,17 @@ console.log('\n3. Plausibilita delle statistiche individuali');
     }
   }
   ok(maxPts <= 62, 'nessun punteggio individuale assurdo', `massimo ${maxPts} punti`);
-  ok(maxReb <= 27, 'rimbalzi entro limiti umani', `massimo ${maxReb}`);
+  // Qui si gioca senza panchina: i cinque stanno in campo 48 minuti invece di
+  // 34, quindi ogni voce di tabellino sta circa il 40% sopra i numeri veri.
+  // Una partita da 22 rimbalzi reali corrisponde a una da 31 qui.
+  //
+  // Due controlli insieme, perche il massimo da solo non basta: un tetto
+  // generoso lascerebbe passare un'inflazione sistematica, e un tetto stretto
+  // fa fallire il test alla prima coda rara. Il secondo controlla la FREQUENZA,
+  // ed e quello che si accorge se i rimbalzi si gonfiano davvero.
+  ok(maxReb <= 34, 'rimbalzi entro limiti umani', `massimo ${maxReb}`);
+  ok(rebAlti / lines < 0.012, 'le prestazioni da 25+ rimbalzi restano rare',
+    `${rebAlti} su ${lines} (una ogni ${Math.round(lines / Math.max(1, rebAlti))})`);
   ok(maxAst <= 24, 'assist entro limiti umani', `massimo ${maxAst}`);
   ok(minPts >= 2, 'nessun valore negativo');
   const starAvg = starSample.reduce((s, v) => s + v, 0) / starSample.length;

@@ -24,12 +24,12 @@ della partita, così due serate di fila non hanno gli stessi avversari.
 
 | Bot | Come gioca | Forza |
 |---|---|---|
-| **Ada** | calcola quanto vale ogni giocatore *per la sua rosa* e la tattica migliore contro di voi | 75% |
-| **Bruno** | compra i nomi grossi e si innamora delle stelle | 68% |
-| **Cleo** | caccia le occasioni e non paga mai il prezzo pieno | 67% |
-| **Dino** | svuota la cassa sui primi due che gli piacciono | 66% |
+| **Ada** | calcola quanto vale ogni giocatore *per la sua rosa* e la tattica migliore contro di voi | 78% |
+| **Bruno** | compra i nomi grossi e si innamora delle stelle | 77% |
+| **Cleo** | caccia le occasioni e non paga mai il prezzo pieno | 76% |
+| **Dino** | svuota la cassa sui primi due che gli piacciono | 71% |
 
-Le percentuali sono serie vinte contro tre stili di gioco simulati
+Le percentuali sono serie vinte contro quattro stili di gioco simulati
 (`node tools/bot-arena.mjs`). Sono avversari veri, non sacchi da boxe — ma
 quegli stili sono script grossolani, non una persona che gioca bene.
 
@@ -87,9 +87,9 @@ primo violino e toglie 2 a tutti gli altri; Popovich dà +4 in playmaking a tutt
 e ne toglie 5 alla stella. Un bonus senza costo non sarebbe una scelta, sarebbe
 il calcolo di quale numero è più grande.
 
-Le tre scelte pesano in ordine (`node tools/tattica.mjs`): **strategia 3.5
-punti** di vittorie fra la migliore e la peggiore, **ritmo 2.7**, **allenatore
-1.6**. La strategia resta il piatto, il resto è contorno — altrimenti la serata
+Le tre scelte pesano in ordine (`node tools/tattica.mjs`): **strategia 5.7
+punti** di vittorie fra la migliore e la peggiore, **ritmo 4.7**, **allenatore
+4.1**. La strategia resta il piatto, il resto è contorno — altrimenti la serata
 la deciderebbe chi ha pescato il nome giusto all'asta invece di chi ha scelto
 meglio. Nessuna delle tre ha una risposta giusta sempre: il ritmo migliore
 cambia con la rosa (34% lento, 31% medio, 19% veloce, 17% run and gun) e così
@@ -300,6 +300,17 @@ dice *che giocatore è* (un profilo assoluto 0-100 in `data/archetypes.json`),
 l'**overall** dice *quanto è bravo* e scala quel profilo. Un'ancora difensiva
 ha davvero 20 di tiro da 3 e 97 di protezione del ferro; un tiratore ha l'opposto.
 
+> **Quanto conta l'overall.** La forbice `SCALA_MIN`–`SCALA_MAX` in `js/core.js`
+> decide il peso dell'overall rispetto all'archetipo, ed è la manopola più
+> importante del gioco. Era 0.90–1.08: da 85 a 99 gli attributi salivano di 8
+> punti, mentre fra due archetipi allo stesso overall la differenza arriva a 50.
+> L'archetipo contava sei volte l'overall, e un 92 batteva regolarmente un 99 —
+> LeBron risultava 19° per valore, Jordan 52°. Allargata a **0.76–1.16**: LeBron
+> 4°, Jordan 5°, nove degli undici nomi grossi nei primi venti. Il costo è
+> misurato e piccolo: sweep dal 16% al 20%, sorprese ferme al 24%. Allargarla
+> ancora (0.66–1.22) porterebbe gli sweep al 26% e le sorprese al 17%, cioè un
+> gioco più prevedibile — non vale il guadagno.
+
 Se un giocatore ti sembra sbagliato, cambia il suo `ovr` o il suo `arc`. Se
 sbagliata ti sembra un'intera *categoria* di giocatori, correggi il profilo
 dell'archetipo: cambia tutti quelli che lo usano in un colpo solo.
@@ -347,6 +358,7 @@ node tools/audit-gioco.mjs # le scelte che il gioco chiede contano davvero?
 node tools/tattica.mjs     # ritmo e allenatori: contano, e contano il giusto?
 node tools/anteprima.mjs   # le cinque schermate vere in una pagina sola, da guardare
 node tools/bot-arena.mjs   # i bot giocano partite intere: rispettano le regole? quanto valgono?
+node tools/valutazioni.mjs # pagina con cosa pensa il bot dei giocatori, da correggere a occhio
 node tools/bye.mjs         # con tre squadre, quanto vale saltare la semifinale
 node tools/partite.mjs     # gioca migliaia di serie e cerca incoerenze nei testi
 node tools/audit-bug.mjs   # i casi storti: giro dal database, azzeramenti, chi entra ed esce

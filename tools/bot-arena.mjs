@@ -27,10 +27,24 @@ let clock = 1e6;
 const tick = () => (clock += 400);
 
 /* ---------- Gli avversari finti, per il confronto ---------- */
+// Gli ultimi due sono i soli che contano davvero: i primi tre offrono cifre
+// basse, e contro di loro un bot tirchio sembra bravo perche i prezzi restano
+// bassi comunque. E' contro chi PAGA che si vede se un tetto e sbagliato.
 const UMANI = {
   'compra i nomi grossi': (p) => Math.round((p.ovr - 85) * 2.8),
   'spende uguale su tutti': (p, s, k) => (S.slotsLeft(s, k) > 0 ? 9 : 0),
   'prima tira, poi spende': (p, s, k) => (S.slotsLeft(s, k) >= 3 ? 4 : 16),
+  // Chi sa giocare: paga i fuoriclasse una fetta grossa di cassa, perche sa
+  // che in due gli ultimi posti si riempiono con gli avanzi.
+  'paga i fuoriclasse': (p, s, k) => {
+    const left = S.slotsLeft(s, k);
+    if (left <= 0) return 0;
+    const max = S.maxBid(s, k);
+    if (p.ovr >= 95) return Math.round(max * 0.6);
+    if (p.ovr >= 91) return Math.round(max * 0.35);
+    if (p.ovr >= 88) return Math.round(max * 0.18);
+    return left >= 3 ? 2 : Math.round(max * 0.5);
+  },
 };
 
 /* ---------- Una partita intera ---------- */
@@ -153,6 +167,14 @@ function partita(seed, chi) {
   return { campione: finale.res.winner, ruolo, s, inGioco };
 }
 
+// I crediti lasciati in tasca a fine asta. E la spia che alla prima stesura
+// mancava: il bot vinceva abbastanza contro avversari deboli e nessuno si
+// accorgeva che ne spendeva meno della meta.
+function inTasca(r, chi) {
+  const k = r.inGioco.find((x) => (chi === 'bot' ? r.s.bots?.[x] : !r.s.bots?.[x]));
+  return k ? r.s.teams[k].credits : 0;
+}
+
 /* ==========================================================
    1. Un bot arriva in fondo senza rompere niente?
    ========================================================== */
@@ -178,17 +200,17 @@ console.log('\n1. UNA PARTITA INTERA CON I BOT\n');
    ========================================================== */
 console.log('\n2. OGNI BOT CONTRO OGNI STILE  (40 serie per casella, uno contro uno)\n');
 const stili = Object.keys(UMANI);
-console.log('  bot      ' + stili.map((s) => s.slice(0, 13).padStart(15)).join('') + '     media');
+console.log('  bot      ' + stili.map((s) => s.slice(0, 13).padStart(15)).join('') + '     media   in tasca');
 console.log('  ' + '-'.repeat(10 + stili.length * 15 + 10));
 
 for (const b of Bot.ID_BOT) {
-  const celle = []; let somma = 0;
+  const celle = []; let somma = 0, tasca = 0, conta = 0;
   for (const st of stili) {
     let v = 0, n = 0;
     for (let i = 0; i < 40; i++) {
       const r = partita(`${b}-${st}-${i}`, { x: b, y: st });
       if (!r) continue;
-      n++;
+      n++; conta++; tasca += inTasca(r, 'bot');
       if (r.s.bots?.[r.campione]) v++;
     }
     const pc = n ? v / n * 100 : 0;
@@ -196,8 +218,11 @@ for (const b of Bot.ID_BOT) {
     somma += pc;
   }
   const media = somma / stili.length;
-  console.log(`  ${Bot.BOT[b].nome.padEnd(8)} ${celle.join('')}   ${media.toFixed(0).padStart(6)}%`);
+  console.log(`  ${Bot.BOT[b].nome.padEnd(8)} ${celle.join('')}   ${media.toFixed(0).padStart(6)}%`
+    + `   ${(tasca / conta).toFixed(0).padStart(6)}`);
 }
+console.log('\n  L\'ultima colonna sono i crediti rimasti in tasca a fine asta, su 50.');
+console.log('  Sopra i 12 il bot sta giocando con meno budget di quello che ha.');
 
 console.log('\n  Ada e l\'unica che calcola: deve vincere spesso ma non sempre.');
 console.log('  Gli altri tre devono restare intorno alla meta, o non sono avversari');
