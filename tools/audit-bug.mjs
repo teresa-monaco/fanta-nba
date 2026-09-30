@@ -432,5 +432,94 @@ console.log('\nIL NOME SI CAMBIA IN LOBBY\n');
   applicaNomi('fanta-nba');   // si rimette com'era per chi viene dopo
 }
 
+/* ==========================================================
+   Chi ha finito la rosa mentre gli altri comprano ancora
+   ==========================================================
+
+   Scena vista giocando: rosa completa, gli altri ancora in asta, e nessuna
+   visuale dello skip. Le domande sono due. Gli altri restano bloccati ad
+   aspettare un voto che non puo arrivare? E se nessuno offre, il giocatore
+   resta li per sempre? */
+console.log('\nUNA SQUADRA HA FINITO, LE ALTRE NO\n');
+{
+  const tavolo = () => {
+    let s = S.newGame('pieno', 'host');
+    for (let i = 0; i < 4; i++) s = S.joinGame(s, 'u' + i, 'P' + i);
+    s = S.startAuction(s, tick(), S.attive(s));
+    // La prima squadra si riempie comprando a 1 i primi cinque lotti.
+    const io = S.attive(s)[0];
+    for (let i = 0; i < ROSTER_SIZE; i++) {
+      s = S.placeBid(s, io, 1, tick());
+      s = S.resolveLot(s, tick());
+    }
+    return { s, io };
+  };
+
+  const { s: base, io } = tavolo();
+  ok(S.slotsLeft(base, io) === 0, 'la mia rosa e completa', `${base.teams[io].roster.length}/5`);
+  ok(base.phase === 'auction', 'e l\'asta va avanti per gli altri');
+
+  // 1. Il mio voto non serve e non manca: chi ha la rosa piena non puo
+  //    comprare, quindi non ha voce. Se l'avesse, il suo silenzio bloccherebbe
+  //    tutti gli altri per sempre.
+  const votanti = S.puoVotare(base);
+  ok(!votanti.includes(io), 'chi ha finito non ha voto: non potrebbe comprarlo comunque');
+  ok(votanti.length === 3, 'e agli altri basta l\'accordo fra loro tre', `${votanti.length} votanti`);
+
+  let s2 = base;
+  for (const k of votanti) s2 = S.votaSkip(s2, k, tick());
+  ok(s2.auction.idx !== base.auction.idx, 'infatti in tre saltano il giocatore senza aspettarmi');
+
+  // 2. IL PUNTO CHE CONTA. Nessuno offre, il tempo scade: il giocatore deve
+  //    essere assegnato lo stesso, o l'asta si pianta li.
+  let s3 = base;
+  const primaIdx = s3.auction.idx;
+  const primaPid = S.currentPlayerId(s3);
+  s3 = S.resolveLot(s3, tick());
+  ok(s3.auction.idx !== primaIdx, 'a tempo scaduto senza offerte il lotto si chiude lo stesso');
+  const chi = S.attive(s3).find((k) => s3.teams[k].roster.includes(primaPid));
+  ok(!!chi, 'e il giocatore finisce a qualcuno, non nel vuoto',
+    chi ? `assegnato a ${chi}` : 'NESSUNO lo ha preso');
+  ok(chi !== io, 'mai a chi aveva gia la rosa piena');
+
+  // 3. E deve valere anche a skip esauriti, che e quando capita davvero.
+  let s4 = base;
+  for (let giro = 0; giro < S.MAX_SKIP; giro++) {
+    for (const k of S.puoVotare(s4)) s4 = S.votaSkip(s4, k, tick());
+  }
+  ok(S.skipRimasti(s4) === 0, 'finiti i tre skip');
+  const idx4 = s4.auction.idx;
+  const pid4 = S.currentPlayerId(s4);
+  s4 = S.resolveLot(s4, tick());
+  ok(s4.auction.idx !== idx4 && S.attive(s4).some((k) => s4.teams[k].roster.includes(pid4)),
+    'anche a skip finiti il tempo scaduto assegna, non blocca');
+
+  // 3b. IL TEMPO NON DIPENDE DALLA PAGINA. Chi ospita leggeva il residuo dal
+  //     valore di ritorno della funzione che DISEGNA il cronometro, e quella
+  //     vale null quando non trova l'elemento a schermo: un ridisegno storto
+  //     bastava a fermare l'asta per tutti, col tempo a zero e nessuna
+  //     assegnazione. Adesso il residuo si calcola dallo stato e basta.
+  {
+    const t0 = 5_000_000;
+    let sx = S.newGame('tempo', 'host');
+    sx = S.joinGame(sx, 'u1', 'P1');
+    sx = S.joinGame(sx, 'u2', 'P2');
+    sx = S.startAuction(sx, t0, S.attive(sx));
+    ok(S.tempoRimasto(sx, t0) === S.BID_SECONDS * 1000,
+      'a lotto appena aperto resta tutto il tempo', `${S.tempoRimasto(sx, t0)} ms`);
+    ok(S.tempoRimasto(sx, t0 + S.BID_SECONDS * 1000 + 1) === 0, 'e a tempo finito vale zero, non null');
+    ok(S.tempoRimasto(S.pauseAuction(sx, t0 + 1000), t0 + 9000) === null, 'in pausa non scorre');
+    ok(S.tempoRimasto({ auction: { running: false } }, t0) === null, 'e senza asta in corso non esiste');
+  }
+
+  // 4. E l'asta arriva in fondo davvero, senza che nessuno offra piu niente:
+  //    e' la prova che non esiste uno stato da cui non si esce.
+  let s5 = base, giri = 0;
+  while (s5.phase === 'auction' && giri++ < 400) s5 = S.resolveLot(s5, tick());
+  ok(s5.phase === 'squadra', 'senza nessuna offerta l\'asta si chiude comunque', `fase ${s5.phase}`);
+  ok(S.attive(s5).every((k) => s5.teams[k].roster.length === ROSTER_SIZE),
+    'e tutte le rose sono complete');
+}
+
 console.log('\n' + (fails === 0 ? 'Nessun bug trovato.\n' : `${fails} problemi.\n`));
 process.exit(fails === 0 ? 0 : 1);

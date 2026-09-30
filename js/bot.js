@@ -264,18 +264,27 @@ function tettoRagionato(st, k, pid, S, tr) {
   return Math.max(0, Math.min(max, tetto));
 }
 
-// `attesa` e solo il tempo di reazione: entrano scaglionati, o si vedrebbe
-// che sono finti. Non cambia quanto sono bravi.
+// `attesa` e il tempo di reazione, in millisecondi: minimo quando il prezzo
+// e ancora basso, massimo quando si e sul proprio limite.
+//
+// LE QUATTRO FORCHETTE SI SOMIGLIANO DI PROPOSITO. Da quando i bot ci
+// ripensano a ogni rilancio, chi reagisce prima ha piu occasioni di
+// rilanciare dentro gli stessi quindici secondi: il tempo di reazione era
+// diventato un vantaggio competitivo. Misurato con le forchette larghe di
+// prima (Dino 300-1100 contro Cleo 1800-3400), nel torneo a quattro Dino
+// faceva 53 titoli su 120 e Cleo 12, con la quota equa a 30. I riflessi non
+// devono decidere chi vince: le differenze stanno nei prezzi e nelle
+// tattiche. Restano appena diverse solo perche entrino scaglionati.
 function creaBot(id, nome, stile, attesa) {
   const tr = TRATTI[id];
   return { nome, stile, tr, attesa, tetto: (st, k, pid, S) => tettoRagionato(st, k, pid, S, tr) };
 }
 
 export const BOT = {
-  ada: creaBot('ada', 'Ada', 'non sbaglia un prezzo e non si affeziona a nessuno', [900, 2600]),
-  bruno: creaBot('bruno', 'Bruno', 'punta tutto su due fuoriclasse e riempie con gli avanzi', [400, 1500]),
-  cleo: creaBot('cleo', 'Cleo', 'spende poco su tanti e aspetta che finiate i crediti', [1800, 3400]),
-  dino: creaBot('dino', 'Dino', 'svuota la cassa subito, prima che ci pensiate voi', [300, 1100]),
+  ada: creaBot('ada', 'Ada', 'non sbaglia un prezzo e non si affeziona a nessuno', [700, 2400]),
+  bruno: creaBot('bruno', 'Bruno', 'punta tutto su due fuoriclasse e riempie con gli avanzi', [600, 2100]),
+  cleo: creaBot('cleo', 'Cleo', 'spende poco su tanti e aspetta che finiate i crediti', [800, 2600]),
+  dino: creaBot('dino', 'Dino', 'svuota la cassa subito, prima che ci pensiate voi', [550, 2000]),
 };
 
 export const ID_BOT = Object.keys(BOT);
@@ -299,9 +308,53 @@ export function prossimoBot(st) {
    Quanto offre, adesso
    ========================================================== */
 
+// Quanto ci pensa prima di rispondere a questa cifra.
+//
+// SI RIPENSA A OGNI RILANCIO, non una volta per lotto. Prima ogni bot si
+// svegliava una volta sola e da li in poi rilanciava a ogni istante fino al
+// proprio limite: si buttavano tutti dentro nei primi secondi, il prezzo
+// schizzava in un lampo e poi per dieci secondi non succedeva piu niente.
+// Sembravano quattro macchine, perche lo erano.
+//
+// E si rallenta avvicinandosi al proprio limite. Rilanciare da 3 a 4 non
+// costa pensiero; decidere se andare a 28 quando ti fermeresti a 30 si.
+// L'esitazione sul finale e la cosa che rende la salita credibile.
+function pensata(bot, quanto, tetto) {
+  const [min, max] = bot.attesa;
+  const vicino = tetto > 0 ? Math.min(1, quanto / tetto) : 1;
+  const base = min + (max - min) * vicino;
+  return base * (0.55 + Math.random() * 0.9);
+}
+
+// UNA SOLA DECISIONE SUL LOTTO, letta sia da chi offre sia da chi vota.
+//
+// Prima erano due, prese in due posti diversi, e si contraddicevano: con il
+// tetto a 1 il bot offriva 1 (perche 1 >= 1) e insieme votava per saltare
+// (perche il tetto era al minimo). Visto giocando: qualcuno punta nel primo
+// secondo e subito dopo vota skip. Oltre a essere assurdo da guardare e
+// sfruttabile — basta lasciarglielo a 1 e si ritrova in rosa un giocatore
+// che aveva appena dichiarato di non volere.
+//
+// Adesso: se il tetto e al minimo il giocatore non lo vuole, e allora non
+// offre affatto. L'unica eccezione e l'ultimo posto da riempire, dove
+// chiunque e meglio di un buco: li non si salta e si compra.
+function giudizio(st, k, S, memoria, pid) {
+  const bot = BOT[st.bots?.[k]];
+  const m = memoria[k] || (memoria[k] = {});
+  if (m.lotto !== st.auction.idx) {
+    m.lotto = st.auction.idx;
+    // Il tetto si calcola una volta per lotto: per Ada sono un centinaio di
+    // simulazioni, e non cambia mentre si rilancia.
+    m.tetto = bot.tetto(st, k, pid, S);
+    m.visto = -1;
+    m.prossima = 0;
+  }
+  m.salta = m.tetto <= 1 && S.slotsLeft(st, k) > 1;
+  return m;
+}
+
 // Ritorna l'importo da offrire, o null se questo bot per ora sta fermo.
-// `momento` e un timestamp locale di chi ospita: serve solo a non farli
-// rilanciare tutti nello stesso istante, cosa che si vedrebbe subito.
+// `momento` e un timestamp locale di chi ospita.
 export function offerta(st, k, S, momento, memoria) {
   const bot = BOT[st.bots?.[k]];
   if (!bot || st.phase !== 'auction') return null;
@@ -314,18 +367,18 @@ export function offerta(st, k, S, momento, memoria) {
   if (cur && cur.team === k) return null;          // non si rilancia su se stessi
   const minimo = cur ? cur.amount + 1 : 1;
 
-  // Il tetto si calcola una volta per lotto: per Ada sono un centinaio di
-  // simulazioni, e non cambia mentre si rilancia.
-  const m = memoria[k] || (memoria[k] = {});
-  if (m.lotto !== a.idx) {
-    m.lotto = a.idx;
-    m.tetto = bot.tetto(st, k, pid, S);
-    // Ogni bot ha il suo tempo di reazione: entrano scaglionati.
-    const [min, max] = bot.attesa;
-    m.sveglia = momento + min + Math.random() * (max - min);
-  }
-  if (momento < m.sveglia) return null;
+  const m = giudizio(st, k, S, memoria, pid);
+  if (m.salta) return null;                        // non lo vuole: non ci prova nemmeno
   if (m.tetto < minimo) return null;
+
+  // Il prezzo si e mosso: si ricomincia a pensare da capo. Vale anche per il
+  // primo sguardo al lotto, dove il prezzo passa da -1 a 0.
+  const prezzo = cur ? cur.amount : 0;
+  if (m.visto !== prezzo) {
+    m.visto = prezzo;
+    m.prossima = momento + pensata(bot, minimo, m.tetto);
+  }
+  if (momento < m.prossima) return null;
   return S.canBid(st, k, minimo) ? minimo : null;
 }
 
@@ -343,11 +396,9 @@ export function vuoleSaltare(st, k, S, memoria) {
   if (!pid) return false;
   // Se sta gia conducendo lui, evidentemente lo vuole.
   if (a.bid?.team === k) return false;
-  const m = memoria[k] || (memoria[k] = {});
-  const tetto = m.lotto === a.idx ? m.tetto : bot.tetto(st, k, pid, S);
-  // Con l'ultimo posto da riempire non si salta: meglio chiunque di un buco.
-  if (S.slotsLeft(st, k) === 1) return false;
-  return tetto <= 1;
+  // La stessa decisione che usa offerta(): o si vuole il giocatore, o si
+  // vota per saltarlo. Mai tutte e due.
+  return giudizio(st, k, S, memoria, pid).salta;
 }
 
 /* ==========================================================

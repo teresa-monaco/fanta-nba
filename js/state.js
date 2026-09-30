@@ -359,6 +359,22 @@ export function assegnaDufficio(s, now) {
   return award(s, pid, scelto, 1, now);
 }
 
+// Quanto manca alla chiusura del lotto, in millisecondi. null quando non c'e
+// un cronometro in corso.
+//
+// STA QUI, NON NELL'INTERFACCIA. Prima chi ospita leggeva il tempo residuo
+// dal valore di ritorno di tickClock(), che disegna il cronometro a schermo —
+// e tickClock restituisce null quando non trova l'elemento da aggiornare.
+// Voleva dire che la chiusura automatica del lotto dipendeva da un pezzo di
+// pagina: bastava un ridisegno andato storto e l'asta si fermava in silenzio
+// per tutti, col cronometro a zero e il giocatore mai assegnato. Il tempo e
+// un fatto dello stato, non del DOM.
+export function tempoRimasto(s, now) {
+  const a = s?.auction;
+  if (!a?.running || a.paused || !a.deadline) return null;
+  return Math.max(0, a.deadline - now);
+}
+
 // Chiamata dal banditore quando il cronometro e scaduto.
 export function resolveLot(s, now) {
   const pid = currentPlayerId(s);

@@ -261,7 +261,13 @@ function startClock() {
     guidaBot();
 
     if (!state || state.phase !== 'auction') { ultimoTic = null; return; }
-    const left = tickClock(state);
+
+    // Il tempo si legge dallo STATO, il disegno e un'altra cosa. Prima si
+    // leggeva dal valore di ritorno di tickClock, che vale null quando non
+    // trova l'elemento del cronometro: bastava un ridisegno storto e chi
+    // ospita smetteva di chiudere i lotti, in silenzio.
+    const left = S.tempoRimasto(state, now());
+    tickClock(state);
     if (state.auction.paused) return; // il cronometro è fermo per tutti
 
     // Un tic per ogni secondo degli ultimi cinque, una volta sola.

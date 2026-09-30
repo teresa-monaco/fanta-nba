@@ -22,6 +22,10 @@ const { TEAM_KEYS, STRATEGIES, ROSTER_SIZE, SLOTS } = core;
 
 let fails = 0;
 const male = (msg, extra = '') => { console.log(`  ROTTO  ${msg}${extra ? ' — ' + extra : ''}`); fails++; };
+const ok = (c, msg, extra = '') => {
+  if (c) console.log(`  PASS  ${msg}${extra ? ' — ' + extra : ''}`);
+  else male(msg, extra);
+};
 
 let clock = 1e6;
 const tick = () => (clock += 400);
@@ -86,19 +90,20 @@ function partita(seed, chi) {
     if (!pid) break;
     const p = D.byId[pid];
 
-    // Un giro di offerte. IL TEMPO DEVE AVANZARE anche quando nessuno
-    // rilancia: i bot hanno un tempo di reazione, e se l'orologio sta fermo
-    // non si svegliano mai. Alla prima stesura del test succedeva questo, e
-    // ogni lotto passava invenduto.
-    let momento = clock;
-    let fermiDa = 0;
-    for (let giro = 0; giro < 30 && fermiDa < 6; giro++) {
-      momento += 700;
-      let mosso = false;
+    // SI SEGUE IL CRONOMETRO VERO: quindici secondi a passi di 200 ms.
+    //
+    // Prima erano trenta giri da 700 ms con uscita anticipata dopo sei giri
+    // di silenzio. Andava bene finche ogni bot si svegliava una volta sola
+    // per lotto; da quando ci ripensa a ogni rilancio — e sul proprio limite
+    // ci mette qualche secondo — quel modello tagliava i lotti prima della
+    // fine e faceva sembrare che i bot non spendessero. Il banco deve avere
+    // lo stesso orologio del gioco, o misura un gioco diverso.
+    const t0 = clock;
+    for (let t = t0; t <= t0 + S.BID_SECONDS * 1000; t += 200) {
       for (const k of inGioco) {
         let q = null;
         if (s.bots?.[k]) {
-          q = Bot.offerta(s, k, S, momento, memoria);
+          q = Bot.offerta(s, k, S, t, memoria);
         } else {
           const stile = UMANI[ruolo[k]];
           if (stile) {
@@ -106,11 +111,10 @@ function partita(seed, chi) {
             if (v >= 1) q = v;
           }
         }
-        if (q != null && S.canBid(s, k, q)) { s = S.placeBid(s, k, q, tick()); mosso = true; }
+        if (q != null && S.canBid(s, k, q)) s = S.placeBid(s, k, q, t);
       }
-      fermiDa = mosso ? 0 : fermiDa + 1;
     }
-    clock = momento;
+    clock = t0 + S.BID_SECONDS * 1000 + 1000;
     s = S.resolveLot(s, tick());
 
     // Le regole valgono anche per i bot: si controlla a ogni lotto.
@@ -336,6 +340,115 @@ console.log('\n3. I QUATTRO BOT FRA LORO  (120 tornei in quattro)\n');
    ogni lotto l'asta va a scatti su chi ospita e su nessun altro — un difetto
    che nessuna partita di prova farebbe vedere, perche i test non hanno una
    interfaccia da ridisegnare. */
+/* ==========================================================
+   3b. Il prezzo sale a scalini, o schizza e si ferma?
+   ==========================================================
+
+   Con la sveglia unica per lotto i bot si buttavano tutti dentro nei primi
+   secondi: il prezzo arrivava al massimo in un lampo e poi per dieci secondi
+   non succedeva piu niente. Si misura quante volte il prezzo si muove in un
+   lotto conteso e in quanto tempo, su un cronometro di quindici secondi. */
+console.log('\n3b. COME SALE IL PREZZO IN UN LOTTO CONTESO\n');
+{
+  let s = S.newGame('ritmo-asta', 'host');
+  for (const b of Bot.ID_BOT) s = S.aggiungiBot(s, b);
+  const keys = S.attive(s);
+  s = S.startAuction(s, 1e7, keys);
+
+  const memoria = {};
+  const rilanci = [];       // quanti cambi di prezzo per lotto
+  const finestre = [];      // in quale secondo del lotto e arrivato ogni rilancio
+  let lotti = 0;
+
+  while (s.phase === 'auction' && lotti < 40) {
+    const t0 = s.auction.deadline - S.BID_SECONDS * 1000;
+    let mosse = 0, ultimo = null;
+    // Si segue il cronometro vero: 15 secondi a passi di 100 ms.
+    for (let t = t0; t <= t0 + S.BID_SECONDS * 1000; t += 100) {
+      for (const k of keys) {
+        const q = Bot.offerta(s, k, S, t, memoria);
+        if (q != null && S.canBid(s, k, q)) {
+          s = S.placeBid(s, k, q, t);
+          mosse++; ultimo = t;
+          finestre.push(Math.floor((t - t0) / 1000));
+        }
+      }
+    }
+    if (mosse >= 2) { rilanci.push(mosse); }
+    lotti++;
+    s = S.resolveLot(s, s.auction.deadline + 1);
+  }
+
+  const media = rilanci.length ? rilanci.reduce((a, b) => a + b, 0) / rilanci.length : 0;
+  // Quanta parte dei rilanci cade nei primi tre secondi: e' la spia del
+  // "si buttano tutti dentro subito".
+  const primi3 = finestre.filter((x) => x <= 2).length / (finestre.length || 1) * 100;
+  const istogramma = Array.from({ length: S.BID_SECONDS }, (_, i) => finestre.filter((x) => x === i).length);
+  const picco = Math.max(1, ...istogramma);
+
+  console.log(`  lotti contesi: ${rilanci.length} · rilanci per lotto: ${media.toFixed(1)}`);
+  console.log(`  rilanci nei primi 3 secondi: ${primi3.toFixed(0)}%\n`);
+  console.log('  quando arrivano le offerte, secondo per secondo:');
+  istogramma.forEach((n, i) => {
+    console.log(`   ${String(i).padStart(2)}s ${'█'.repeat(Math.round(n / picco * 34))} ${n}`);
+  });
+  console.log('\n  Se quasi tutto sta nei primi secondi e poi il grafico muore,');
+  console.log('  i bot si stanno buttando dentro tutti insieme come prima.');
+  if (primi3 > 70) male('le offerte si ammucchiano all\'inizio', `${primi3.toFixed(0)}% nei primi 3 secondi`);
+  if (media < 2) male('il prezzo non sale a scalini', `${media.toFixed(1)} rilanci per lotto conteso`);
+}
+
+/* ==========================================================
+   3c. O lo vuoi, o lo salti. Mai tutte e due.
+   ==========================================================
+
+   Si vedeva giocando: un bot offre 1 nel primo secondo e subito dopo vota
+   per saltare lo stesso giocatore. Erano due decisioni prese in due posti
+   diversi che si contraddicevano, ed era sfruttabile: bastava lasciarglielo
+   a 1 e si ritrovava in rosa uno che aveva appena dichiarato di non volere. */
+console.log('\n3c. NESSUN BOT OFFRE PER UN GIOCATORE CHE VUOLE SALTARE\n');
+{
+  let s = S.newGame('coerenza', 'host');
+  for (const b of Bot.ID_BOT) s = S.aggiungiBot(s, b);
+  const keys = S.attive(s);
+  s = S.startAuction(s, 2e7, keys);
+
+  const memoria = {};
+  let contraddizioni = 0, voti = 0, offerte = 0, lotti = 0;
+  while (s.phase === 'auction' && lotti < 60) {
+    const t0 = s.auction.deadline - S.BID_SECONDS * 1000;
+    for (let t = t0; t <= t0 + S.BID_SECONDS * 1000; t += 200) {
+      for (const k of keys) {
+        const q = Bot.offerta(s, k, S, t, memoria);
+        const salta = Bot.vuoleSaltare(s, k, S, memoria);
+        // La contraddizione: nello stesso istante vorrebbe comprarlo e
+        // vorrebbe buttarlo via.
+        if (q != null && salta) contraddizioni++;
+        if (salta) voti++;
+        if (q != null && S.canBid(s, k, q)) { s = S.placeBid(s, k, q, t); offerte++; }
+      }
+    }
+    lotti++;
+    s = S.resolveLot(s, s.auction.deadline + 1);
+  }
+  ok(contraddizioni === 0, 'nessun bot offre e vota skip sullo stesso giocatore',
+    contraddizioni ? `${contraddizioni} volte` : `${offerte} offerte e ${voti} voti in ${lotti} lotti, mai insieme`);
+
+  // E la regola deve saltare quando resta un posto solo: li chiunque e
+  // meglio di un buco, quindi si compra e non si salta.
+  let s2 = S.newGame('ultimo-posto', 'host');
+  for (const b of Bot.ID_BOT) s2 = S.aggiungiBot(s2, b);
+  const k2 = S.attive(s2);
+  s2 = S.startAuction(s2, 3e7, k2);
+  const uno = k2[0];
+  for (let i = 0; i < ROSTER_SIZE - 1; i++) {
+    s2 = S.placeBid(s2, uno, 1, tick());
+    s2 = S.resolveLot(s2, tick());
+  }
+  ok(S.slotsLeft(s2, uno) === 1, 'una squadra con un solo posto libero');
+  ok(!Bot.vuoleSaltare(s2, uno, S, {}), 'con l\'ultimo posto da riempire non vota mai skip');
+}
+
 console.log('\n4. QUANTO CI METTONO A PENSARE\n');
 {
   let s = S.newGame('tempi', 'host');
