@@ -220,18 +220,29 @@ export function applicaNomi(seed, scelte) {
   return TEAM_NAMES;
 }
 
-// Il nome dopo, per chi sta zappando. Si scartano solo i nomi delle sedie
-// OCCUPATE, non di tutte e dodici: in due, escludere anche le dieci sedie
-// vuote lascerebbe dodici nomi su ventidue e meta elenco sarebbe irraggiungibile.
-export function prossimoNome(seed, scelte, k, occupate) {
+// Un altro nome, per chi sta zappando.
+//
+// SI PESCA, NON SI SCORRE. La prima versione prendeva il successivo in elenco,
+// e non era una pescata: premendo si scendeva sempre nello stesso ordine, e
+// due persone allo stesso tavolo che premono lo stesso numero di volte si
+// ritrovavano lo stesso giro di nomi. Il tasto sembrava una freccia giu.
+//
+// Il caso vero qui e lecito perche il risultato si SALVA nello stato: non
+// viene ricalcolato da nessun'altra parte, quindi non rompe la regola per cui
+// la partita si rigioca identica dal seme. Le simulazioni restano sui seed.
+//
+// Si scartano solo i nomi delle sedie OCCUPATE, non di tutte e dodici: in due,
+// escludere anche le dieci sedie vuote lascerebbe dodici nomi su ventidue e
+// meta elenco non uscirebbe mai.
+export function prossimoNome(seed, scelte, k, occupate, rnd) {
   const idx = { ...indiciBase(seed), ...(scelte || {}) };
   const presi = new Set((occupate || TEAM_KEYS).filter((x) => x !== k).map((x) => idx[x]));
-  const attuale = idx[k];
-  for (let passo = 1; passo <= NOMI_SQUADRE.length; passo++) {
-    const cand = (attuale + passo) % NOMI_SQUADRE.length;
-    if (!presi.has(cand)) return cand;
-  }
-  return attuale;
+  // Nemmeno quello che ho gia: se ricapitasse, il tasto sembrerebbe rotto.
+  presi.add(idx[k]);
+  const liberi = NOMI_SQUADRE.map((_, i) => i).filter((i) => !presi.has(i));
+  if (!liberi.length) return idx[k];
+  const r = typeof rnd === 'function' ? rnd() : Math.random();
+  return liberi[Math.min(liberi.length - 1, Math.floor(r * liberi.length))];
 }
 
 // Un'assegnazione c'e sempre, anche prima che una partita esista: gli script

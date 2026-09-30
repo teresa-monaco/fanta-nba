@@ -173,12 +173,13 @@
     .pan .lab {
       font: 700 9.5px var(--cond); letter-spacing: 2.2px; text-transform: uppercase; color: var(--muted);
     }
-    .pan .val {
-      font: 800 20px var(--cond); letter-spacing: 1px; text-transform: uppercase;
-      margin-top: 5px; line-height: 1.1;
-    }
-    .pan.casa .val { color: var(--gold); text-shadow: 0 0 14px rgba(255,209,102,.35); }
-    .pan.ospiti .val { color: #6ee7ff; text-shadow: 0 0 14px rgba(110,231,255,.3); }
+    /* L'altezza e fissa di proposito. I nomi vanno da "Sucio" a "Penetrazione
+       Centrale": senza, ogni ventiquattro secondi il tabellone cambierebbe
+       misura e si porterebbe dietro mezza pagina. */
+    .pan { min-height: 96px; display: flex; flex-direction: column; }
+    .pan .flap { flex: 1; align-content: center; margin-top: 5px; }
+    .pan.casa .flap span { color: var(--gold); }
+    .pan.ospiti .flap span { color: #6ee7ff; border-color: #24384a; }
     .clock24 {
       display: grid; place-items: center; min-width: 58px;
       background: #0b0e15; border: 1px solid #202737; opacity: 0;
@@ -198,6 +199,7 @@
       font: 800 19px var(--cond); color: var(--gold);
       transform-origin: center; backface-visibility: hidden;
     }
+    .flap.mini span { min-width: 14px; height: 20px; font-size: 12.5px; border-radius: 1px; }
     .flap span.gira { animation: paletta .3s ease-in-out; }
     @keyframes paletta {
       0%   { transform: rotateX(0); }
@@ -383,7 +385,7 @@
                 <div class="pannelli">
                   <div class="pan casa">
                     <div class="lab">Casa</div>
-                    <div class="val">Nuova<br>partita</div>
+                    <div class="flap mini" id="flap-casa"></div>
                   </div>
                   <div class="clock24">
                     <div class="n" id="clock-n">24</div>
@@ -391,12 +393,14 @@
                   </div>
                   <div class="pan ospiti">
                     <div class="lab">Ospiti</div>
-                    <div class="val">Entra<br>col codice</div>
+                    <div class="flap mini" id="flap-ospiti"></div>
                   </div>
                 </div>
               </div>
-              <p class="small muted center mt">Tocca un pannello. Da 2 a 12 squadre, 50 crediti a testa.</p>
-              <div class="row mt">
+              <p class="small muted center mt">Da 2 a 12 squadre, 50 crediti a testa, 5 giocatori ciascuna.</p>
+              <button class="primary wide mt">Crea la stanza</button>
+              <div class="oppure">oppure</div>
+              <div class="row">
                 <input placeholder="CODICE" maxlength="4" class="grow"
                        style="text-transform:uppercase;letter-spacing:4px;font-weight:800">
                 <button>Entra</button>
@@ -533,15 +537,24 @@
       'Estrema Unzione', 'Reparto Cardiologia', 'Qué Mirás Bobo', 'Fallo Antisportivo',
       'Tony Montana', 'Terzo Tempo'];
     const COLORI = ['--t1', '--t3', '--t5', '--t9', '--t2', '--t7', '--t11', '--t4'];
-    const giro = { a: 0, b: 0, c: 0 };
+    const scelto = { a: NOMI[0], b: NOMI[0], c: NOMI[0] };
+    let quantiCambi = 0;
 
+    // SI PESCA, NON SI SCORRE. Prendere il successivo in elenco farebbe
+    // scendere tutti nello stesso ordine: due persone che premono lo stesso
+    // numero di volte vedrebbero lo stesso giro, e il tasto sembrerebbe una
+    // freccia giu invece di un'estrazione.
+    const pesca = (...fuori) => {
+      const liberi = NOMI.filter((n) => !fuori.includes(n));
+      return liberi[Math.floor(Math.random() * liberi.length)];
+    };
     const scrivi = (sel, testo) => document.querySelectorAll(sel).forEach((e) => { e.textContent = testo; });
 
-    /* ---- B: lettere a paletta ---- */
-    function flap(testo, animare) {
-      const box = document.getElementById('flap-b');
-      const lettere = testo.toUpperCase().split('');
-      box.innerHTML = lettere.map((c) => `<span>${c === ' ' ? '&nbsp;' : c}</span>`).join('');
+    /* ---- lettere a paletta ---- */
+    function flap(box, testo, animare) {
+      if (!box) return;
+      box.innerHTML = testo.toUpperCase().split('')
+        .map((c) => `<span>${c === ' ' ? '&nbsp;' : c}</span>`).join('');
       if (!animare) return;
       // Da sinistra, una ogni 45ms: e' quello che fa "tabellone" invece di
       // "tutto insieme".
@@ -549,12 +562,28 @@
         setTimeout(() => s.classList.add('gira'), i * 45);
       });
     }
-    flap(NOMI[0], false);
+
+    const boxB = document.getElementById('flap-b');
+    const boxCasa = document.getElementById('flap-casa');
+    const boxOspiti = document.getElementById('flap-ospiti');
+
+    // Il tabellone dell'ingresso non e' un menu: mostra una partita, come
+    // quello vero. Le due squadre girano insieme ai ventiquattro secondi.
+    let casa = NOMI[0], ospiti = NOMI[4];
+    function nuovaSfida(animare) {
+      casa = pesca(casa, ospiti);
+      ospiti = pesca(casa, ospiti);
+      flap(boxCasa, casa, animare);
+      flap(boxOspiti, ospiti, animare);
+    }
+    flap(boxB, scelto.b, false);
+    flap(boxCasa, casa, false);
+    flap(boxOspiti, ospiti, false);
 
     /* ---- i 24 secondi ---- */
     let sec = 24;
     setInterval(() => {
-      sec = sec <= 1 ? 24 : sec - 1;
+      if (sec <= 1) { sec = 24; nuovaSfida(true); } else { sec -= 1; }
       const n = document.getElementById('clock-n');
       if (n) n.textContent = sec;
     }, 1000);
@@ -564,8 +593,9 @@
       const z = ev.target.closest('[data-zap]');
       if (z) {
         const k = z.dataset.zap;
-        giro[k] = (giro[k] + 1) % NOMI.length;
-        const nome = NOMI[giro[k]];
+        const nome = pesca(scelto[k]);
+        scelto[k] = nome;
+        quantiCambi++;
 
         if (k === 'a') {
           // Si richiude, cambia, si riapre: il gesto deve sembrare meccanico.
@@ -573,7 +603,7 @@
           u.classList.remove('aperta-a');
           setTimeout(() => { scrivi('[data-sq-a]', nome); u.classList.add('aperta-a'); }, 260);
         } else if (k === 'b') {
-          flap(nome, true);
+          flap(boxB, nome, true);
           scrivi('[data-sq-b]', nome);
         } else {
           const f = document.getElementById('fig-c');
@@ -581,7 +611,7 @@
           setTimeout(() => {
             scrivi('[data-sq-c]', nome);
             document.querySelector('[data-iniz-c]').textContent = nome[0].toUpperCase();
-            f.style.setProperty('--tc', `var(${COLORI[giro.c % COLORI.length]})`);
+            f.style.setProperty('--tc', `var(${COLORI[quantiCambi % COLORI.length]})`);
             f.classList.remove('girata');
           }, 260);
         }

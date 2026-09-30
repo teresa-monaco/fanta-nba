@@ -162,19 +162,22 @@ export function botDi(s) {
 /* ---------- Il nome della squadra ---------- */
 
 // In lobby si aspetta, e aspettare fermi e la parte peggiore. Il nome non si
-// scrive: si zappa, e quello che esce te lo tieni finche non ripremi. Cambiare
+// scrive: si pesca, e quello che esce te lo tieni finche non ripremi. Cambiare
 // e gratis e reversibile, quindi non serve nessuna conferma.
 //
 // Si salva l'INDICE, non la stringa: due byte invece di venti, e se un domani
 // un nome si corregge cambia ovunque senza migrazioni.
-export function cambiaNome(s, teamKey) {
+//
+// `rnd` esiste per i test, che devono poter ripetere la stessa pescata. In
+// partita non lo passa nessuno e si pesca davvero a caso.
+export function cambiaNome(s, teamKey, rnd) {
   if (s.phase !== 'lobby') return undefined;
   // Una sedia vuota non ha nessuno che possa volerla rinominare, e lasciarlo
   // fare toglierebbe nomi dal giro a chi sta giocando.
   if (!Object.values(s.seats).includes(teamKey)) return undefined;
   // Un nome libero c'e sempre: le sedie sono al massimo dodici e i nomi
   // ventidue, quindi almeno dieci restano fuori da qualunque tavolo pieno.
-  const prossimo = prossimoNome(s.seed, s.nomi, teamKey, Object.values(s.seats));
+  const prossimo = prossimoNome(s.seed, s.nomi, teamKey, Object.values(s.seats), rnd);
   return { ...s, nomi: { ...(s.nomi || {}), [teamKey]: prossimo } };
 }
 

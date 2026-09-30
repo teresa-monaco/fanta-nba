@@ -384,6 +384,31 @@ console.log('\nIL NOME SI CAMBIA IN LOBBY\n');
   ok(visti.size >= 15, 'e si gira per davvero fra i nomi, non fra due o tre',
     `${visti.size} nomi diversi in 30 pressioni`);
 
+  // 2b. SI PESCA, NON SI SCORRE. Prima il tasto dava il successivo in elenco:
+  //     due persone allo stesso tavolo che premono lo stesso numero di volte
+  //     vedevano lo stesso giro di nomi, e sembrava una freccia giu. Si prova
+  //     premendo duecento volte SEMPRE DALLO STESSO STATO: se fosse uno
+  //     scorrimento uscirebbe duecento volte lo stesso nome.
+  {
+    const base = s;
+    const idxBase = { ...core.indiciBase(base.seed), ...base.nomi };
+    const esiti = new Map();
+    for (let i = 0; i < 200; i++) {
+      const dopo = S.cambiaNome(base, mio);
+      const v = dopo.nomi[mio];
+      esiti.set(v, (esiti.get(v) || 0) + 1);
+    }
+    const seguente = (idxBase[mio] + 1) % NOMI_SQUADRE.length;
+    const piuFrequente = Math.max(...esiti.values());
+    ok(esiti.size >= 8, 'dallo stesso punto la pescata da esiti diversi, non sempre lo stesso',
+      `${esiti.size} nomi diversi in 200 pressioni`);
+    ok((esiti.get(seguente) || 0) < 60,
+      'e non e il successivo in elenco travestito',
+      `il nome dopo e uscito ${esiti.get(seguente) || 0} volte su 200`);
+    ok(piuFrequente < 60, 'nessun nome domina la pescata', `il piu frequente ${piuFrequente}/200`);
+    ok(!esiti.has(idxBase[mio]), 'e non ricapita mai quello che si aveva gia');
+  }
+
   // 3. Le sedie vuote non si rinominano: toglierebbero nomi a chi gioca.
   const vuota = TEAM_KEYS.find((k) => !Object.values(s.seats).includes(k));
   ok(S.cambiaNome(s, vuota) === undefined, 'una sedia vuota non si puo rinominare');
