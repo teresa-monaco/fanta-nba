@@ -89,7 +89,7 @@ const S = await import('../js/state.js');
 const { ui, render, teamsFromState, stagioneFromState, esc } = await import('../js/ui.js');
 const { buildTeam, componiTabellone, simSeriesUpTo, costruisciBracket, matchup, RITMI,
   giriStagione, tabelloneDaStagione } = await import('../js/engine.js');
-const { TEAM_KEYS, STRATEGIES, db } = await import('../js/core.js');
+const { TEAM_KEYS, STRATEGIES, db, TEAM_NAMES } = await import('../js/core.js');
 const BotAI = await import('../js/bot.js');
 const { SLOTS: SLOTS_D } = await import('../js/core.js');
 
@@ -101,6 +101,36 @@ ok(clean() && has('Fanta NBA', 'Inizia'), 'la lobby si disegna');
 ok(els.topbar.innerHTML.includes('FANTA'), 'la barra in alto si disegna');
 ok(cssVars['--vv-bottom'] === '114px',
   'la barra dei rilanci si alza sopra la toolbar di Safari', `--vv-bottom = ${cssVars['--vv-bottom']}`);
+
+// Il nome della squadra si zappa mentre si aspetta. Si disegna a mano la
+// lobby in modalita STANZA: il test gira in locale, e in locale non esiste
+// "la tua squadra" — le comandi tutte tu, quindi il tasto giustamente non c'e.
+{
+  const { applicaNomi } = await import('../js/core.js');
+  let s = S.joinGame(F.state, 'u-altro', 'Teresa');
+  s = S.joinGame(s, 'io', 'Diego');
+  const mio = s.seats.io;
+  const stanza = { uid: 'io', mode: 'room', code: 'DDXD' };
+  const disegna = () => { applicaNomi(s.seed, s.nomi); render(els.app, { state: s, session: stanza }); return html(); };
+
+  let h = disegna();
+  const prima = TEAM_NAMES[mio];
+  ok(h.includes('data-act="cambia-nome"'), 'chi e dentro puo cambiare nome alla squadra');
+  ok(h.includes(`data-nome-team="${mio}"`),
+    'e il nome porta il marcatore che accende l\'animazione solo quando cambia');
+
+  s = S.cambiaNome(s, mio) || s;
+  h = disegna();
+  ok(TEAM_NAMES[mio] !== prima && h.includes(esc(TEAM_NAMES[mio])),
+    'premendo, il nome nuovo e quello che finisce a schermo', `${prima} -> ${TEAM_NAMES[mio]}`);
+
+  const guarda = { uid: 'nessuno', mode: 'room', code: 'DDXD' };
+  render(els.app, { state: s, session: guarda });
+  ok(!html().includes('data-act="cambia-nome"'), 'chi guarda e basta non ha niente da rinominare');
+
+  applicaNomi(F.state.seed, F.state.nomi);
+  render(els.app, { state: F.state, session: F.session });
+}
 
 /* 2. Asta */
 const now = () => Date.now();

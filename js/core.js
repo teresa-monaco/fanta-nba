@@ -164,6 +164,9 @@ export function deriveAttrs(p, archetypes) {
 // sotto, e nient'altro.
 export const TEAM_KEYS = ['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12'];
 
+// Devono essere piu dei posti a sedere, e di parecchio: in lobby si cambia
+// nome finche non piace, e con dodici nomi in dodici si resterebbe fermi sul
+// primo. Ventidue lasciano da zappare anche col tavolo pieno.
 export const NOMI_SQUADRE = [
   'Pornland',
   'Volta Reno FC',
@@ -177,6 +180,16 @@ export const NOMI_SQUADRE = [
   'Dimash',
   'Climberz',
   'Appennino',
+  'Penetrazione Centrale',
+  'Doppio Palleggio',
+  'Sam Bowie Fan Club',
+  'Darko Academy',
+  'Estrema Unzione',
+  'Reparto Cardiologia',
+  'Qué Mirás Bobo',
+  'Fallo Antisportivo',
+  'Tony Montana',
+  'Terzo Tempo',
 ];
 
 // I nomi si estraggono dal SEED della partita, non si salvano nel database:
@@ -184,15 +197,41 @@ export const NOMI_SQUADRE = [
 // La sedia resta la stessa (t3 e sempre la stessa persona), cambia l'etichetta.
 export const TEAM_NAMES = {};
 
-export function applicaNomi(seed) {
-  const estratti = shuffle(NOMI_SQUADRE, makeRng(String(seed) + ':nomi'));
-  TEAM_KEYS.forEach((k, i) => {
-    // I nomi bastano per tutte le sedie. Il ripiego col numero resta come rete
-    // di sicurezza: se un giorno si toglie un nome dalla lista, la sedia in
-    // fondo resta comunque battezzata invece di finire "undefined".
-    TEAM_NAMES[k] = i < estratti.length ? estratti[i] : `${estratti[i % estratti.length]} II`;
+// L'assegnazione di partenza, in indici invece che in stringhe: serve poter
+// dire "il prossimo" senza cercare una stringa dentro un elenco.
+export function indiciBase(seed) {
+  const ordine = shuffle(NOMI_SQUADRE.map((_, i) => i), makeRng(String(seed) + ':nomi'));
+  const out = {};
+  TEAM_KEYS.forEach((k, i) => { out[k] = ordine[i % ordine.length]; });
+  return out;
+}
+
+// `scelte` sono i cambi fatti in lobby, una mappa sedia -> indice. Quelli si
+// salvano davvero nel database, ma sono numeri: una partita intera sta in una
+// manciata di byte, come tutto il resto dello stato.
+export function applicaNomi(seed, scelte) {
+  const idx = { ...indiciBase(seed), ...(scelte || {}) };
+  TEAM_KEYS.forEach((k) => {
+    // Il ripiego resta come rete di sicurezza: se un giorno si toglie un nome
+    // dalla lista, una sedia salvata con quell'indice resta battezzata invece
+    // di finire "undefined".
+    TEAM_NAMES[k] = NOMI_SQUADRE[idx[k]] ?? `Squadra ${k.slice(1)}`;
   });
   return TEAM_NAMES;
+}
+
+// Il nome dopo, per chi sta zappando. Si scartano solo i nomi delle sedie
+// OCCUPATE, non di tutte e dodici: in due, escludere anche le dieci sedie
+// vuote lascerebbe dodici nomi su ventidue e meta elenco sarebbe irraggiungibile.
+export function prossimoNome(seed, scelte, k, occupate) {
+  const idx = { ...indiciBase(seed), ...(scelte || {}) };
+  const presi = new Set((occupate || TEAM_KEYS).filter((x) => x !== k).map((x) => idx[x]));
+  const attuale = idx[k];
+  for (let passo = 1; passo <= NOMI_SQUADRE.length; passo++) {
+    const cand = (attuale + passo) % NOMI_SQUADRE.length;
+    if (!presi.has(cand)) return cand;
+  }
+  return attuale;
 }
 
 // Un'assegnazione c'e sempre, anche prima che una partita esista: gli script

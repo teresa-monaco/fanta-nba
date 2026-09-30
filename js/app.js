@@ -68,10 +68,12 @@ function paint() {
   if (!state || !session) return;
   // I nomi girano a ogni partita e si estraggono dal seed: vanno rimessi a
   // posto prima di disegnare, perche il seed cambia con "Nuova partita".
-  applicaNomi(state.seed);
+  // In coda arrivano i cambi fatti a mano in lobby, che stanno nello stato.
+  applicaNomi(state.seed, state.nomi);
   const ctx = { state, session };
   renderTopbar(topbar, ctx);
   render(root, ctx);
+  effettiNomi();
   tickClock(state);
   suoniDiStato();
   // Anche a ogni ridisegno, non solo sul timer: cosi un bot reagisce subito
@@ -273,6 +275,28 @@ async function guidaBot() {
   }
 }
 
+// LE ANIMAZIONI DI CAMBIAMENTO VANNO ACCESE DA QUI, non dal CSS.
+// render() riscrive tutto l'HTML a ogni ridisegno: una regola CSS attaccata
+// all'elemento ripartirebbe anche quando quel nome e rimasto identico, e si
+// vedrebbero i nomi ballare da soli. Si confronta con il giro precedente,
+// esattamente come gia fa suoniDiStato() per i suoni.
+let nomiVisti = null;
+
+function effettiNomi() {
+  const ora = {};
+  for (const k of TEAM_KEYS) ora[k] = TEAM_NAMES[k];
+  // Al primo disegno non e cambiato niente: si prende nota e basta, o
+  // all'ingresso in stanza partirebbero tutte insieme.
+  if (nomiVisti) {
+    for (const k of TEAM_KEYS) {
+      if (ora[k] === nomiVisti[k]) continue;
+      document.querySelectorAll(`[data-nome-team="${k}"]`)
+        .forEach((el) => el.classList.add('scambia'));
+    }
+  }
+  nomiVisti = ora;
+}
+
 // Il suono segue lo STATO, non il click: cosi lo sentono tutti e quattro,
 // non solo chi ha premuto il tasto.
 let ultimiAcquisti = null;
@@ -331,6 +355,13 @@ document.addEventListener('click', async (ev) => {
         catch (e) { el.disabled = false; landing(e.message); }
         break;
       }
+
+      // Il nome della squadra non si scrive, si pesca: e' un modo di passare
+      // i secondi mentre gli altri entrano. Sempre la propria sedia, mai
+      // quella di un altro, e solo finche si e in lobby.
+      case 'cambia-nome':
+        await session.apply((s) => S.cambiaNome(s, s.seats[session.uid]));
+        break;
 
       case 'copy-link':
         await navigator.clipboard.writeText(`${location.origin}${location.pathname}?r=${session.code}`);

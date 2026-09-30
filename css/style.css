@@ -431,6 +431,38 @@ table.referto tr.giusta .scelta { color: var(--ok); }
   min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .strip .cr { font: 800 15px var(--cond); color: var(--gold); }
+
+/* ---- il nome della tua squadra, in lobby ---- */
+/* Non si scrive, si pesca: il tasto ne da un altro. Serve a riempire i
+   secondi di attesa mentre gli altri entrano. */
+.nome-mio {
+  display: flex; align-items: center; gap: 11px;
+  background: var(--surface-2); border-left: 4px solid var(--tc);
+  padding: 9px 11px;
+}
+/* Il rullo taglia il nome in arrivo mentre sale: senza, si vedrebbe entrare
+   da sopra il paragrafo accanto. */
+.rullo { overflow: hidden; display: block; }
+.nm-grande {
+  display: block;
+  font: 800 22px/1.15 var(--cond); letter-spacing: 1.2px; text-transform: uppercase;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* L'animazione la accende app.js SOLO quando il nome cambia davvero: render()
+   riscrive tutto l'HTML a ogni ridisegno, quindi una regola CSS da sola
+   ripartirebbe anche quando il nome e rimasto lo stesso. */
+@keyframes nome-scambio {
+  0%   { opacity: 0; transform: translateY(85%); }
+  65%  { opacity: 1; transform: translateY(-7%); }
+  100% { opacity: 1; transform: none; }
+}
+.scambia { animation: nome-scambio .3s cubic-bezier(.2,.9,.3,1); }
+
+/* Chi ha chiesto meno movimento vede i cambiamenti, non le animazioni. */
+@media (prefers-reduced-motion: reduce) {
+  .scambia { animation: none; }
+}
 .strip .ros { font-size: 11px; color: var(--muted); line-height: 1.35; }
 .strip.leading { box-shadow: inset 0 0 0 1px var(--red); }
 

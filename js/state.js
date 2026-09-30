@@ -5,7 +5,7 @@
 // ricalcola da solo esattamente le stesse gare. Lo stato condiviso resta di
 // pochi KB e non esiste il rischio che due schermi mostrino risultati diversi.
 
-import { TEAM_KEYS, TEAM_NAMES, SLOTS, START_CREDITS, ROSTER_SIZE, NUMERI_SQUADRE, makeRng, shuffle, db, allenatoriDi } from './core.js';
+import { TEAM_KEYS, TEAM_NAMES, SLOTS, START_CREDITS, ROSTER_SIZE, NUMERI_SQUADRE, makeRng, shuffle, db, allenatoriDi, prossimoNome } from './core.js';
 import { BOT, prossimoBot, uidBot, eBot } from './bot.js';
 
 export const BID_SECONDS = 15;
@@ -24,6 +24,7 @@ export function newGame(seed, hostUid) {
     names: {}, // uid -> nickname
     teams, lineups, tactics,
     bots: {},           // teamKey -> quale bot la occupa
+    nomi: {},           // teamKey -> indice in NOMI_SQUADRE, per chi in lobby cambia nome
     conStagione: false, // si sceglie in lobby: solo playoff, o stagione + playoff
     stagione: null,     // fotografia di quintetti e tattiche con cui si e giocata
     auction: { order: null, idx: 0, bid: null, deadline: null, running: false, log: [], unsold: [],
@@ -41,6 +42,7 @@ export function hydrate(raw) {
   s.teams = s.teams || {};
   s.lineups = s.lineups || {};
   s.tactics = s.tactics || {};
+  s.nomi = s.nomi || {};   // stanze aperte prima dello zapping: nessun cambio
   for (const k of TEAM_KEYS) {
     s.teams[k] = { credits: START_CREDITS, roster: [], ...(s.teams[k] || {}) };
     s.teams[k].roster = s.teams[k].roster || [];
@@ -155,6 +157,25 @@ export function togliBot(s, teamKey) {
 
 export function botDi(s) {
   return Object.keys(s.bots || {});
+}
+
+/* ---------- Il nome della squadra ---------- */
+
+// In lobby si aspetta, e aspettare fermi e la parte peggiore. Il nome non si
+// scrive: si zappa, e quello che esce te lo tieni finche non ripremi. Cambiare
+// e gratis e reversibile, quindi non serve nessuna conferma.
+//
+// Si salva l'INDICE, non la stringa: due byte invece di venti, e se un domani
+// un nome si corregge cambia ovunque senza migrazioni.
+export function cambiaNome(s, teamKey) {
+  if (s.phase !== 'lobby') return undefined;
+  // Una sedia vuota non ha nessuno che possa volerla rinominare, e lasciarlo
+  // fare toglierebbe nomi dal giro a chi sta giocando.
+  if (!Object.values(s.seats).includes(teamKey)) return undefined;
+  // Un nome libero c'e sempre: le sedie sono al massimo dodici e i nomi
+  // ventidue, quindi almeno dieci restano fuori da qualunque tavolo pieno.
+  const prossimo = prossimoNome(s.seed, s.nomi, teamKey, Object.values(s.seats));
+  return { ...s, nomi: { ...(s.nomi || {}), [teamKey]: prossimo } };
 }
 
 /* ---------- Asta ---------- */

@@ -98,7 +98,7 @@ function viewLobby({ state: s, session }) {
     const bot = s.bots?.[k];
     return `<div class="strip t-${k}">
       <span class="dot"></span>
-      <span class="nm">${TEAM_NAMES[k]}</span>
+      <span class="nm" data-nome-team="${k}">${esc(TEAM_NAMES[k])}</span>
       <span class="grow"></span>
       <span class="small">${esc(S.nameOfSeat(s, k))}${mine ? ' <span class="tiny muted">(tu)</span>' : ''}
         ${bot ? `<span class="tag bot">bot</span>` : ''}</span>
@@ -161,7 +161,14 @@ function viewLobby({ state: s, session }) {
             <h3>Sei dentro</h3>
             <button class="sm ghost" data-act="leave">Esci</button>
           </div>
-          <p class="small muted mt">Ti è stata assegnata <b>${TEAM_NAMES[s.seats[session.uid]]}</b>.</p>
+          <div class="nome-mio mt t-${s.seats[session.uid]}">
+            <div class="grow">
+              <p class="tiny muted">La tua squadra</p>
+              <div class="rullo"><span class="nm-grande" data-nome-team="${s.seats[session.uid]}">${esc(TEAM_NAMES[s.seats[session.uid]])}</span></div>
+            </div>
+            <button class="sm" data-act="cambia-nome" title="Te ne dà un altro">Cambia</button>
+          </div>
+          <p class="tiny muted mt">Finché siete in attesa puoi cambiarla quante volte vuoi: il nome non si scrive, si pesca.</p>
         ` : `
           <label class="field"><span>Il tuo nome</span>
             <input id="nick" value="${esc(ui.nickname)}" placeholder="il tuo nome" maxlength="14" autocomplete="off">

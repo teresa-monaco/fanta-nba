@@ -337,5 +337,75 @@ for (const n of NUMERI_SQUADRE) {
   ok(problemi.size === 0, `${String(n).padStart(2)} squadre, 60 tornei`, [...problemi].join('; '));
 }
 
+/* ==========================================================
+   Il nome della squadra si cambia in lobby
+   ==========================================================
+
+   Si zappa mentre si aspetta. Le cose che possono rompersi sono due: finire
+   con due squadre chiamate uguale, e restare incastrati sullo stesso nome. */
+console.log('\nIL NOME SI CAMBIA IN LOBBY\n');
+{
+  const core = await import('../js/core.js');
+  const { NOMI_SQUADRE, applicaNomi, TEAM_NAMES } = core;
+
+  ok(NOMI_SQUADRE.length > TEAM_KEYS.length,
+    'i nomi sono piu delle sedie, o col tavolo pieno non si zappa',
+    `${NOMI_SQUADRE.length} nomi, ${TEAM_KEYS.length} sedie`);
+  ok(new Set(NOMI_SQUADRE).size === NOMI_SQUADRE.length, 'nessun nome ripetuto nell\'elenco');
+
+  let s = S.newGame('zap', 'h1');
+  s = S.joinGame(s, 'h1', 'Diego');
+  s = S.joinGame(s, 'u2', 'Teresa');
+  s = S.joinGame(s, 'u3', 'Fabio');
+  const mio = s.seats.h1;
+
+  // 1. Cambia davvero, e cambia solo la mia.
+  applicaNomi(s.seed, s.nomi);
+  const prima = { ...TEAM_NAMES };
+  s = S.cambiaNome(s, mio) || s;
+  applicaNomi(s.seed, s.nomi);
+  ok(TEAM_NAMES[mio] !== prima[mio], 'il nome della mia squadra cambia', `${prima[mio]} -> ${TEAM_NAMES[mio]}`);
+  ok(Object.values(s.seats).filter((k) => k !== mio).every((k) => TEAM_NAMES[k] === prima[k]),
+    'le squadre degli altri restano come stavano');
+
+  // 2. Zappando trenta volte non si finisce mai addosso a un altro. E' la
+  //    regola che conta: due "Pornland" allo stesso tavolo e ingiocabile.
+  const visti = new Set();
+  let doppioni = 0;
+  for (let i = 0; i < 30; i++) {
+    s = S.cambiaNome(s, mio) || s;
+    applicaNomi(s.seed, s.nomi);
+    const occupate = Object.values(s.seats);
+    const nomi = occupate.map((k) => TEAM_NAMES[k]);
+    if (new Set(nomi).size !== nomi.length) doppioni++;
+    visti.add(TEAM_NAMES[mio]);
+  }
+  ok(doppioni === 0, 'zappando trenta volte non si prende mai il nome di un altro', `${doppioni} collisioni`);
+  ok(visti.size >= 15, 'e si gira per davvero fra i nomi, non fra due o tre',
+    `${visti.size} nomi diversi in 30 pressioni`);
+
+  // 3. Le sedie vuote non si rinominano: toglierebbero nomi a chi gioca.
+  const vuota = TEAM_KEYS.find((k) => !Object.values(s.seats).includes(k));
+  ok(S.cambiaNome(s, vuota) === undefined, 'una sedia vuota non si puo rinominare');
+
+  // 4. Finita la lobby il nome e quello, o cambierebbe a meta asta.
+  let t = S.startAuction(s, tick(), S.attive(s));
+  ok(S.cambiaNome(t, mio) === undefined, 'a partita iniziata il nome non si tocca piu');
+
+  // 5. Il cambio deve sopravvivere al giro nel database: e' li che gli
+  //    oggetti vuoti spariscono e i campi tornano undefined.
+  const scelto = s.nomi[mio];
+  const dopo = S.hydrate(giroFirebase(s));
+  ok(dopo.nomi?.[mio] === scelto, 'il nome scelto sopravvive al passaggio da Firebase',
+    `${scelto} -> ${dopo.nomi?.[mio]}`);
+
+  // 6. Una stanza aperta prima che lo zapping esistesse non ha il campo.
+  const vecchia = S.hydrate({ ...S.newGame('vecchia', 'h1'), nomi: undefined });
+  ok(vecchia.nomi && Object.keys(vecchia.nomi).length === 0,
+    'una stanza aperta prima non si rompe: nessun cambio, nessun errore');
+
+  applicaNomi('fanta-nba');   // si rimette com'era per chi viene dopo
+}
+
 console.log('\n' + (fails === 0 ? 'Nessun bug trovato.\n' : `${fails} problemi.\n`));
 process.exit(fails === 0 ? 0 : 1);
