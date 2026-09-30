@@ -91,6 +91,7 @@ const { buildTeam, componiTabellone, simSeriesUpTo, costruisciBracket, matchup, 
   giriStagione, tabelloneDaStagione } = await import('../js/engine.js');
 const { TEAM_KEYS, STRATEGIES, db } = await import('../js/core.js');
 const BotAI = await import('../js/bot.js');
+const { SLOTS: SLOTS_D } = await import('../js/core.js');
 
 console.log('\nCollaudo interfaccia (modalita locale, DOM simulato)\n');
 
@@ -472,6 +473,50 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
       break;
     }
     ok(offerte > 0, 'il bot rilancia entro il tempo del lotto');
+  }
+
+  // QUALCUNO LI DEVE MUOVERE. Il controllo sopra prova la funzione del bot;
+  // questo prova che l'app la chiama davvero. Mancava, e infatti guidaBot()
+  // stava in fondo al ciclo del cronometro, dopo un return che scatta appena
+  // la fase non e l'asta: nella schermata delle squadre i bot restavano fermi
+  // e la partita si bloccava li.
+  {
+    let s = F.state;
+    const k = S.botDi(s)[0];
+    // Si completano le rose e si passa alla fase squadre, come a fine asta.
+    let g = 0;
+    while (s.phase === 'auction' && g++ < 400) {
+      const chi = S.attive(s).filter((t) => S.slotsLeft(s, t) > 0)[0];
+      if (!chi) break;
+      s = S.placeBid(s, chi, Math.max(1, Math.min(S.maxBid(s, chi), 1 + (g % 5))), now());
+      s = S.resolveLot(s, now());
+    }
+    await F.session.apply(() => s);
+    ok(F.state.phase === 'squadra', 'si arriva alla schermata delle squadre');
+
+    // ATTENZIONE a cosa si controlla: toSquadra riempie gia violini,
+    // strategia e ritmo con dei valori di partenza per TUTTE le squadre.
+    // Verificare che siano "non vuoti" passa anche se il bot non si muove —
+    // ed e esattamente l'errore che ha lasciato passare questo bug. Il
+    // controllo vero e che la tattica applicata sia QUELLA CHE IL BOT
+    // SCEGLIEREBBE, che e diversa dal valore di partenza.
+    const atteso = BotAI.tatticaBot(F.state, k, S);
+    ok(!!atteso, 'il bot sa cosa scegliere');
+    const diDefault = { strategy: 'equilibrato', ritmo: 'medio' };
+    const sceltaVera = atteso.tac.strategy !== diDefault.strategy || atteso.tac.ritmo !== diDefault.ritmo;
+
+    for (let i = 0; i < 20; i++) {
+      const t = F.state.tactics[k];
+      if (t?.strategy === atteso.tac.strategy && t?.ritmo === atteso.tac.ritmo) break;
+      await new Promise((r) => setTimeout(r, 60));
+    }
+    const t = F.state.tactics[k];
+    ok(t?.strategy === atteso.tac.strategy && t?.ritmo === atteso.tac.ritmo,
+      'l\'app muove il bot: la tattica applicata e quella che il bot ha scelto',
+      `nello stato ${t?.strategy}/${t?.ritmo}, il bot voleva ${atteso.tac.strategy}/${atteso.tac.ritmo}`);
+    ok(sceltaVera, 'e non e il valore di partenza, altrimenti il controllo non proverebbe niente',
+      `${atteso.tac.strategy} · ${atteso.tac.ritmo}`);
+    ok(SLOTS_D.every((sl) => F.state.lineups[k][sl]), 'e schiera un quintetto completo');
   }
 
   // L'azzeramento li lascia seduti: sono parte del tavolo, non della partita.

@@ -74,6 +74,9 @@ function paint() {
   render(root, ctx);
   tickClock(state);
   suoniDiStato();
+  // Anche a ogni ridisegno, non solo sul timer: cosi un bot reagisce subito
+  // a un cambiamento di stato invece di aspettare il prossimo giro.
+  guidaBot();
   seguiLaPartita();
   tieniIlPosto();
   registraAlbo();
@@ -184,6 +187,12 @@ let ultimoLotto = null; // indice del lotto gia annunciato
 function startClock() {
   if (clockTimer) clearInterval(clockTimer);
   clockTimer = setInterval(() => {
+    // I bot vanno mossi PRIMA delle uscite anticipate qui sotto. Stavano in
+    // fondo, e cosi non si muovevano mai fuori dall'asta: nella fase delle
+    // squadre restavano fermi senza scegliere la tattica, e la partita si
+    // bloccava li. Non sono un pezzo del cronometro, non devono dipenderne.
+    guidaBot();
+
     if (!state || state.phase !== 'auction') { ultimoTic = null; return; }
     const left = tickClock(state);
     if (state.auction.paused) return; // il cronometro è fermo per tutti
@@ -199,8 +208,6 @@ function startClock() {
     if (left !== null && left <= 0 && state.host === session.uid) {
       session.apply((s) => (s.auction.running && s.auction.deadline <= now() ? S.resolveLot(s, now()) : undefined));
     }
-
-    guidaBot();
   }, 250);
 }
 
