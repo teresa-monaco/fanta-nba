@@ -144,6 +144,27 @@ const FORZA_FIRMA = 0.25;
 export function deriveAttrs(p, archetypes) {
   const arc = archetypes[p.arc];
   if (!arc) throw new Error(`Archetipo sconosciuto: ${p.arc} (${p.n})`);
+
+  // SE IL GIOCATORE HA I SUOI NUMERI, SI USANO QUELLI.
+  //
+  // Per molto tempo nessun giocatore ne aveva: c'erano 22 modelli e 225
+  // giocatori, e gli attributi si estrapolavano dal modello scalato
+  // sull'overall. Funzionava, ma voleva dire che nessuno aveva mai scritto
+  // il tiro da tre di Pau Gasol — usciva da una formula. Era il motivo per
+  // cui certi valori non convincevano: non erano sbagliati, erano assenti.
+  //
+  // Un giocatore su tre aveva gia bisogno di una correzione a mano (65 su
+  // 225, con trentatre scostamenti da venti punti o piu). Quando un terzo
+  // dei casi e un'eccezione, il modello non descrive piu: va aggirato.
+  //
+  // La derivazione qui sotto resta, e serve a due cose: dare dei numeri di
+  // partenza a un giocatore nuovo che non li ha ancora, e documentare da
+  // dove vengono quelli congelati.
+  if (p.attrs) {
+    const out = {};
+    for (const k of ATTR_KEYS) out[k] = Math.round(clamp(p.attrs[k] ?? 50, 20, 99));
+    return out;
+  }
   const livello = clamp((p.ovr - OVR_MIN) / (OVR_MAX - OVR_MIN), 0, 1);
   const scala = SCALA_MIN + (SCALA_MAX - SCALA_MIN) * livello;
 

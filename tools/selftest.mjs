@@ -52,16 +52,49 @@ console.log('\n1. Integrita dei dati');
   ok(D.players.every((p) => Object.values(p.attrs).every((v) => v >= 20 && v <= 99)),
     'attributi derivati nel range');
 
-  // Le correzioni individuali sono facili da sbagliare scrivendole a mano:
-  // una chiave con un refuso verrebbe semplicemente ignorata, in silenzio.
+  // Adesso ogni giocatore ha i suoi otto numeri scritti nei dati: facili da
+  // sbagliare a mano, e una chiave con un refuso verrebbe ignorata in
+  // silenzio lasciando l'attributo a un valore di ripiego.
   const CHIAVI = ['sco', 'tre', 'pla', 'reb', 'dif', 'dpe', 'atl', 'usg'];
-  const conMod = D.players.filter((p) => p.mod);
-  const chiaviStorte = conMod.flatMap((p) => Object.keys(p.mod).filter((k) => !CHIAVI.includes(k)).map((k) => `${p.n}: ${k}`));
-  ok(chiaviStorte.length === 0, 'le correzioni individuali usano solo attributi esistenti',
-    chiaviStorte.length ? chiaviStorte.join(', ') : `${conMod.length} giocatori corretti a mano`);
-  const troppoGrandi = conMod.filter((p) => Object.values(p.mod).some((v) => Math.abs(v) > 40));
-  ok(troppoGrandi.length === 0, 'nessuna correzione cosi grande da svuotare l\'archetipo',
-    troppoGrandi.map((p) => p.n).join(', '));
+  const raw = readJson('data/players.json');
+  const grezzi = raw.players || raw;
+  const senza = grezzi.filter((p) => !p.attrs || CHIAVI.some((k) => typeof p.attrs[k] !== 'number'));
+  ok(senza.length === 0, 'ogni giocatore ha tutti e otto i suoi attributi',
+    senza.length ? senza.slice(0, 5).map((p) => p.n).join(', ') : `${grezzi.length} giocatori`);
+  const storte = grezzi.flatMap((p) => Object.keys(p.attrs || {}).filter((k) => !CHIAVI.includes(k)).map((k) => `${p.n}: ${k}`));
+  ok(storte.length === 0, 'e nessun attributo inventato', storte.join(', '));
+
+  // OVERALL E ATTRIBUTI NON DEVONO CONTRADDIRSI.
+  //
+  // Finche gli attributi si derivavano dall'overall la cosa era garantita
+  // per costruzione. Adesso sono due numeri indipendenti, e niente impedisce
+  // di scrivere un 99 con numeri da ottantasei — l'errore piu facile da fare
+  // correggendo un giocatore a mano, e invisibile a occhio in un file da 225.
+  //
+  // Si guarda la forza dei TRE attributi piu alti, non la media piatta: uno
+  // specialista ha quattro valori bassi per mestiere e la media lo
+  // punirebbe. Misurato sui dati attuali, forza e overall stanno su una
+  // retta con scarto tipico 3,7 e il piu lontano e a 11,1 (Chris Bosh). La
+  // soglia a 16 lascia respiro a chi e volutamente sbilanciato e prende i
+  // refusi veri.
+  const forza = (p) => {
+    const v = CHIAVI.map((k) => p.attrs[k]).sort((a, b) => b - a);
+    return (v[0] + v[1] + v[2]) / 3;
+  };
+  const n = D.players.length;
+  const sx = D.players.reduce((a, p) => a + p.ovr, 0);
+  const sy = D.players.reduce((a, p) => a + forza(p), 0);
+  const sxy = D.players.reduce((a, p) => a + p.ovr * forza(p), 0);
+  const sxx = D.players.reduce((a, p) => a + p.ovr * p.ovr, 0);
+  const m = (n * sxy - sx * sy) / (n * sxx - sx * sx);
+  const q = (sy - m * sx) / n;
+  const lontani = D.players
+    .map((p) => ({ p, e: forza(p) - (m * p.ovr + q) }))
+    .filter((x) => Math.abs(x.e) > 16);
+  ok(lontani.length === 0, 'overall e attributi raccontano lo stesso giocatore',
+    lontani.length
+      ? lontani.map((x) => `${x.p.n} (ovr ${x.p.ovr}, forza ${forza(x.p).toFixed(0)})`).join(', ')
+      : `${n} giocatori, il piu lontano a ${Math.max(...D.players.map((p) => Math.abs(forza(p) - (m * p.ovr + q)))).toFixed(1)}`);
 }
 
 /* ---------- Helper: quattro squadre casuali ---------- */
