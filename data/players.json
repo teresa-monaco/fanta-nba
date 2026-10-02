@@ -1,230 +1,2789 @@
 {
-  "_doc": "Pool giocatori dagli anni 80 in poi, con picco storico NBA 2K stimato fra 85 e 100. ATTENZIONE: gli overall sono RICOSTRUZIONI plausibili, non dati ufficiali 2K — non esiste una fonte gratuita scaricabile. Correggerli qui e legittimo e incoraggiato. Gli otto attributi NON si scrivono qui: nascono dall'archetipo (vedi archetypes.json) scalato dall'overall. Campi: id univoco, n nome, ovr overall di picco, pos ruolo naturale, alt ruoli alternativi accettabili, arc archetipo, era decennio del prime, tm squadra del prime.",
-  "players": [
-    { "id": "jordan", "n": "Michael Jordan", "ovr": 99, "pos": "SG", "alt": ["SF"], "arc": "all-around-star", "era": "1990s", "tm": "Bulls", "mod": {"reb": -10} },
-    { "id": "lebron", "n": "LeBron James", "ovr": 99, "pos": "SF", "alt": ["PF", "PG"], "arc": "point-forward", "era": "2010s", "tm": "Heat", "mod": {"tre": 10} },
-    { "id": "shaq", "n": "Shaquille O'Neal", "ovr": 99, "pos": "C", "alt": [], "arc": "dominant-center", "era": "2000s", "tm": "Lakers" },
-    { "id": "kobe", "n": "Kobe Bryant", "ovr": 98, "pos": "SG", "alt": ["SF"], "arc": "iso-scorer", "era": "2000s", "tm": "Lakers", "mod": {"tre": -12} },
-    { "id": "magic", "n": "Magic Johnson", "ovr": 98, "pos": "PG", "alt": ["SF", "PF"], "arc": "point-forward", "era": "1980s", "tm": "Lakers", "mod": {"reb": -2, "tre": -24} },
-    { "id": "jokic", "n": "Nikola Jokic", "ovr": 98, "pos": "C", "alt": ["PF"], "arc": "playmaking-center", "era": "2020s", "tm": "Nuggets" },
-    { "id": "bird", "n": "Larry Bird", "ovr": 97, "pos": "SF", "alt": ["PF"], "arc": "point-forward", "era": "1980s", "tm": "Celtics", "mod": {"tre": 28} },
-    { "id": "kareem", "n": "Kareem Abdul-Jabbar", "ovr": 97, "pos": "C", "alt": [], "arc": "dominant-center", "era": "1980s", "tm": "Lakers" },
-    { "id": "hakeem", "n": "Hakeem Olajuwon", "ovr": 97, "pos": "C", "alt": [], "arc": "dominant-center", "era": "1990s", "tm": "Rockets" },
-    { "id": "duncan", "n": "Tim Duncan", "ovr": 97, "pos": "PF", "alt": ["C"], "arc": "post-scorer", "era": "2000s", "tm": "Spurs", "mod": {"tre": -6} },
-    { "id": "garnett", "n": "Kevin Garnett", "ovr": 97, "pos": "PF", "alt": ["C"], "arc": "power-forward", "era": "2000s", "tm": "Timberwolves" },
-    { "id": "curry", "n": "Stephen Curry", "ovr": 97, "pos": "PG", "alt": ["SG"], "arc": "scoring-pg", "era": "2010s", "tm": "Warriors", "mod": {"reb": 11} },
-    { "id": "giannis", "n": "Giannis Antetokounmpo", "ovr": 97, "pos": "PF", "alt": ["C", "SF"], "arc": "all-around-star", "era": "2020s", "tm": "Bucks", "mod": {"tre": -15} },
-    { "id": "iverson", "n": "Allen Iverson", "ovr": 97, "pos": "PG", "alt": ["SG"], "arc": "scoring-pg", "era": "2000s", "tm": "Sixers", "mod": {"tre": -40} },
-    { "id": "durant", "n": "Kevin Durant", "ovr": 96, "pos": "SF", "alt": ["PF"], "arc": "iso-scorer", "era": "2010s", "tm": "Thunder" },
-    { "id": "tmac", "n": "Tracy McGrady", "ovr": 96, "pos": "SG", "alt": ["SF"], "arc": "iso-scorer", "era": "2000s", "tm": "Magic", "mod": {"tre": -10} },
-    { "id": "dirk", "n": "Dirk Nowitzki", "ovr": 96, "pos": "PF", "alt": ["C"], "arc": "stretch-four", "era": "2000s", "tm": "Mavericks" },
-    { "id": "wade", "n": "Dwyane Wade", "ovr": 96, "pos": "SG", "alt": ["PG"], "arc": "slasher", "era": "2000s", "tm": "Heat", "mod": {"tre": -10} },
-    { "id": "kawhi", "n": "Kawhi Leonard", "ovr": 96, "pos": "SF", "alt": ["PF"], "arc": "two-way-wing", "era": "2010s", "tm": "Raptors", "mod": {"tre": 14} },
-    { "id": "harden", "n": "James Harden", "ovr": 96, "pos": "SG", "alt": ["PG"], "arc": "iso-scorer", "era": "2010s", "tm": "Rockets", "mod": {"reb": 6} },
-    { "id": "embiid", "n": "Joel Embiid", "ovr": 96, "pos": "C", "alt": [], "arc": "dominant-center", "era": "2020s", "tm": "Sixers", "mod": {"tre": 30} },
-    { "id": "luka", "n": "Luka Doncic", "ovr": 96, "pos": "PG", "alt": ["SG", "SF"], "arc": "point-forward", "era": "2020s", "tm": "Mavericks", "mod": {"tre": 24} },
-    { "id": "sga", "n": "Shai Gilgeous-Alexander", "ovr": 96, "pos": "PG", "alt": ["SG"], "arc": "iso-scorer", "era": "2020s", "tm": "Thunder", "mod": {"tre": -10} },
-    { "id": "malone", "n": "Karl Malone", "ovr": 95, "pos": "PF", "alt": ["C"], "arc": "power-forward", "era": "1990s", "tm": "Jazz", "mod": {"tre": -10} },
-    { "id": "barkley", "n": "Charles Barkley", "ovr": 95, "pos": "PF", "alt": ["C", "SF"], "arc": "power-forward", "era": "1990s", "tm": "Suns" },
-    { "id": "robinson", "n": "David Robinson", "ovr": 95, "pos": "C", "alt": [], "arc": "dominant-center", "era": "1990s", "tm": "Spurs" },
-    { "id": "cp3", "n": "Chris Paul", "ovr": 95, "pos": "PG", "alt": [], "arc": "floor-general", "era": "2010s", "tm": "Clippers", "mod": {"reb": 7} },
-    { "id": "ad", "n": "Anthony Davis", "ovr": 95, "pos": "PF", "alt": ["C"], "arc": "post-scorer", "era": "2010s", "tm": "Pelicans" },
-    { "id": "tatum", "n": "Jayson Tatum", "ovr": 95, "pos": "SF", "alt": ["PF"], "arc": "iso-scorer", "era": "2020s", "tm": "Celtics" },
-    { "id": "erving", "n": "Julius Erving", "ovr": 94, "pos": "SF", "alt": [], "arc": "athletic-wing", "era": "1980s", "tm": "Sixers", "mod": {"tre": -30} },
-    { "id": "westbrook", "n": "Russell Westbrook", "ovr": 94, "pos": "PG", "alt": ["SG"], "arc": "slasher", "era": "2010s", "tm": "Thunder", "mod": {"reb": 17, "tre": -5} },
-    { "id": "lillard", "n": "Damian Lillard", "ovr": 94, "pos": "PG", "alt": ["SG"], "arc": "scoring-pg", "era": "2010s", "tm": "Blazers", "mod": {"reb": 6} },
-    { "id": "pippen", "n": "Scottie Pippen", "ovr": 93, "pos": "SF", "alt": ["PF", "PG"], "arc": "two-way-wing", "era": "1990s", "tm": "Bulls", "mod": {"tre": -20} },
-    { "id": "ewing", "n": "Patrick Ewing", "ovr": 93, "pos": "C", "alt": [], "arc": "post-scorer", "era": "1990s", "tm": "Knicks", "mod": {"tre": -6} },
-    { "id": "mosesmalone", "n": "Moses Malone", "ovr": 93, "pos": "C", "alt": ["PF"], "arc": "dominant-center", "era": "1980s", "tm": "Sixers" },
-    { "id": "mchale", "n": "Kevin McHale", "ovr": 93, "pos": "PF", "alt": ["C"], "arc": "post-scorer", "era": "1980s", "tm": "Celtics" },
-    { "id": "drexler", "n": "Clyde Drexler", "ovr": 93, "pos": "SG", "alt": ["SF"], "arc": "athletic-wing", "era": "1990s", "tm": "Blazers", "mod": {"tre": -12} },
-    { "id": "kidd", "n": "Jason Kidd", "ovr": 93, "pos": "PG", "alt": [], "arc": "floor-general", "era": "2000s", "tm": "Nets", "mod": {"reb": 23} },
-    { "id": "nash", "n": "Steve Nash", "ovr": 93, "pos": "PG", "alt": [], "arc": "floor-general", "era": "2000s", "tm": "Suns", "mod": {"tre": 22} },
-    { "id": "payton", "n": "Gary Payton", "ovr": 93, "pos": "PG", "alt": ["SG"], "arc": "two-way-guard", "era": "1990s", "tm": "Sonics", "mod": {"tre": -18} },
-    { "id": "isiah", "n": "Isiah Thomas", "ovr": 93, "pos": "PG", "alt": [], "arc": "floor-general", "era": "1980s", "tm": "Pistons", "mod": {"tre": -30} },
-    { "id": "dhoward", "n": "Dwight Howard", "ovr": 93, "pos": "C", "alt": [], "arc": "defensive-anchor", "era": "2000s", "tm": "Magic" },
-    { "id": "butler", "n": "Jimmy Butler", "ovr": 93, "pos": "SF", "alt": ["SG"], "arc": "two-way-wing", "era": "2010s", "tm": "Heat", "mod": {"tre": -22} },
-    { "id": "drose", "n": "Derrick Rose", "ovr": 93, "pos": "PG", "alt": [], "arc": "slasher", "era": "2010s", "tm": "Bulls" },
-    { "id": "kyrie", "n": "Kyrie Irving", "ovr": 93, "pos": "PG", "alt": ["SG"], "arc": "scoring-pg", "era": "2010s", "tm": "Cavaliers" },
-    { "id": "wemby", "n": "Victor Wembanyama", "ovr": 93, "pos": "C", "alt": ["PF"], "arc": "defensive-anchor", "era": "2020s", "tm": "Spurs", "mod": {"tre": 38} },
-    { "id": "vcarter", "n": "Vince Carter", "ovr": 93, "pos": "SG", "alt": ["SF"], "arc": "athletic-wing", "era": "2000s", "tm": "Raptors", "mod": {"reb": -11, "tre": 25} },
-    { "id": "pgeorge", "n": "Paul George", "ovr": 92, "pos": "SF", "alt": ["SG"], "arc": "two-way-wing", "era": "2010s", "tm": "Pacers", "mod": {"tre": 16} },
-    { "id": "melo", "n": "Carmelo Anthony", "ovr": 92, "pos": "SF", "alt": ["PF"], "arc": "iso-scorer", "era": "2010s", "tm": "Nuggets" },
-    { "id": "ghill", "n": "Grant Hill", "ovr": 92, "pos": "SF", "alt": ["SG"], "arc": "point-forward", "era": "1990s", "tm": "Pistons", "mod": {"tre": -22} },
-    { "id": "cwebb", "n": "Chris Webber", "ovr": 92, "pos": "PF", "alt": ["C"], "arc": "power-forward", "era": "2000s", "tm": "Kings" },
-    { "id": "kemp", "n": "Shawn Kemp", "ovr": 92, "pos": "PF", "alt": ["C"], "arc": "rim-runner", "era": "1990s", "tm": "Sonics" },
-    { "id": "zo", "n": "Alonzo Mourning", "ovr": 92, "pos": "C", "alt": ["PF"], "arc": "defensive-anchor", "era": "1990s", "tm": "Heat" },
-    { "id": "nique", "n": "Dominique Wilkins", "ovr": 92, "pos": "SF", "alt": [], "arc": "iso-scorer", "era": "1990s", "tm": "Hawks" },
-    { "id": "stockton", "n": "John Stockton", "ovr": 92, "pos": "PG", "alt": [], "arc": "floor-general", "era": "1990s", "tm": "Jazz" },
-    { "id": "pierce", "n": "Paul Pierce", "ovr": 91, "pos": "SF", "alt": ["SG"], "arc": "iso-scorer", "era": "2000s", "tm": "Celtics" },
-    { "id": "rayallen", "n": "Ray Allen", "ovr": 91, "pos": "SG", "alt": ["SF"], "arc": "sharpshooter", "era": "2000s", "tm": "Sonics" },
-    { "id": "reggie", "n": "Reggie Miller", "ovr": 91, "pos": "SG", "alt": [], "arc": "sharpshooter", "era": "1990s", "tm": "Pacers" },
-    { "id": "penny", "n": "Penny Hardaway", "ovr": 91, "pos": "PG", "alt": ["SG"], "arc": "point-forward", "era": "1990s", "tm": "Magic", "mod": {"reb": -20, "tre": -10} },
-    { "id": "amare", "n": "Amar'e Stoudemire", "ovr": 91, "pos": "PF", "alt": ["C"], "arc": "rim-runner", "era": "2000s", "tm": "Suns" },
-    { "id": "booker", "n": "Devin Booker", "ovr": 91, "pos": "SG", "alt": ["PG"], "arc": "iso-scorer", "era": "2020s", "tm": "Suns" },
-    { "id": "antedwards", "n": "Anthony Edwards", "ovr": 91, "pos": "SG", "alt": ["SF"], "arc": "athletic-wing", "era": "2020s", "tm": "Timberwolves", "mod": {"tre": 27} },
-    { "id": "worthy", "n": "James Worthy", "ovr": 90, "pos": "SF", "alt": ["PF"], "arc": "athletic-wing", "era": "1980s", "tm": "Lakers" },
-    { "id": "bking", "n": "Bernard King", "ovr": 90, "pos": "SF", "alt": [], "arc": "iso-scorer", "era": "1980s", "tm": "Knicks" },
-    { "id": "gasol", "n": "Pau Gasol", "ovr": 90, "pos": "PF", "alt": ["C"], "arc": "post-scorer", "era": "2000s", "tm": "Lakers" },
-    { "id": "yao", "n": "Yao Ming", "ovr": 90, "pos": "C", "alt": [], "arc": "post-scorer", "era": "2000s", "tm": "Rockets" },
-    { "id": "aldridge", "n": "LaMarcus Aldridge", "ovr": 90, "pos": "PF", "alt": ["C"], "arc": "post-scorer", "era": "2010s", "tm": "Blazers" },
-    { "id": "griffin", "n": "Blake Griffin", "ovr": 90, "pos": "PF", "alt": ["C"], "arc": "power-forward", "era": "2010s", "tm": "Clippers" },
-    { "id": "boogie", "n": "DeMarcus Cousins", "ovr": 90, "pos": "C", "alt": ["PF"], "arc": "post-scorer", "era": "2010s", "tm": "Kings" },
-    { "id": "kat", "n": "Karl-Anthony Towns", "ovr": 90, "pos": "C", "alt": ["PF"], "arc": "stretch-four", "era": "2020s", "tm": "Timberwolves" },
-    { "id": "klay", "n": "Klay Thompson", "ovr": 90, "pos": "SG", "alt": ["SF"], "arc": "sharpshooter", "era": "2010s", "tm": "Warriors" },
-    { "id": "mitchell", "n": "Donovan Mitchell", "ovr": 90, "pos": "SG", "alt": ["PG"], "arc": "iso-scorer", "era": "2020s", "tm": "Cavaliers" },
-    { "id": "dwill", "n": "Deron Williams", "ovr": 90, "pos": "PG", "alt": [], "arc": "floor-general", "era": "2000s", "tm": "Jazz" },
-    { "id": "arenas", "n": "Gilbert Arenas", "ovr": 90, "pos": "PG", "alt": ["SG"], "arc": "combo-guard", "era": "2000s", "tm": "Wizards" },
-    { "id": "manu", "n": "Manu Ginobili", "ovr": 89, "pos": "SG", "alt": ["SF"], "arc": "slasher", "era": "2000s", "tm": "Spurs", "mod": {"tre": 32} },
-    { "id": "broy", "n": "Brandon Roy", "ovr": 89, "pos": "SG", "alt": ["SF"], "arc": "combo-guard", "era": "2000s", "tm": "Blazers" },
-    { "id": "derozan", "n": "DeMar DeRozan", "ovr": 89, "pos": "SG", "alt": ["SF"], "arc": "iso-scorer", "era": "2010s", "tm": "Raptors", "mod": {"tre": -40} },
-    { "id": "beal", "n": "Bradley Beal", "ovr": 89, "pos": "SG", "alt": [], "arc": "combo-guard", "era": "2010s", "tm": "Wizards" },
-    { "id": "jbrown", "n": "Jaylen Brown", "ovr": 89, "pos": "SG", "alt": ["SF"], "arc": "two-way-wing", "era": "2020s", "tm": "Celtics", "mod": {"tre": 10} },
-    { "id": "trae", "n": "Trae Young", "ovr": 89, "pos": "PG", "alt": [], "arc": "scoring-pg", "era": "2020s", "tm": "Hawks", "mod": {"dpe": -12} },
-    { "id": "brunson", "n": "Jalen Brunson", "ovr": 89, "pos": "PG", "alt": ["SG"], "arc": "iso-scorer", "era": "2020s", "tm": "Knicks" },
-    { "id": "halliburton", "n": "Tyrese Haliburton", "ovr": 89, "pos": "PG", "alt": ["SG"], "arc": "floor-general", "era": "2020s", "tm": "Pacers" },
-    { "id": "zion", "n": "Zion Williamson", "ovr": 89, "pos": "PF", "alt": ["C"], "arc": "power-forward", "era": "2020s", "tm": "Pelicans" },
-    { "id": "gobert", "n": "Rudy Gobert", "ovr": 89, "pos": "C", "alt": [], "arc": "defensive-anchor", "era": "2020s", "tm": "Jazz" },
-    { "id": "sheed", "n": "Rasheed Wallace", "ovr": 89, "pos": "PF", "alt": ["C"], "arc": "stretch-four", "era": "2000s", "tm": "Pistons", "mod": {"tre": -30} },
-    { "id": "brand", "n": "Elton Brand", "ovr": 89, "pos": "PF", "alt": ["C"], "arc": "power-forward", "era": "2000s", "tm": "Clippers" },
-    { "id": "klove", "n": "Kevin Love", "ovr": 89, "pos": "PF", "alt": ["C"], "arc": "stretch-four", "era": "2010s", "tm": "Timberwolves" },
-    { "id": "bosh", "n": "Chris Bosh", "ovr": 89, "pos": "PF", "alt": ["C"], "arc": "stretch-four", "era": "2010s", "tm": "Raptors", "mod": {"tre": -36} },
-    { "id": "mullin", "n": "Chris Mullin", "ovr": 89, "pos": "SF", "alt": ["SG"], "arc": "sharpshooter", "era": "1990s", "tm": "Warriors" },
-    { "id": "english", "n": "Alex English", "ovr": 89, "pos": "SF", "alt": [], "arc": "iso-scorer", "era": "1980s", "tm": "Nuggets" },
-    { "id": "dantley", "n": "Adrian Dantley", "ovr": 89, "pos": "SF", "alt": ["PF"], "arc": "post-scorer", "era": "1980s", "tm": "Jazz" },
-    { "id": "simmons", "n": "Ben Simmons", "ovr": 88, "pos": "PG", "alt": ["PF", "SF"], "arc": "point-forward", "era": "2010s", "tm": "Sixers", "mod": {"tre": -38} },
-    { "id": "jwall", "n": "John Wall", "ovr": 88, "pos": "PG", "alt": [], "arc": "slasher", "era": "2010s", "tm": "Wizards" },
-    { "id": "morant", "n": "Ja Morant", "ovr": 88, "pos": "PG", "alt": [], "arc": "slasher", "era": "2020s", "tm": "Grizzlies" },
-    { "id": "fox", "n": "De'Aaron Fox", "ovr": 88, "pos": "PG", "alt": ["SG"], "arc": "slasher", "era": "2020s", "tm": "Kings" },
-    { "id": "cade", "n": "Cade Cunningham", "ovr": 88, "pos": "PG", "alt": ["SG"], "arc": "point-forward", "era": "2020s", "tm": "Pistons" },
-    { "id": "maxey", "n": "Tyrese Maxey", "ovr": 88, "pos": "SG", "alt": ["PG"], "arc": "scoring-pg", "era": "2020s", "tm": "Sixers" },
-    { "id": "middleton", "n": "Khris Middleton", "ovr": 88, "pos": "SF", "alt": ["SG"], "arc": "two-way-wing", "era": "2020s", "tm": "Bucks", "mod": {"tre": 14} },
-    { "id": "draymond", "n": "Draymond Green", "ovr": 88, "pos": "PF", "alt": ["C", "SF"], "arc": "glue-forward", "era": "2010s", "tm": "Warriors" },
-    { "id": "rodman", "n": "Dennis Rodman", "ovr": 88, "pos": "PF", "alt": ["C", "SF"], "arc": "glue-forward", "era": "1990s", "tm": "Bulls" },
-    { "id": "benwallace", "n": "Ben Wallace", "ovr": 88, "pos": "C", "alt": ["PF"], "arc": "defensive-anchor", "era": "2000s", "tm": "Pistons" },
-    { "id": "mutombo", "n": "Dikembe Mutombo", "ovr": 88, "pos": "C", "alt": [], "arc": "defensive-anchor", "era": "1990s", "tm": "Nuggets" },
-    { "id": "jermaine", "n": "Jermaine O'Neal", "ovr": 88, "pos": "PF", "alt": ["C"], "arc": "defensive-anchor", "era": "2000s", "tm": "Pacers" },
-    { "id": "sabonis-d", "n": "Domantas Sabonis", "ovr": 88, "pos": "C", "alt": ["PF"], "arc": "playmaking-center", "era": "2020s", "tm": "Kings" },
-    { "id": "bam", "n": "Bam Adebayo", "ovr": 88, "pos": "C", "alt": ["PF"], "arc": "glue-forward", "era": "2020s", "tm": "Heat" },
-    { "id": "mgasol", "n": "Marc Gasol", "ovr": 88, "pos": "C", "alt": [], "arc": "playmaking-center", "era": "2010s", "tm": "Grizzlies" },
-    { "id": "thardaway", "n": "Tim Hardaway", "ovr": 88, "pos": "PG", "alt": ["SG"], "arc": "scoring-pg", "era": "1990s", "tm": "Heat" },
-    { "id": "kjohnson", "n": "Kevin Johnson", "ovr": 88, "pos": "PG", "alt": [], "arc": "scoring-pg", "era": "1990s", "tm": "Suns" },
-    { "id": "billups", "n": "Chauncey Billups", "ovr": 88, "pos": "PG", "alt": ["SG"], "arc": "floor-general", "era": "2000s", "tm": "Pistons" },
-    { "id": "marbury", "n": "Stephon Marbury", "ovr": 88, "pos": "PG", "alt": [], "arc": "scoring-pg", "era": "2000s", "tm": "Suns" },
-    { "id": "dumars", "n": "Joe Dumars", "ovr": 88, "pos": "SG", "alt": [], "arc": "two-way-guard", "era": "1990s", "tm": "Pistons" },
-    { "id": "richmond", "n": "Mitch Richmond", "ovr": 88, "pos": "SG", "alt": [], "arc": "sharpshooter", "era": "1990s", "tm": "Kings" },
-    { "id": "peja", "n": "Peja Stojakovic", "ovr": 88, "pos": "SF", "alt": ["SG"], "arc": "sharpshooter", "era": "2000s", "tm": "Kings" },
-    { "id": "moncrief", "n": "Sidney Moncrief", "ovr": 88, "pos": "SG", "alt": [], "arc": "two-way-guard", "era": "1980s", "tm": "Bucks" },
-    { "id": "parish", "n": "Robert Parish", "ovr": 88, "pos": "C", "alt": [], "arc": "post-scorer", "era": "1980s", "tm": "Celtics" },
-    { "id": "lowry", "n": "Kyle Lowry", "ovr": 87, "pos": "PG", "alt": ["SG"], "arc": "two-way-guard", "era": "2010s", "tm": "Raptors" },
-    { "id": "jrue", "n": "Jrue Holiday", "ovr": 87, "pos": "PG", "alt": ["SG"], "arc": "two-way-guard", "era": "2010s", "tm": "Pelicans" },
-    { "id": "rondo", "n": "Rajon Rondo", "ovr": 87, "pos": "PG", "alt": [], "arc": "floor-general", "era": "2010s", "tm": "Celtics", "mod": {"tre": -30} },
-    { "id": "kemba", "n": "Kemba Walker", "ovr": 87, "pos": "PG", "alt": [], "arc": "scoring-pg", "era": "2010s", "tm": "Hornets" },
-    { "id": "melo-ball", "n": "LaMelo Ball", "ovr": 87, "pos": "PG", "alt": ["SG"], "arc": "floor-general", "era": "2020s", "tm": "Hornets" },
-    { "id": "jmurray", "n": "Jamal Murray", "ovr": 87, "pos": "PG", "alt": ["SG"], "arc": "scoring-pg", "era": "2020s", "tm": "Nuggets" },
-    { "id": "lavine", "n": "Zach LaVine", "ovr": 87, "pos": "SG", "alt": ["SF"], "arc": "combo-guard", "era": "2020s", "tm": "Bulls" },
-    { "id": "jjwilliams", "n": "Jalen Williams", "ovr": 87, "pos": "SF", "alt": ["SG"], "arc": "two-way-wing", "era": "2020s", "tm": "Thunder" },
-    { "id": "siakam", "n": "Pascal Siakam", "ovr": 87, "pos": "PF", "alt": ["SF"], "arc": "two-way-wing", "era": "2020s", "tm": "Raptors", "mod": {"tre": -16} },
-    { "id": "banchero", "n": "Paolo Banchero", "ovr": 87, "pos": "PF", "alt": ["SF"], "arc": "iso-scorer", "era": "2020s", "tm": "Magic", "mod": {"tre": -14} },
-    { "id": "mobley", "n": "Evan Mobley", "ovr": 87, "pos": "PF", "alt": ["C"], "arc": "defensive-anchor", "era": "2020s", "tm": "Cavaliers", "mod": {"tre": 20} },
-    { "id": "jjj", "n": "Jaren Jackson Jr.", "ovr": 87, "pos": "PF", "alt": ["C"], "arc": "defensive-anchor", "era": "2020s", "tm": "Grizzlies", "mod": {"tre": 40} },
-    { "id": "porzingis", "n": "Kristaps Porzingis", "ovr": 87, "pos": "PF", "alt": ["C"], "arc": "stretch-four", "era": "2020s", "tm": "Celtics", "mod": {"atl": 18} },
-    { "id": "markkanen", "n": "Lauri Markkanen", "ovr": 87, "pos": "PF", "alt": ["SF"], "arc": "stretch-four", "era": "2020s", "tm": "Jazz" },
-    { "id": "chet", "n": "Chet Holmgren", "ovr": 87, "pos": "C", "alt": ["PF"], "arc": "defensive-anchor", "era": "2020s", "tm": "Thunder", "mod": {"tre": 40} },
-    { "id": "sengun", "n": "Alperen Sengun", "ovr": 87, "pos": "C", "alt": [], "arc": "playmaking-center", "era": "2020s", "tm": "Rockets" },
-    { "id": "horford", "n": "Al Horford", "ovr": 87, "pos": "C", "alt": ["PF"], "arc": "playmaking-center", "era": "2010s", "tm": "Hawks", "mod": {"tre": 20} },
-    { "id": "sabonis-a", "n": "Arvydas Sabonis", "ovr": 87, "pos": "C", "alt": [], "arc": "playmaking-center", "era": "1990s", "tm": "Blazers" },
-    { "id": "dejordan", "n": "DeAndre Jordan", "ovr": 87, "pos": "C", "alt": [], "arc": "rim-runner", "era": "2010s", "tm": "Clippers" },
-    { "id": "zbo", "n": "Zach Randolph", "ovr": 87, "pos": "PF", "alt": ["C"], "arc": "post-scorer", "era": "2010s", "tm": "Grizzlies" },
-    { "id": "jamison", "n": "Antawn Jamison", "ovr": 87, "pos": "PF", "alt": ["SF"], "arc": "stretch-four", "era": "2000s", "tm": "Warriors" },
-    { "id": "boozer", "n": "Carlos Boozer", "ovr": 87, "pos": "PF", "alt": [], "arc": "power-forward", "era": "2000s", "tm": "Jazz" },
-    { "id": "ljohnson", "n": "Larry Johnson", "ovr": 87, "pos": "PF", "alt": ["SF"], "arc": "power-forward", "era": "1990s", "tm": "Hornets" },
-    { "id": "mcdyess", "n": "Antonio McDyess", "ovr": 87, "pos": "PF", "alt": ["C"], "arc": "power-forward", "era": "1990s", "tm": "Nuggets" },
-    { "id": "randle", "n": "Julius Randle", "ovr": 87, "pos": "PF", "alt": ["C"], "arc": "power-forward", "era": "2020s", "tm": "Knicks", "mod": {"tre": 34} },
-    { "id": "artest", "n": "Ron Artest", "ovr": 87, "pos": "SF", "alt": ["PF"], "arc": "three-and-d", "era": "2000s", "tm": "Pacers" },
-    { "id": "kirilenko", "n": "Andrei Kirilenko", "ovr": 87, "pos": "SF", "alt": ["PF"], "arc": "glue-forward", "era": "2000s", "tm": "Jazz" },
-    { "id": "jjohnson", "n": "Joe Johnson", "ovr": 87, "pos": "SG", "alt": ["SF"], "arc": "iso-scorer", "era": "2000s", "tm": "Hawks" },
-    { "id": "sprewell", "n": "Latrell Sprewell", "ovr": 87, "pos": "SG", "alt": ["SF"], "arc": "athletic-wing", "era": "1990s", "tm": "Warriors", "mod": {"tre": -10} },
-    { "id": "glenrice", "n": "Glen Rice", "ovr": 87, "pos": "SF", "alt": ["SG"], "arc": "sharpshooter", "era": "1990s", "tm": "Hornets" },
-    { "id": "mprice", "n": "Mark Price", "ovr": 87, "pos": "PG", "alt": [], "arc": "floor-general", "era": "1990s", "tm": "Cavaliers" },
-    { "id": "mjohnson-m", "n": "Marques Johnson", "ovr": 87, "pos": "SF", "alt": ["PF"], "arc": "athletic-wing", "era": "1980s", "tm": "Bucks" },
-    { "id": "conley", "n": "Mike Conley", "ovr": 86, "pos": "PG", "alt": [], "arc": "floor-general", "era": "2010s", "tm": "Grizzlies" },
-    { "id": "bibby", "n": "Mike Bibby", "ovr": 86, "pos": "PG", "alt": [], "arc": "scoring-pg", "era": "2000s", "tm": "Kings" },
-    { "id": "dragic", "n": "Goran Dragic", "ovr": 86, "pos": "PG", "alt": ["SG"], "arc": "combo-guard", "era": "2010s", "tm": "Suns" },
-    { "id": "garland", "n": "Darius Garland", "ovr": 86, "pos": "PG", "alt": [], "arc": "floor-general", "era": "2020s", "tm": "Cavaliers" },
-    { "id": "fvv", "n": "Fred VanVleet", "ovr": 86, "pos": "PG", "alt": ["SG"], "arc": "three-and-d", "era": "2020s", "tm": "Raptors" },
-    { "id": "dwhite", "n": "Derrick White", "ovr": 86, "pos": "SG", "alt": ["PG"], "arc": "three-and-d", "era": "2020s", "tm": "Celtics" },
-    { "id": "bane", "n": "Desmond Bane", "ovr": 86, "pos": "SG", "alt": [], "arc": "sharpshooter", "era": "2020s", "tm": "Grizzlies" },
-    { "id": "oladipo", "n": "Victor Oladipo", "ovr": 86, "pos": "SG", "alt": ["PG"], "arc": "two-way-guard", "era": "2010s", "tm": "Pacers" },
-    { "id": "cjmc", "n": "C.J. McCollum", "ovr": 86, "pos": "SG", "alt": ["PG"], "arc": "combo-guard", "era": "2010s", "tm": "Blazers" },
-    { "id": "monta", "n": "Monta Ellis", "ovr": 86, "pos": "SG", "alt": ["PG"], "arc": "combo-guard", "era": "2010s", "tm": "Warriors" },
-    { "id": "rip", "n": "Richard Hamilton", "ovr": 86, "pos": "SG", "alt": [], "arc": "sharpshooter", "era": "2000s", "tm": "Pistons" },
-    { "id": "jrichardson", "n": "Jason Richardson", "ovr": 86, "pos": "SG", "alt": ["SF"], "arc": "athletic-wing", "era": "2000s", "tm": "Warriors", "mod": {"tre": 25} },
-    { "id": "houston", "n": "Allan Houston", "ovr": 86, "pos": "SG", "alt": [], "arc": "sharpshooter", "era": "2000s", "tm": "Knicks" },
-    { "id": "finley", "n": "Michael Finley", "ovr": 86, "pos": "SG", "alt": ["SF"], "arc": "athletic-wing", "era": "2000s", "tm": "Mavericks" },
-    { "id": "hornacek", "n": "Jeff Hornacek", "ovr": 86, "pos": "SG", "alt": ["PG"], "arc": "sharpshooter", "era": "1990s", "tm": "Jazz" },
-    { "id": "iguodala", "n": "Andre Iguodala", "ovr": 86, "pos": "SF", "alt": ["SG"], "arc": "three-and-d", "era": "2010s", "tm": "Warriors", "mod": {"tre": -30} },
-    { "id": "mbridges", "n": "Mikal Bridges", "ovr": 86, "pos": "SF", "alt": ["SG"], "arc": "three-and-d", "era": "2020s", "tm": "Suns" },
-    { "id": "fwagner", "n": "Franz Wagner", "ovr": 86, "pos": "SF", "alt": ["PF"], "arc": "two-way-wing", "era": "2020s", "tm": "Magic" },
-    { "id": "hayward", "n": "Gordon Hayward", "ovr": 86, "pos": "SF", "alt": ["SG"], "arc": "two-way-wing", "era": "2010s", "tm": "Jazz" },
-    { "id": "granger", "n": "Danny Granger", "ovr": 86, "pos": "SF", "alt": ["PF"], "arc": "sharpshooter", "era": "2000s", "tm": "Pacers" },
-    { "id": "rlewis", "n": "Rashard Lewis", "ovr": 86, "pos": "SF", "alt": ["PF"], "arc": "stretch-four", "era": "2000s", "tm": "Magic" },
-    { "id": "odom", "n": "Lamar Odom", "ovr": 86, "pos": "PF", "alt": ["SF"], "arc": "point-forward", "era": "2000s", "tm": "Lakers" },
-    { "id": "schrempf", "n": "Detlef Schrempf", "ovr": 86, "pos": "SF", "alt": ["PF"], "arc": "stretch-four", "era": "1990s", "tm": "Sonics" },
-    { "id": "aguirre", "n": "Mark Aguirre", "ovr": 86, "pos": "SF", "alt": [], "arc": "iso-scorer", "era": "1980s", "tm": "Mavericks" },
-    { "id": "kiki", "n": "Kiki Vandeweghe", "ovr": 86, "pos": "SF", "alt": ["PF"], "arc": "sharpshooter", "era": "1980s", "tm": "Nuggets" },
-    { "id": "tchambers", "n": "Tom Chambers", "ovr": 86, "pos": "PF", "alt": ["SF"], "arc": "stretch-four", "era": "1990s", "tm": "Suns" },
-    { "id": "cummings", "n": "Terry Cummings", "ovr": 86, "pos": "PF", "alt": ["C"], "arc": "power-forward", "era": "1980s", "tm": "Bucks" },
-    { "id": "vinbaker", "n": "Vin Baker", "ovr": 86, "pos": "PF", "alt": ["C"], "arc": "power-forward", "era": "1990s", "tm": "Bucks" },
-    { "id": "laimbeer", "n": "Bill Laimbeer", "ovr": 86, "pos": "C", "alt": ["PF"], "arc": "stretch-four", "era": "1980s", "tm": "Pistons" },
-    { "id": "sikma", "n": "Jack Sikma", "ovr": 86, "pos": "C", "alt": ["PF"], "arc": "stretch-four", "era": "1980s", "tm": "Sonics" },
-    { "id": "camby", "n": "Marcus Camby", "ovr": 86, "pos": "C", "alt": ["PF"], "arc": "defensive-anchor", "era": "2000s", "tm": "Nuggets" },
-    { "id": "divac", "n": "Vlade Divac", "ovr": 86, "pos": "C", "alt": [], "arc": "playmaking-center", "era": "2000s", "tm": "Kings" },
-    { "id": "daugherty", "n": "Brad Daugherty", "ovr": 86, "pos": "C", "alt": [], "arc": "playmaking-center", "era": "1990s", "tm": "Cavaliers" },
-    { "id": "drummond", "n": "Andre Drummond", "ovr": 86, "pos": "C", "alt": [], "arc": "rim-runner", "era": "2010s", "tm": "Pistons" },
-    { "id": "chandler", "n": "Tyson Chandler", "ovr": 86, "pos": "C", "alt": [], "arc": "rim-runner", "era": "2010s", "tm": "Mavericks" },
-    { "id": "blopez", "n": "Brook Lopez", "ovr": 86, "pos": "C", "alt": [], "arc": "stretch-four", "era": "2020s", "tm": "Bucks", "mod": {"tre": -18} },
-    { "id": "vucevic", "n": "Nikola Vucevic", "ovr": 86, "pos": "C", "alt": ["PF"], "arc": "post-scorer", "era": "2020s", "tm": "Magic" },
-    { "id": "ayton", "n": "Deandre Ayton", "ovr": 86, "pos": "C", "alt": [], "arc": "post-scorer", "era": "2020s", "tm": "Suns" },
-    { "id": "aljefferson", "n": "Al Jefferson", "ovr": 86, "pos": "C", "alt": ["PF"], "arc": "post-scorer", "era": "2010s", "tm": "Bobcats" },
-    { "id": "cheeks", "n": "Maurice Cheeks", "ovr": 86, "pos": "PG", "alt": [], "arc": "floor-general", "era": "1980s", "tm": "Sixers", "mod": {"tre": -25} },
-    { "id": "strickland", "n": "Rod Strickland", "ovr": 86, "pos": "PG", "alt": [], "arc": "floor-general", "era": "1990s", "tm": "Wizards" },
-    { "id": "marion", "n": "Shawn Marion", "ovr": 88, "pos": "SF", "alt": ["PF"], "arc": "glue-forward", "era": "2000s", "tm": "Suns" },
-    { "id": "cassell", "n": "Sam Cassell", "ovr": 85, "pos": "PG", "alt": ["SG"], "arc": "floor-general", "era": "2000s", "tm": "Timberwolves" },
-    { "id": "tporter", "n": "Terry Porter", "ovr": 85, "pos": "PG", "alt": ["SG"], "arc": "floor-general", "era": "1990s", "tm": "Blazers" },
-    { "id": "blaylock", "n": "Mookie Blaylock", "ovr": 85, "pos": "PG", "alt": ["SG"], "arc": "two-way-guard", "era": "1990s", "tm": "Hawks" },
-    { "id": "nixon", "n": "Norm Nixon", "ovr": 85, "pos": "PG", "alt": ["SG"], "arc": "floor-general", "era": "1980s", "tm": "Lakers" },
-    { "id": "smart", "n": "Marcus Smart", "ovr": 85, "pos": "PG", "alt": ["SG"], "arc": "three-and-d", "era": "2010s", "tm": "Celtics", "mod": {"tre": -25} },
-    { "id": "bledsoe", "n": "Eric Bledsoe", "ovr": 85, "pos": "PG", "alt": ["SG"], "arc": "slasher", "era": "2010s", "tm": "Suns" },
-    { "id": "tparker", "n": "Tony Parker", "ovr": 89, "pos": "PG", "alt": [], "arc": "slasher", "era": "2000s", "tm": "Spurs", "mod": {"tre": -10} },
-    { "id": "korver", "n": "Kyle Korver", "ovr": 85, "pos": "SG", "alt": ["SF"], "arc": "sharpshooter", "era": "2010s", "tm": "Hawks" },
-    { "id": "jrsmith", "n": "J.R. Smith", "ovr": 85, "pos": "SG", "alt": ["SF"], "arc": "sharpshooter", "era": "2010s", "tm": "Knicks" },
-    { "id": "ssmith", "n": "Steve Smith", "ovr": 85, "pos": "SG", "alt": ["SF"], "arc": "sharpshooter", "era": "1990s", "tm": "Hawks" },
-    { "id": "hawkins-h", "n": "Hersey Hawkins", "ovr": 85, "pos": "SG", "alt": [], "arc": "sharpshooter", "era": "1990s", "tm": "Sixers" },
-    { "id": "majerle", "n": "Dan Majerle", "ovr": 85, "pos": "SG", "alt": ["SF"], "arc": "three-and-d", "era": "1990s", "tm": "Suns" },
-    { "id": "cooper", "n": "Michael Cooper", "ovr": 85, "pos": "SG", "alt": ["SF"], "arc": "three-and-d", "era": "1980s", "tm": "Lakers" },
-    { "id": "arobertson", "n": "Alvin Robertson", "ovr": 85, "pos": "SG", "alt": ["PG"], "arc": "two-way-guard", "era": "1980s", "tm": "Spurs" },
-    { "id": "battier", "n": "Shane Battier", "ovr": 85, "pos": "SF", "alt": ["PF"], "arc": "three-and-d", "era": "2000s", "tm": "Rockets" },
-    { "id": "oganunoby", "n": "OG Anunoby", "ovr": 85, "pos": "SF", "alt": ["PF"], "arc": "three-and-d", "era": "2020s", "tm": "Knicks" },
-    { "id": "wiggins", "n": "Andrew Wiggins", "ovr": 85, "pos": "SF", "alt": ["SG"], "arc": "two-way-wing", "era": "2020s", "tm": "Warriors" },
-    { "id": "mpj", "n": "Michael Porter Jr.", "ovr": 85, "pos": "SF", "alt": ["PF"], "arc": "sharpshooter", "era": "2020s", "tm": "Nuggets" },
-    { "id": "sbarnes", "n": "Scottie Barnes", "ovr": 85, "pos": "SF", "alt": ["PF"], "arc": "point-forward", "era": "2020s", "tm": "Raptors", "mod": {"tre": -16} },
-    { "id": "jhoward", "n": "Josh Howard", "ovr": 85, "pos": "SF", "alt": ["PF"], "arc": "two-way-wing", "era": "2000s", "tm": "Mavericks" },
-    { "id": "cbutler", "n": "Caron Butler", "ovr": 85, "pos": "SF", "alt": ["SG"], "arc": "two-way-wing", "era": "2000s", "tm": "Wizards" },
-    { "id": "selliott", "n": "Sean Elliott", "ovr": 85, "pos": "SF", "alt": ["PF"], "arc": "sharpshooter", "era": "1990s", "tm": "Spurs" },
-    { "id": "wilkes", "n": "Jamaal Wilkes", "ovr": 85, "pos": "SF", "alt": ["SG"], "arc": "athletic-wing", "era": "1980s", "tm": "Lakers" },
-    { "id": "tharris", "n": "Tobias Harris", "ovr": 85, "pos": "PF", "alt": ["SF"], "arc": "two-way-wing", "era": "2020s", "tm": "Sixers" },
-    { "id": "agordon", "n": "Aaron Gordon", "ovr": 85, "pos": "PF", "alt": ["SF"], "arc": "athletic-wing", "era": "2020s", "tm": "Nuggets" },
-    { "id": "horace", "n": "Horace Grant", "ovr": 85, "pos": "PF", "alt": ["C"], "arc": "glue-forward", "era": "1990s", "tm": "Bulls" },
-    { "id": "horry", "n": "Robert Horry", "ovr": 85, "pos": "PF", "alt": ["SF"], "arc": "three-and-d", "era": "2000s", "tm": "Spurs" },
-    { "id": "buckwilliams", "n": "Buck Williams", "ovr": 85, "pos": "PF", "alt": ["C"], "arc": "glue-forward", "era": "1980s", "tm": "Nets" },
-    { "id": "bobbyjones", "n": "Bobby Jones", "ovr": 85, "pos": "PF", "alt": ["SF"], "arc": "glue-forward", "era": "1980s", "tm": "Sixers" },
-    { "id": "othorpe", "n": "Otis Thorpe", "ovr": 85, "pos": "PF", "alt": ["C"], "arc": "glue-forward", "era": "1990s", "tm": "Rockets" },
-    { "id": "mturner", "n": "Myles Turner", "ovr": 85, "pos": "C", "alt": ["PF"], "arc": "defensive-anchor", "era": "2020s", "tm": "Pacers", "mod": {"tre": 40} },
-    { "id": "capela", "n": "Clint Capela", "ovr": 85, "pos": "C", "alt": [], "arc": "rim-runner", "era": "2020s", "tm": "Rockets" },
-    { "id": "sadams", "n": "Steven Adams", "ovr": 85, "pos": "C", "alt": [], "arc": "rim-runner", "era": "2020s", "tm": "Thunder" },
-    { "id": "nurkic", "n": "Jusuf Nurkic", "ovr": 85, "pos": "C", "alt": [], "arc": "post-scorer", "era": "2020s", "tm": "Blazers" },
-    { "id": "smits", "n": "Rik Smits", "ovr": 85, "pos": "C", "alt": [], "arc": "post-scorer", "era": "1990s", "tm": "Pacers" },
-    { "id": "ilgauskas", "n": "Zydrunas Ilgauskas", "ovr": 85, "pos": "C", "alt": [], "arc": "post-scorer", "era": "2000s", "tm": "Cavaliers" }
-  ]
+ "_doc": "Pool giocatori dagli anni 80 in poi, con picco storico NBA 2K stimato fra 85 e 100. ATTENZIONE: gli overall sono RICOSTRUZIONI plausibili, non dati ufficiali 2K — non esiste una fonte gratuita scaricabile. Correggerli qui e legittimo e incoraggiato. Gli otto attributi NON si scrivono qui: nascono dall'archetipo (vedi archetypes.json) scalato dall'overall. Campi: id univoco, n nome, ovr overall di picco, pos ruolo naturale, alt ruoli alternativi accettabili, arc archetipo, era decennio del prime, tm squadra del prime.",
+ "players": [
+  {
+   "id": "jordan",
+   "n": "Michael Jordan",
+   "ovr": 99,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "all-around-star",
+   "era": "1990s",
+   "tm": "Bulls",
+   "mod": {
+    "reb": -10
+   }
+  },
+  {
+   "id": "lebron",
+   "n": "LeBron James",
+   "ovr": 99,
+   "pos": "SF",
+   "alt": [
+    "PF",
+    "PG"
+   ],
+   "arc": "point-forward",
+   "era": "2010s",
+   "tm": "Heat",
+   "mod": {
+    "tre": 10
+   }
+  },
+  {
+   "id": "shaq",
+   "n": "Shaquille O'Neal",
+   "ovr": 99,
+   "pos": "C",
+   "alt": [],
+   "arc": "dominant-center",
+   "era": "2000s",
+   "tm": "Lakers"
+  },
+  {
+   "id": "kobe",
+   "n": "Kobe Bryant",
+   "ovr": 98,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "iso-scorer",
+   "era": "2000s",
+   "tm": "Lakers",
+   "mod": {
+    "tre": -12
+   }
+  },
+  {
+   "id": "magic",
+   "n": "Magic Johnson",
+   "ovr": 98,
+   "pos": "PG",
+   "alt": [
+    "SF",
+    "PF"
+   ],
+   "arc": "point-forward",
+   "era": "1980s",
+   "tm": "Lakers",
+   "mod": {
+    "reb": -2,
+    "tre": -24
+   }
+  },
+  {
+   "id": "jokic",
+   "n": "Nikola Jokic",
+   "ovr": 98,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "playmaking-center",
+   "era": "2020s",
+   "tm": "Nuggets"
+  },
+  {
+   "id": "bird",
+   "n": "Larry Bird",
+   "ovr": 97,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "point-forward",
+   "era": "1980s",
+   "tm": "Celtics",
+   "mod": {
+    "tre": 18
+   }
+  },
+  {
+   "id": "kareem",
+   "n": "Kareem Abdul-Jabbar",
+   "ovr": 97,
+   "pos": "C",
+   "alt": [],
+   "arc": "dominant-center",
+   "era": "1980s",
+   "tm": "Lakers"
+  },
+  {
+   "id": "hakeem",
+   "n": "Hakeem Olajuwon",
+   "ovr": 97,
+   "pos": "C",
+   "alt": [],
+   "arc": "dominant-center",
+   "era": "1990s",
+   "tm": "Rockets"
+  },
+  {
+   "id": "duncan",
+   "n": "Tim Duncan",
+   "ovr": 97,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "post-scorer",
+   "era": "2000s",
+   "tm": "Spurs",
+   "mod": {
+    "tre": -6
+   }
+  },
+  {
+   "id": "garnett",
+   "n": "Kevin Garnett",
+   "ovr": 97,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "power-forward",
+   "era": "2000s",
+   "tm": "Timberwolves"
+  },
+  {
+   "id": "curry",
+   "n": "Stephen Curry",
+   "ovr": 97,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "scoring-pg",
+   "era": "2010s",
+   "tm": "Warriors",
+   "mod": {
+    "reb": 11
+   }
+  },
+  {
+   "id": "giannis",
+   "n": "Giannis Antetokounmpo",
+   "ovr": 97,
+   "pos": "PF",
+   "alt": [
+    "C",
+    "SF"
+   ],
+   "arc": "all-around-star",
+   "era": "2020s",
+   "tm": "Bucks",
+   "mod": {
+    "tre": -15
+   }
+  },
+  {
+   "id": "iverson",
+   "n": "Allen Iverson",
+   "ovr": 97,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "scoring-pg",
+   "era": "2000s",
+   "tm": "Sixers",
+   "mod": {
+    "tre": -40
+   }
+  },
+  {
+   "id": "durant",
+   "n": "Kevin Durant",
+   "ovr": 96,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "iso-scorer",
+   "era": "2010s",
+   "tm": "Thunder",
+   "mod": {
+    "tre": 6
+   }
+  },
+  {
+   "id": "tmac",
+   "n": "Tracy McGrady",
+   "ovr": 96,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "iso-scorer",
+   "era": "2000s",
+   "tm": "Magic",
+   "mod": {
+    "tre": -10
+   }
+  },
+  {
+   "id": "dirk",
+   "n": "Dirk Nowitzki",
+   "ovr": 96,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "stretch-four",
+   "era": "2000s",
+   "tm": "Mavericks",
+   "mod": {
+    "tre": -7
+   }
+  },
+  {
+   "id": "wade",
+   "n": "Dwyane Wade",
+   "ovr": 96,
+   "pos": "SG",
+   "alt": [
+    "PG"
+   ],
+   "arc": "slasher",
+   "era": "2000s",
+   "tm": "Heat",
+   "mod": {
+    "tre": -10
+   }
+  },
+  {
+   "id": "kawhi",
+   "n": "Kawhi Leonard",
+   "ovr": 96,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "two-way-wing",
+   "era": "2010s",
+   "tm": "Raptors",
+   "mod": {
+    "tre": 6
+   }
+  },
+  {
+   "id": "harden",
+   "n": "James Harden",
+   "ovr": 96,
+   "pos": "SG",
+   "alt": [
+    "PG"
+   ],
+   "arc": "iso-scorer",
+   "era": "2010s",
+   "tm": "Rockets",
+   "mod": {
+    "reb": 6
+   }
+  },
+  {
+   "id": "embiid",
+   "n": "Joel Embiid",
+   "ovr": 96,
+   "pos": "C",
+   "alt": [],
+   "arc": "dominant-center",
+   "era": "2020s",
+   "tm": "Sixers",
+   "mod": {
+    "tre": 30
+   }
+  },
+  {
+   "id": "luka",
+   "n": "Luka Doncic",
+   "ovr": 96,
+   "pos": "PG",
+   "alt": [
+    "SG",
+    "SF"
+   ],
+   "arc": "point-forward",
+   "era": "2020s",
+   "tm": "Mavericks",
+   "mod": {
+    "tre": 24
+   }
+  },
+  {
+   "id": "sga",
+   "n": "Shai Gilgeous-Alexander",
+   "ovr": 96,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "iso-scorer",
+   "era": "2020s",
+   "tm": "Thunder",
+   "mod": {
+    "tre": -10
+   }
+  },
+  {
+   "id": "malone",
+   "n": "Karl Malone",
+   "ovr": 95,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "power-forward",
+   "era": "1990s",
+   "tm": "Jazz",
+   "mod": {
+    "tre": -10
+   }
+  },
+  {
+   "id": "barkley",
+   "n": "Charles Barkley",
+   "ovr": 95,
+   "pos": "PF",
+   "alt": [
+    "C",
+    "SF"
+   ],
+   "arc": "power-forward",
+   "era": "1990s",
+   "tm": "Suns"
+  },
+  {
+   "id": "robinson",
+   "n": "David Robinson",
+   "ovr": 95,
+   "pos": "C",
+   "alt": [],
+   "arc": "dominant-center",
+   "era": "1990s",
+   "tm": "Spurs"
+  },
+  {
+   "id": "cp3",
+   "n": "Chris Paul",
+   "ovr": 95,
+   "pos": "PG",
+   "alt": [],
+   "arc": "floor-general",
+   "era": "2010s",
+   "tm": "Clippers",
+   "mod": {
+    "reb": 7
+   }
+  },
+  {
+   "id": "ad",
+   "n": "Anthony Davis",
+   "ovr": 95,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "post-scorer",
+   "era": "2010s",
+   "tm": "Pelicans"
+  },
+  {
+   "id": "tatum",
+   "n": "Jayson Tatum",
+   "ovr": 95,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "iso-scorer",
+   "era": "2020s",
+   "tm": "Celtics"
+  },
+  {
+   "id": "erving",
+   "n": "Julius Erving",
+   "ovr": 94,
+   "pos": "SF",
+   "alt": [],
+   "arc": "athletic-wing",
+   "era": "1980s",
+   "tm": "Sixers",
+   "mod": {
+    "tre": -30
+   }
+  },
+  {
+   "id": "westbrook",
+   "n": "Russell Westbrook",
+   "ovr": 94,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "slasher",
+   "era": "2010s",
+   "tm": "Thunder",
+   "mod": {
+    "reb": 17,
+    "tre": -5
+   }
+  },
+  {
+   "id": "lillard",
+   "n": "Damian Lillard",
+   "ovr": 94,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "scoring-pg",
+   "era": "2010s",
+   "tm": "Blazers",
+   "mod": {
+    "reb": 6
+   }
+  },
+  {
+   "id": "pippen",
+   "n": "Scottie Pippen",
+   "ovr": 93,
+   "pos": "SF",
+   "alt": [
+    "PF",
+    "PG"
+   ],
+   "arc": "two-way-wing",
+   "era": "1990s",
+   "tm": "Bulls",
+   "mod": {
+    "tre": -20
+   }
+  },
+  {
+   "id": "ewing",
+   "n": "Patrick Ewing",
+   "ovr": 93,
+   "pos": "C",
+   "alt": [],
+   "arc": "post-scorer",
+   "era": "1990s",
+   "tm": "Knicks",
+   "mod": {
+    "tre": -6
+   }
+  },
+  {
+   "id": "mosesmalone",
+   "n": "Moses Malone",
+   "ovr": 93,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "dominant-center",
+   "era": "1980s",
+   "tm": "Sixers"
+  },
+  {
+   "id": "mchale",
+   "n": "Kevin McHale",
+   "ovr": 93,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "post-scorer",
+   "era": "1980s",
+   "tm": "Celtics"
+  },
+  {
+   "id": "drexler",
+   "n": "Clyde Drexler",
+   "ovr": 93,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "athletic-wing",
+   "era": "1990s",
+   "tm": "Blazers",
+   "mod": {
+    "tre": -12
+   }
+  },
+  {
+   "id": "kidd",
+   "n": "Jason Kidd",
+   "ovr": 93,
+   "pos": "PG",
+   "alt": [],
+   "arc": "floor-general",
+   "era": "2000s",
+   "tm": "Nets",
+   "mod": {
+    "reb": 23
+   }
+  },
+  {
+   "id": "nash",
+   "n": "Steve Nash",
+   "ovr": 93,
+   "pos": "PG",
+   "alt": [],
+   "arc": "floor-general",
+   "era": "2000s",
+   "tm": "Suns",
+   "mod": {
+    "tre": 22
+   }
+  },
+  {
+   "id": "payton",
+   "n": "Gary Payton",
+   "ovr": 93,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "two-way-guard",
+   "era": "1990s",
+   "tm": "Sonics",
+   "mod": {
+    "tre": -18
+   }
+  },
+  {
+   "id": "isiah",
+   "n": "Isiah Thomas",
+   "ovr": 93,
+   "pos": "PG",
+   "alt": [],
+   "arc": "floor-general",
+   "era": "1980s",
+   "tm": "Pistons",
+   "mod": {
+    "tre": -30
+   }
+  },
+  {
+   "id": "dhoward",
+   "n": "Dwight Howard",
+   "ovr": 93,
+   "pos": "C",
+   "alt": [],
+   "arc": "defensive-anchor",
+   "era": "2000s",
+   "tm": "Magic"
+  },
+  {
+   "id": "butler",
+   "n": "Jimmy Butler",
+   "ovr": 93,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "two-way-wing",
+   "era": "2010s",
+   "tm": "Heat",
+   "mod": {
+    "tre": -22
+   }
+  },
+  {
+   "id": "drose",
+   "n": "Derrick Rose",
+   "ovr": 93,
+   "pos": "PG",
+   "alt": [],
+   "arc": "slasher",
+   "era": "2010s",
+   "tm": "Bulls"
+  },
+  {
+   "id": "kyrie",
+   "n": "Kyrie Irving",
+   "ovr": 93,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "scoring-pg",
+   "era": "2010s",
+   "tm": "Cavaliers"
+  },
+  {
+   "id": "wemby",
+   "n": "Victor Wembanyama",
+   "ovr": 93,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "defensive-anchor",
+   "era": "2020s",
+   "tm": "Spurs",
+   "mod": {
+    "tre": 38
+   }
+  },
+  {
+   "id": "vcarter",
+   "n": "Vince Carter",
+   "ovr": 93,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "athletic-wing",
+   "era": "2000s",
+   "tm": "Raptors",
+   "mod": {
+    "reb": -11,
+    "tre": 25
+   }
+  },
+  {
+   "id": "pgeorge",
+   "n": "Paul George",
+   "ovr": 92,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "two-way-wing",
+   "era": "2010s",
+   "tm": "Pacers",
+   "mod": {
+    "tre": 16
+   }
+  },
+  {
+   "id": "melo",
+   "n": "Carmelo Anthony",
+   "ovr": 92,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "iso-scorer",
+   "era": "2010s",
+   "tm": "Nuggets"
+  },
+  {
+   "id": "ghill",
+   "n": "Grant Hill",
+   "ovr": 92,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "point-forward",
+   "era": "1990s",
+   "tm": "Pistons",
+   "mod": {
+    "tre": -22
+   }
+  },
+  {
+   "id": "cwebb",
+   "n": "Chris Webber",
+   "ovr": 92,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "power-forward",
+   "era": "2000s",
+   "tm": "Kings"
+  },
+  {
+   "id": "kemp",
+   "n": "Shawn Kemp",
+   "ovr": 92,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "rim-runner",
+   "era": "1990s",
+   "tm": "Sonics"
+  },
+  {
+   "id": "zo",
+   "n": "Alonzo Mourning",
+   "ovr": 92,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "defensive-anchor",
+   "era": "1990s",
+   "tm": "Heat"
+  },
+  {
+   "id": "nique",
+   "n": "Dominique Wilkins",
+   "ovr": 92,
+   "pos": "SF",
+   "alt": [],
+   "arc": "iso-scorer",
+   "era": "1990s",
+   "tm": "Hawks"
+  },
+  {
+   "id": "stockton",
+   "n": "John Stockton",
+   "ovr": 92,
+   "pos": "PG",
+   "alt": [],
+   "arc": "floor-general",
+   "era": "1990s",
+   "tm": "Jazz"
+  },
+  {
+   "id": "pierce",
+   "n": "Paul Pierce",
+   "ovr": 91,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "iso-scorer",
+   "era": "2000s",
+   "tm": "Celtics"
+  },
+  {
+   "id": "rayallen",
+   "n": "Ray Allen",
+   "ovr": 91,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "sharpshooter",
+   "era": "2000s",
+   "tm": "Sonics"
+  },
+  {
+   "id": "reggie",
+   "n": "Reggie Miller",
+   "ovr": 91,
+   "pos": "SG",
+   "alt": [],
+   "arc": "sharpshooter",
+   "era": "1990s",
+   "tm": "Pacers"
+  },
+  {
+   "id": "penny",
+   "n": "Penny Hardaway",
+   "ovr": 91,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "point-forward",
+   "era": "1990s",
+   "tm": "Magic",
+   "mod": {
+    "reb": -20,
+    "tre": -10
+   }
+  },
+  {
+   "id": "amare",
+   "n": "Amar'e Stoudemire",
+   "ovr": 91,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "rim-runner",
+   "era": "2000s",
+   "tm": "Suns"
+  },
+  {
+   "id": "booker",
+   "n": "Devin Booker",
+   "ovr": 91,
+   "pos": "SG",
+   "alt": [
+    "PG"
+   ],
+   "arc": "iso-scorer",
+   "era": "2020s",
+   "tm": "Suns"
+  },
+  {
+   "id": "antedwards",
+   "n": "Anthony Edwards",
+   "ovr": 91,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "athletic-wing",
+   "era": "2020s",
+   "tm": "Timberwolves",
+   "mod": {
+    "tre": 27
+   }
+  },
+  {
+   "id": "worthy",
+   "n": "James Worthy",
+   "ovr": 90,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "athletic-wing",
+   "era": "1980s",
+   "tm": "Lakers"
+  },
+  {
+   "id": "bking",
+   "n": "Bernard King",
+   "ovr": 90,
+   "pos": "SF",
+   "alt": [],
+   "arc": "iso-scorer",
+   "era": "1980s",
+   "tm": "Knicks"
+  },
+  {
+   "id": "gasol",
+   "n": "Pau Gasol",
+   "ovr": 90,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "post-scorer",
+   "era": "2000s",
+   "tm": "Lakers",
+   "mod": {
+    "tre": 24
+   }
+  },
+  {
+   "id": "yao",
+   "n": "Yao Ming",
+   "ovr": 90,
+   "pos": "C",
+   "alt": [],
+   "arc": "post-scorer",
+   "era": "2000s",
+   "tm": "Rockets"
+  },
+  {
+   "id": "aldridge",
+   "n": "LaMarcus Aldridge",
+   "ovr": 90,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "post-scorer",
+   "era": "2010s",
+   "tm": "Blazers"
+  },
+  {
+   "id": "griffin",
+   "n": "Blake Griffin",
+   "ovr": 90,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "power-forward",
+   "era": "2010s",
+   "tm": "Clippers"
+  },
+  {
+   "id": "boogie",
+   "n": "DeMarcus Cousins",
+   "ovr": 90,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "stretch-center",
+   "era": "2010s",
+   "tm": "Kings",
+   "mod": {
+    "tre": -14
+   }
+  },
+  {
+   "id": "kat",
+   "n": "Karl-Anthony Towns",
+   "ovr": 90,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "stretch-four",
+   "era": "2020s",
+   "tm": "Timberwolves"
+  },
+  {
+   "id": "klay",
+   "n": "Klay Thompson",
+   "ovr": 90,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "sharpshooter",
+   "era": "2010s",
+   "tm": "Warriors"
+  },
+  {
+   "id": "mitchell",
+   "n": "Donovan Mitchell",
+   "ovr": 90,
+   "pos": "SG",
+   "alt": [
+    "PG"
+   ],
+   "arc": "iso-scorer",
+   "era": "2020s",
+   "tm": "Cavaliers"
+  },
+  {
+   "id": "dwill",
+   "n": "Deron Williams",
+   "ovr": 90,
+   "pos": "PG",
+   "alt": [],
+   "arc": "floor-general",
+   "era": "2000s",
+   "tm": "Jazz"
+  },
+  {
+   "id": "arenas",
+   "n": "Gilbert Arenas",
+   "ovr": 90,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "combo-guard",
+   "era": "2000s",
+   "tm": "Wizards"
+  },
+  {
+   "id": "manu",
+   "n": "Manu Ginobili",
+   "ovr": 89,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "slasher",
+   "era": "2000s",
+   "tm": "Spurs",
+   "mod": {
+    "tre": 32
+   }
+  },
+  {
+   "id": "broy",
+   "n": "Brandon Roy",
+   "ovr": 89,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "combo-guard",
+   "era": "2000s",
+   "tm": "Blazers"
+  },
+  {
+   "id": "derozan",
+   "n": "DeMar DeRozan",
+   "ovr": 89,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "midrange-scorer",
+   "era": "2010s",
+   "tm": "Raptors",
+   "mod": {
+    "tre": -20
+   }
+  },
+  {
+   "id": "beal",
+   "n": "Bradley Beal",
+   "ovr": 89,
+   "pos": "SG",
+   "alt": [],
+   "arc": "combo-guard",
+   "era": "2010s",
+   "tm": "Wizards"
+  },
+  {
+   "id": "jbrown",
+   "n": "Jaylen Brown",
+   "ovr": 89,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "two-way-wing",
+   "era": "2020s",
+   "tm": "Celtics",
+   "mod": {
+    "tre": 10
+   }
+  },
+  {
+   "id": "trae",
+   "n": "Trae Young",
+   "ovr": 89,
+   "pos": "PG",
+   "alt": [],
+   "arc": "scoring-pg",
+   "era": "2020s",
+   "tm": "Hawks",
+   "mod": {
+    "dpe": -12
+   }
+  },
+  {
+   "id": "brunson",
+   "n": "Jalen Brunson",
+   "ovr": 89,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "iso-scorer",
+   "era": "2020s",
+   "tm": "Knicks"
+  },
+  {
+   "id": "halliburton",
+   "n": "Tyrese Haliburton",
+   "ovr": 89,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "floor-general",
+   "era": "2020s",
+   "tm": "Pacers"
+  },
+  {
+   "id": "zion",
+   "n": "Zion Williamson",
+   "ovr": 89,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "power-forward",
+   "era": "2020s",
+   "tm": "Pelicans"
+  },
+  {
+   "id": "gobert",
+   "n": "Rudy Gobert",
+   "ovr": 89,
+   "pos": "C",
+   "alt": [],
+   "arc": "defensive-anchor",
+   "era": "2020s",
+   "tm": "Jazz"
+  },
+  {
+   "id": "sheed",
+   "n": "Rasheed Wallace",
+   "ovr": 89,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "stretch-four",
+   "era": "2000s",
+   "tm": "Pistons",
+   "mod": {
+    "tre": -30
+   }
+  },
+  {
+   "id": "brand",
+   "n": "Elton Brand",
+   "ovr": 89,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "power-forward",
+   "era": "2000s",
+   "tm": "Clippers"
+  },
+  {
+   "id": "klove",
+   "n": "Kevin Love",
+   "ovr": 89,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "stretch-four",
+   "era": "2010s",
+   "tm": "Timberwolves"
+  },
+  {
+   "id": "bosh",
+   "n": "Chris Bosh",
+   "ovr": 89,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "stretch-four",
+   "era": "2010s",
+   "tm": "Raptors",
+   "mod": {
+    "tre": -36
+   }
+  },
+  {
+   "id": "mullin",
+   "n": "Chris Mullin",
+   "ovr": 89,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "sharpshooter",
+   "era": "1990s",
+   "tm": "Warriors"
+  },
+  {
+   "id": "english",
+   "n": "Alex English",
+   "ovr": 89,
+   "pos": "SF",
+   "alt": [],
+   "arc": "iso-scorer",
+   "era": "1980s",
+   "tm": "Nuggets"
+  },
+  {
+   "id": "dantley",
+   "n": "Adrian Dantley",
+   "ovr": 89,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "post-scorer",
+   "era": "1980s",
+   "tm": "Jazz"
+  },
+  {
+   "id": "simmons",
+   "n": "Ben Simmons",
+   "ovr": 88,
+   "pos": "PG",
+   "alt": [
+    "PF",
+    "SF"
+   ],
+   "arc": "point-forward",
+   "era": "2010s",
+   "tm": "Sixers",
+   "mod": {
+    "tre": -38
+   }
+  },
+  {
+   "id": "jwall",
+   "n": "John Wall",
+   "ovr": 88,
+   "pos": "PG",
+   "alt": [],
+   "arc": "slasher",
+   "era": "2010s",
+   "tm": "Wizards"
+  },
+  {
+   "id": "morant",
+   "n": "Ja Morant",
+   "ovr": 88,
+   "pos": "PG",
+   "alt": [],
+   "arc": "slasher",
+   "era": "2020s",
+   "tm": "Grizzlies"
+  },
+  {
+   "id": "fox",
+   "n": "De'Aaron Fox",
+   "ovr": 88,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "slasher",
+   "era": "2020s",
+   "tm": "Kings"
+  },
+  {
+   "id": "cade",
+   "n": "Cade Cunningham",
+   "ovr": 88,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "point-forward",
+   "era": "2020s",
+   "tm": "Pistons"
+  },
+  {
+   "id": "maxey",
+   "n": "Tyrese Maxey",
+   "ovr": 88,
+   "pos": "SG",
+   "alt": [
+    "PG"
+   ],
+   "arc": "scoring-pg",
+   "era": "2020s",
+   "tm": "Sixers"
+  },
+  {
+   "id": "middleton",
+   "n": "Khris Middleton",
+   "ovr": 88,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "two-way-wing",
+   "era": "2020s",
+   "tm": "Bucks",
+   "mod": {
+    "tre": 14
+   }
+  },
+  {
+   "id": "draymond",
+   "n": "Draymond Green",
+   "ovr": 88,
+   "pos": "PF",
+   "alt": [
+    "C",
+    "SF"
+   ],
+   "arc": "glue-forward",
+   "era": "2010s",
+   "tm": "Warriors"
+  },
+  {
+   "id": "rodman",
+   "n": "Dennis Rodman",
+   "ovr": 88,
+   "pos": "PF",
+   "alt": [
+    "C",
+    "SF"
+   ],
+   "arc": "glue-forward",
+   "era": "1990s",
+   "tm": "Bulls"
+  },
+  {
+   "id": "benwallace",
+   "n": "Ben Wallace",
+   "ovr": 88,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "defensive-anchor",
+   "era": "2000s",
+   "tm": "Pistons"
+  },
+  {
+   "id": "mutombo",
+   "n": "Dikembe Mutombo",
+   "ovr": 88,
+   "pos": "C",
+   "alt": [],
+   "arc": "defensive-anchor",
+   "era": "1990s",
+   "tm": "Nuggets"
+  },
+  {
+   "id": "jermaine",
+   "n": "Jermaine O'Neal",
+   "ovr": 88,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "defensive-anchor",
+   "era": "2000s",
+   "tm": "Pacers"
+  },
+  {
+   "id": "sabonis-d",
+   "n": "Domantas Sabonis",
+   "ovr": 88,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "playmaking-center",
+   "era": "2020s",
+   "tm": "Kings"
+  },
+  {
+   "id": "bam",
+   "n": "Bam Adebayo",
+   "ovr": 88,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "glue-forward",
+   "era": "2020s",
+   "tm": "Heat"
+  },
+  {
+   "id": "mgasol",
+   "n": "Marc Gasol",
+   "ovr": 88,
+   "pos": "C",
+   "alt": [],
+   "arc": "playmaking-center",
+   "era": "2010s",
+   "tm": "Grizzlies"
+  },
+  {
+   "id": "thardaway",
+   "n": "Tim Hardaway",
+   "ovr": 88,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "scoring-pg",
+   "era": "1990s",
+   "tm": "Heat"
+  },
+  {
+   "id": "kjohnson",
+   "n": "Kevin Johnson",
+   "ovr": 88,
+   "pos": "PG",
+   "alt": [],
+   "arc": "slasher",
+   "era": "1990s",
+   "tm": "Suns"
+  },
+  {
+   "id": "billups",
+   "n": "Chauncey Billups",
+   "ovr": 88,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "floor-general",
+   "era": "2000s",
+   "tm": "Pistons"
+  },
+  {
+   "id": "marbury",
+   "n": "Stephon Marbury",
+   "ovr": 88,
+   "pos": "PG",
+   "alt": [],
+   "arc": "scoring-pg",
+   "era": "2000s",
+   "tm": "Suns"
+  },
+  {
+   "id": "dumars",
+   "n": "Joe Dumars",
+   "ovr": 88,
+   "pos": "SG",
+   "alt": [],
+   "arc": "two-way-guard",
+   "era": "1990s",
+   "tm": "Pistons"
+  },
+  {
+   "id": "richmond",
+   "n": "Mitch Richmond",
+   "ovr": 88,
+   "pos": "SG",
+   "alt": [],
+   "arc": "sharpshooter",
+   "era": "1990s",
+   "tm": "Kings"
+  },
+  {
+   "id": "peja",
+   "n": "Peja Stojakovic",
+   "ovr": 88,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "sharpshooter",
+   "era": "2000s",
+   "tm": "Kings"
+  },
+  {
+   "id": "moncrief",
+   "n": "Sidney Moncrief",
+   "ovr": 88,
+   "pos": "SG",
+   "alt": [],
+   "arc": "two-way-guard",
+   "era": "1980s",
+   "tm": "Bucks"
+  },
+  {
+   "id": "parish",
+   "n": "Robert Parish",
+   "ovr": 88,
+   "pos": "C",
+   "alt": [],
+   "arc": "post-scorer",
+   "era": "1980s",
+   "tm": "Celtics"
+  },
+  {
+   "id": "lowry",
+   "n": "Kyle Lowry",
+   "ovr": 87,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "two-way-guard",
+   "era": "2010s",
+   "tm": "Raptors"
+  },
+  {
+   "id": "jrue",
+   "n": "Jrue Holiday",
+   "ovr": 87,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "two-way-guard",
+   "era": "2010s",
+   "tm": "Pelicans"
+  },
+  {
+   "id": "rondo",
+   "n": "Rajon Rondo",
+   "ovr": 87,
+   "pos": "PG",
+   "alt": [],
+   "arc": "floor-general",
+   "era": "2010s",
+   "tm": "Celtics",
+   "mod": {
+    "tre": -30
+   }
+  },
+  {
+   "id": "kemba",
+   "n": "Kemba Walker",
+   "ovr": 87,
+   "pos": "PG",
+   "alt": [],
+   "arc": "scoring-pg",
+   "era": "2010s",
+   "tm": "Hornets"
+  },
+  {
+   "id": "melo-ball",
+   "n": "LaMelo Ball",
+   "ovr": 87,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "floor-general",
+   "era": "2020s",
+   "tm": "Hornets"
+  },
+  {
+   "id": "jmurray",
+   "n": "Jamal Murray",
+   "ovr": 87,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "scoring-pg",
+   "era": "2020s",
+   "tm": "Nuggets"
+  },
+  {
+   "id": "lavine",
+   "n": "Zach LaVine",
+   "ovr": 87,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "combo-guard",
+   "era": "2020s",
+   "tm": "Bulls"
+  },
+  {
+   "id": "jjwilliams",
+   "n": "Jalen Williams",
+   "ovr": 87,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "two-way-wing",
+   "era": "2020s",
+   "tm": "Thunder"
+  },
+  {
+   "id": "siakam",
+   "n": "Pascal Siakam",
+   "ovr": 87,
+   "pos": "PF",
+   "alt": [
+    "SF"
+   ],
+   "arc": "two-way-wing",
+   "era": "2020s",
+   "tm": "Raptors",
+   "mod": {
+    "tre": -16
+   }
+  },
+  {
+   "id": "banchero",
+   "n": "Paolo Banchero",
+   "ovr": 87,
+   "pos": "PF",
+   "alt": [
+    "SF"
+   ],
+   "arc": "iso-scorer",
+   "era": "2020s",
+   "tm": "Magic",
+   "mod": {
+    "tre": -14
+   }
+  },
+  {
+   "id": "mobley",
+   "n": "Evan Mobley",
+   "ovr": 87,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "defensive-anchor",
+   "era": "2020s",
+   "tm": "Cavaliers",
+   "mod": {
+    "tre": 20
+   }
+  },
+  {
+   "id": "jjj",
+   "n": "Jaren Jackson Jr.",
+   "ovr": 87,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "defensive-anchor",
+   "era": "2020s",
+   "tm": "Grizzlies",
+   "mod": {
+    "tre": 40
+   }
+  },
+  {
+   "id": "porzingis",
+   "n": "Kristaps Porzingis",
+   "ovr": 87,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "stretch-four",
+   "era": "2020s",
+   "tm": "Celtics",
+   "mod": {
+    "atl": 18
+   }
+  },
+  {
+   "id": "markkanen",
+   "n": "Lauri Markkanen",
+   "ovr": 87,
+   "pos": "PF",
+   "alt": [
+    "SF"
+   ],
+   "arc": "stretch-four",
+   "era": "2020s",
+   "tm": "Jazz"
+  },
+  {
+   "id": "chet",
+   "n": "Chet Holmgren",
+   "ovr": 87,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "defensive-anchor",
+   "era": "2020s",
+   "tm": "Thunder",
+   "mod": {
+    "tre": 40
+   }
+  },
+  {
+   "id": "sengun",
+   "n": "Alperen Sengun",
+   "ovr": 87,
+   "pos": "C",
+   "alt": [],
+   "arc": "playmaking-center",
+   "era": "2020s",
+   "tm": "Rockets"
+  },
+  {
+   "id": "horford",
+   "n": "Al Horford",
+   "ovr": 87,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "playmaking-center",
+   "era": "2010s",
+   "tm": "Hawks",
+   "mod": {
+    "tre": 20
+   }
+  },
+  {
+   "id": "sabonis-a",
+   "n": "Arvydas Sabonis",
+   "ovr": 87,
+   "pos": "C",
+   "alt": [],
+   "arc": "playmaking-center",
+   "era": "1990s",
+   "tm": "Blazers"
+  },
+  {
+   "id": "dejordan",
+   "n": "DeAndre Jordan",
+   "ovr": 87,
+   "pos": "C",
+   "alt": [],
+   "arc": "rim-runner",
+   "era": "2010s",
+   "tm": "Clippers"
+  },
+  {
+   "id": "zbo",
+   "n": "Zach Randolph",
+   "ovr": 87,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "post-scorer",
+   "era": "2010s",
+   "tm": "Grizzlies"
+  },
+  {
+   "id": "jamison",
+   "n": "Antawn Jamison",
+   "ovr": 87,
+   "pos": "PF",
+   "alt": [
+    "SF"
+   ],
+   "arc": "stretch-four",
+   "era": "2000s",
+   "tm": "Warriors"
+  },
+  {
+   "id": "boozer",
+   "n": "Carlos Boozer",
+   "ovr": 87,
+   "pos": "PF",
+   "alt": [],
+   "arc": "power-forward",
+   "era": "2000s",
+   "tm": "Jazz"
+  },
+  {
+   "id": "ljohnson",
+   "n": "Larry Johnson",
+   "ovr": 87,
+   "pos": "PF",
+   "alt": [
+    "SF"
+   ],
+   "arc": "power-forward",
+   "era": "1990s",
+   "tm": "Hornets"
+  },
+  {
+   "id": "mcdyess",
+   "n": "Antonio McDyess",
+   "ovr": 87,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "power-forward",
+   "era": "1990s",
+   "tm": "Nuggets"
+  },
+  {
+   "id": "randle",
+   "n": "Julius Randle",
+   "ovr": 87,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "power-forward",
+   "era": "2020s",
+   "tm": "Knicks",
+   "mod": {
+    "tre": 34
+   }
+  },
+  {
+   "id": "artest",
+   "n": "Ron Artest",
+   "ovr": 87,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "three-and-d",
+   "era": "2000s",
+   "tm": "Pacers"
+  },
+  {
+   "id": "kirilenko",
+   "n": "Andrei Kirilenko",
+   "ovr": 87,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "glue-forward",
+   "era": "2000s",
+   "tm": "Jazz"
+  },
+  {
+   "id": "jjohnson",
+   "n": "Joe Johnson",
+   "ovr": 87,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "iso-scorer",
+   "era": "2000s",
+   "tm": "Hawks"
+  },
+  {
+   "id": "sprewell",
+   "n": "Latrell Sprewell",
+   "ovr": 87,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "athletic-wing",
+   "era": "1990s",
+   "tm": "Warriors",
+   "mod": {
+    "tre": -10
+   }
+  },
+  {
+   "id": "glenrice",
+   "n": "Glen Rice",
+   "ovr": 87,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "sharpshooter",
+   "era": "1990s",
+   "tm": "Hornets"
+  },
+  {
+   "id": "mprice",
+   "n": "Mark Price",
+   "ovr": 87,
+   "pos": "PG",
+   "alt": [],
+   "arc": "floor-general",
+   "era": "1990s",
+   "tm": "Cavaliers"
+  },
+  {
+   "id": "mjohnson-m",
+   "n": "Marques Johnson",
+   "ovr": 87,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "athletic-wing",
+   "era": "1980s",
+   "tm": "Bucks"
+  },
+  {
+   "id": "conley",
+   "n": "Mike Conley",
+   "ovr": 86,
+   "pos": "PG",
+   "alt": [],
+   "arc": "floor-general",
+   "era": "2010s",
+   "tm": "Grizzlies"
+  },
+  {
+   "id": "bibby",
+   "n": "Mike Bibby",
+   "ovr": 86,
+   "pos": "PG",
+   "alt": [],
+   "arc": "scoring-pg",
+   "era": "2000s",
+   "tm": "Kings"
+  },
+  {
+   "id": "dragic",
+   "n": "Goran Dragic",
+   "ovr": 86,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "combo-guard",
+   "era": "2010s",
+   "tm": "Suns"
+  },
+  {
+   "id": "garland",
+   "n": "Darius Garland",
+   "ovr": 86,
+   "pos": "PG",
+   "alt": [],
+   "arc": "floor-general",
+   "era": "2020s",
+   "tm": "Cavaliers"
+  },
+  {
+   "id": "fvv",
+   "n": "Fred VanVleet",
+   "ovr": 86,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "three-and-d",
+   "era": "2020s",
+   "tm": "Raptors"
+  },
+  {
+   "id": "dwhite",
+   "n": "Derrick White",
+   "ovr": 86,
+   "pos": "SG",
+   "alt": [
+    "PG"
+   ],
+   "arc": "three-and-d",
+   "era": "2020s",
+   "tm": "Celtics"
+  },
+  {
+   "id": "bane",
+   "n": "Desmond Bane",
+   "ovr": 86,
+   "pos": "SG",
+   "alt": [],
+   "arc": "sharpshooter",
+   "era": "2020s",
+   "tm": "Grizzlies"
+  },
+  {
+   "id": "oladipo",
+   "n": "Victor Oladipo",
+   "ovr": 86,
+   "pos": "SG",
+   "alt": [
+    "PG"
+   ],
+   "arc": "two-way-guard",
+   "era": "2010s",
+   "tm": "Pacers"
+  },
+  {
+   "id": "cjmc",
+   "n": "C.J. McCollum",
+   "ovr": 86,
+   "pos": "SG",
+   "alt": [
+    "PG"
+   ],
+   "arc": "combo-guard",
+   "era": "2010s",
+   "tm": "Blazers"
+  },
+  {
+   "id": "monta",
+   "n": "Monta Ellis",
+   "ovr": 86,
+   "pos": "SG",
+   "alt": [
+    "PG"
+   ],
+   "arc": "combo-guard",
+   "era": "2010s",
+   "tm": "Warriors"
+  },
+  {
+   "id": "rip",
+   "n": "Richard Hamilton",
+   "ovr": 86,
+   "pos": "SG",
+   "alt": [],
+   "arc": "midrange-scorer",
+   "era": "2000s",
+   "tm": "Pistons"
+  },
+  {
+   "id": "jrichardson",
+   "n": "Jason Richardson",
+   "ovr": 86,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "athletic-wing",
+   "era": "2000s",
+   "tm": "Warriors",
+   "mod": {
+    "tre": 25
+   }
+  },
+  {
+   "id": "houston",
+   "n": "Allan Houston",
+   "ovr": 86,
+   "pos": "SG",
+   "alt": [],
+   "arc": "sharpshooter",
+   "era": "2000s",
+   "tm": "Knicks"
+  },
+  {
+   "id": "finley",
+   "n": "Michael Finley",
+   "ovr": 86,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "athletic-wing",
+   "era": "2000s",
+   "tm": "Mavericks"
+  },
+  {
+   "id": "hornacek",
+   "n": "Jeff Hornacek",
+   "ovr": 86,
+   "pos": "SG",
+   "alt": [
+    "PG"
+   ],
+   "arc": "sharpshooter",
+   "era": "1990s",
+   "tm": "Jazz"
+  },
+  {
+   "id": "iguodala",
+   "n": "Andre Iguodala",
+   "ovr": 86,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "three-and-d",
+   "era": "2010s",
+   "tm": "Warriors",
+   "mod": {
+    "tre": -30
+   }
+  },
+  {
+   "id": "mbridges",
+   "n": "Mikal Bridges",
+   "ovr": 86,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "three-and-d",
+   "era": "2020s",
+   "tm": "Suns"
+  },
+  {
+   "id": "fwagner",
+   "n": "Franz Wagner",
+   "ovr": 86,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "two-way-wing",
+   "era": "2020s",
+   "tm": "Magic"
+  },
+  {
+   "id": "hayward",
+   "n": "Gordon Hayward",
+   "ovr": 86,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "two-way-wing",
+   "era": "2010s",
+   "tm": "Jazz"
+  },
+  {
+   "id": "granger",
+   "n": "Danny Granger",
+   "ovr": 86,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "sharpshooter",
+   "era": "2000s",
+   "tm": "Pacers"
+  },
+  {
+   "id": "rlewis",
+   "n": "Rashard Lewis",
+   "ovr": 86,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "stretch-four",
+   "era": "2000s",
+   "tm": "Magic"
+  },
+  {
+   "id": "odom",
+   "n": "Lamar Odom",
+   "ovr": 86,
+   "pos": "PF",
+   "alt": [
+    "SF"
+   ],
+   "arc": "point-forward",
+   "era": "2000s",
+   "tm": "Lakers"
+  },
+  {
+   "id": "schrempf",
+   "n": "Detlef Schrempf",
+   "ovr": 86,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "stretch-four",
+   "era": "1990s",
+   "tm": "Sonics"
+  },
+  {
+   "id": "aguirre",
+   "n": "Mark Aguirre",
+   "ovr": 86,
+   "pos": "SF",
+   "alt": [],
+   "arc": "iso-scorer",
+   "era": "1980s",
+   "tm": "Mavericks"
+  },
+  {
+   "id": "kiki",
+   "n": "Kiki Vandeweghe",
+   "ovr": 86,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "sharpshooter",
+   "era": "1980s",
+   "tm": "Nuggets"
+  },
+  {
+   "id": "tchambers",
+   "n": "Tom Chambers",
+   "ovr": 86,
+   "pos": "PF",
+   "alt": [
+    "SF"
+   ],
+   "arc": "stretch-four",
+   "era": "1990s",
+   "tm": "Suns"
+  },
+  {
+   "id": "cummings",
+   "n": "Terry Cummings",
+   "ovr": 86,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "power-forward",
+   "era": "1980s",
+   "tm": "Bucks"
+  },
+  {
+   "id": "vinbaker",
+   "n": "Vin Baker",
+   "ovr": 86,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "power-forward",
+   "era": "1990s",
+   "tm": "Bucks"
+  },
+  {
+   "id": "laimbeer",
+   "n": "Bill Laimbeer",
+   "ovr": 86,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "stretch-four",
+   "era": "1980s",
+   "tm": "Pistons"
+  },
+  {
+   "id": "sikma",
+   "n": "Jack Sikma",
+   "ovr": 86,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "stretch-four",
+   "era": "1980s",
+   "tm": "Sonics"
+  },
+  {
+   "id": "camby",
+   "n": "Marcus Camby",
+   "ovr": 86,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "defensive-anchor",
+   "era": "2000s",
+   "tm": "Nuggets"
+  },
+  {
+   "id": "divac",
+   "n": "Vlade Divac",
+   "ovr": 86,
+   "pos": "C",
+   "alt": [],
+   "arc": "playmaking-center",
+   "era": "2000s",
+   "tm": "Kings"
+  },
+  {
+   "id": "daugherty",
+   "n": "Brad Daugherty",
+   "ovr": 86,
+   "pos": "C",
+   "alt": [],
+   "arc": "playmaking-center",
+   "era": "1990s",
+   "tm": "Cavaliers"
+  },
+  {
+   "id": "drummond",
+   "n": "Andre Drummond",
+   "ovr": 86,
+   "pos": "C",
+   "alt": [],
+   "arc": "rim-runner",
+   "era": "2010s",
+   "tm": "Pistons"
+  },
+  {
+   "id": "chandler",
+   "n": "Tyson Chandler",
+   "ovr": 86,
+   "pos": "C",
+   "alt": [],
+   "arc": "rim-runner",
+   "era": "2010s",
+   "tm": "Mavericks"
+  },
+  {
+   "id": "blopez",
+   "n": "Brook Lopez",
+   "ovr": 86,
+   "pos": "C",
+   "alt": [],
+   "arc": "stretch-center",
+   "era": "2020s",
+   "tm": "Bucks",
+   "mod": {
+    "dif": 20
+   }
+  },
+  {
+   "id": "vucevic",
+   "n": "Nikola Vucevic",
+   "ovr": 86,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "stretch-center",
+   "era": "2020s",
+   "tm": "Magic"
+  },
+  {
+   "id": "ayton",
+   "n": "Deandre Ayton",
+   "ovr": 86,
+   "pos": "C",
+   "alt": [],
+   "arc": "post-scorer",
+   "era": "2020s",
+   "tm": "Suns"
+  },
+  {
+   "id": "aljefferson",
+   "n": "Al Jefferson",
+   "ovr": 86,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "post-scorer",
+   "era": "2010s",
+   "tm": "Bobcats"
+  },
+  {
+   "id": "cheeks",
+   "n": "Maurice Cheeks",
+   "ovr": 86,
+   "pos": "PG",
+   "alt": [],
+   "arc": "floor-general",
+   "era": "1980s",
+   "tm": "Sixers",
+   "mod": {
+    "tre": -25
+   }
+  },
+  {
+   "id": "strickland",
+   "n": "Rod Strickland",
+   "ovr": 86,
+   "pos": "PG",
+   "alt": [],
+   "arc": "floor-general",
+   "era": "1990s",
+   "tm": "Wizards"
+  },
+  {
+   "id": "marion",
+   "n": "Shawn Marion",
+   "ovr": 88,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "glue-forward",
+   "era": "2000s",
+   "tm": "Suns"
+  },
+  {
+   "id": "cassell",
+   "n": "Sam Cassell",
+   "ovr": 85,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "floor-general",
+   "era": "2000s",
+   "tm": "Timberwolves"
+  },
+  {
+   "id": "tporter",
+   "n": "Terry Porter",
+   "ovr": 85,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "floor-general",
+   "era": "1990s",
+   "tm": "Blazers"
+  },
+  {
+   "id": "blaylock",
+   "n": "Mookie Blaylock",
+   "ovr": 85,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "two-way-guard",
+   "era": "1990s",
+   "tm": "Hawks"
+  },
+  {
+   "id": "nixon",
+   "n": "Norm Nixon",
+   "ovr": 85,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "floor-general",
+   "era": "1980s",
+   "tm": "Lakers"
+  },
+  {
+   "id": "smart",
+   "n": "Marcus Smart",
+   "ovr": 85,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "three-and-d",
+   "era": "2010s",
+   "tm": "Celtics",
+   "mod": {
+    "tre": -25
+   }
+  },
+  {
+   "id": "bledsoe",
+   "n": "Eric Bledsoe",
+   "ovr": 85,
+   "pos": "PG",
+   "alt": [
+    "SG"
+   ],
+   "arc": "slasher",
+   "era": "2010s",
+   "tm": "Suns"
+  },
+  {
+   "id": "tparker",
+   "n": "Tony Parker",
+   "ovr": 89,
+   "pos": "PG",
+   "alt": [],
+   "arc": "slasher",
+   "era": "2000s",
+   "tm": "Spurs",
+   "mod": {
+    "tre": -10
+   }
+  },
+  {
+   "id": "korver",
+   "n": "Kyle Korver",
+   "ovr": 85,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "sharpshooter",
+   "era": "2010s",
+   "tm": "Hawks"
+  },
+  {
+   "id": "jrsmith",
+   "n": "J.R. Smith",
+   "ovr": 85,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "sharpshooter",
+   "era": "2010s",
+   "tm": "Knicks"
+  },
+  {
+   "id": "ssmith",
+   "n": "Steve Smith",
+   "ovr": 85,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "sharpshooter",
+   "era": "1990s",
+   "tm": "Hawks"
+  },
+  {
+   "id": "hawkins-h",
+   "n": "Hersey Hawkins",
+   "ovr": 85,
+   "pos": "SG",
+   "alt": [],
+   "arc": "sharpshooter",
+   "era": "1990s",
+   "tm": "Sixers"
+  },
+  {
+   "id": "majerle",
+   "n": "Dan Majerle",
+   "ovr": 85,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "three-and-d",
+   "era": "1990s",
+   "tm": "Suns"
+  },
+  {
+   "id": "cooper",
+   "n": "Michael Cooper",
+   "ovr": 85,
+   "pos": "SG",
+   "alt": [
+    "SF"
+   ],
+   "arc": "three-and-d",
+   "era": "1980s",
+   "tm": "Lakers"
+  },
+  {
+   "id": "arobertson",
+   "n": "Alvin Robertson",
+   "ovr": 85,
+   "pos": "SG",
+   "alt": [
+    "PG"
+   ],
+   "arc": "two-way-guard",
+   "era": "1980s",
+   "tm": "Spurs"
+  },
+  {
+   "id": "battier",
+   "n": "Shane Battier",
+   "ovr": 85,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "three-and-d",
+   "era": "2000s",
+   "tm": "Rockets"
+  },
+  {
+   "id": "oganunoby",
+   "n": "OG Anunoby",
+   "ovr": 85,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "three-and-d",
+   "era": "2020s",
+   "tm": "Knicks"
+  },
+  {
+   "id": "wiggins",
+   "n": "Andrew Wiggins",
+   "ovr": 85,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "two-way-wing",
+   "era": "2020s",
+   "tm": "Warriors"
+  },
+  {
+   "id": "mpj",
+   "n": "Michael Porter Jr.",
+   "ovr": 85,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "sharpshooter",
+   "era": "2020s",
+   "tm": "Nuggets"
+  },
+  {
+   "id": "sbarnes",
+   "n": "Scottie Barnes",
+   "ovr": 85,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "point-forward",
+   "era": "2020s",
+   "tm": "Raptors",
+   "mod": {
+    "tre": -16
+   }
+  },
+  {
+   "id": "jhoward",
+   "n": "Josh Howard",
+   "ovr": 85,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "two-way-wing",
+   "era": "2000s",
+   "tm": "Mavericks"
+  },
+  {
+   "id": "cbutler",
+   "n": "Caron Butler",
+   "ovr": 85,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "two-way-wing",
+   "era": "2000s",
+   "tm": "Wizards"
+  },
+  {
+   "id": "selliott",
+   "n": "Sean Elliott",
+   "ovr": 85,
+   "pos": "SF",
+   "alt": [
+    "PF"
+   ],
+   "arc": "sharpshooter",
+   "era": "1990s",
+   "tm": "Spurs"
+  },
+  {
+   "id": "wilkes",
+   "n": "Jamaal Wilkes",
+   "ovr": 85,
+   "pos": "SF",
+   "alt": [
+    "SG"
+   ],
+   "arc": "athletic-wing",
+   "era": "1980s",
+   "tm": "Lakers"
+  },
+  {
+   "id": "tharris",
+   "n": "Tobias Harris",
+   "ovr": 85,
+   "pos": "PF",
+   "alt": [
+    "SF"
+   ],
+   "arc": "two-way-wing",
+   "era": "2020s",
+   "tm": "Sixers"
+  },
+  {
+   "id": "agordon",
+   "n": "Aaron Gordon",
+   "ovr": 85,
+   "pos": "PF",
+   "alt": [
+    "SF"
+   ],
+   "arc": "athletic-wing",
+   "era": "2020s",
+   "tm": "Nuggets"
+  },
+  {
+   "id": "horace",
+   "n": "Horace Grant",
+   "ovr": 85,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "glue-forward",
+   "era": "1990s",
+   "tm": "Bulls"
+  },
+  {
+   "id": "horry",
+   "n": "Robert Horry",
+   "ovr": 85,
+   "pos": "PF",
+   "alt": [
+    "SF"
+   ],
+   "arc": "three-and-d",
+   "era": "2000s",
+   "tm": "Spurs"
+  },
+  {
+   "id": "buckwilliams",
+   "n": "Buck Williams",
+   "ovr": 85,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "glue-forward",
+   "era": "1980s",
+   "tm": "Nets"
+  },
+  {
+   "id": "bobbyjones",
+   "n": "Bobby Jones",
+   "ovr": 85,
+   "pos": "PF",
+   "alt": [
+    "SF"
+   ],
+   "arc": "glue-forward",
+   "era": "1980s",
+   "tm": "Sixers"
+  },
+  {
+   "id": "othorpe",
+   "n": "Otis Thorpe",
+   "ovr": 85,
+   "pos": "PF",
+   "alt": [
+    "C"
+   ],
+   "arc": "glue-forward",
+   "era": "1990s",
+   "tm": "Rockets"
+  },
+  {
+   "id": "mturner",
+   "n": "Myles Turner",
+   "ovr": 85,
+   "pos": "C",
+   "alt": [
+    "PF"
+   ],
+   "arc": "defensive-anchor",
+   "era": "2020s",
+   "tm": "Pacers",
+   "mod": {
+    "tre": 40
+   }
+  },
+  {
+   "id": "capela",
+   "n": "Clint Capela",
+   "ovr": 85,
+   "pos": "C",
+   "alt": [],
+   "arc": "rim-runner",
+   "era": "2020s",
+   "tm": "Rockets"
+  },
+  {
+   "id": "sadams",
+   "n": "Steven Adams",
+   "ovr": 85,
+   "pos": "C",
+   "alt": [],
+   "arc": "rim-runner",
+   "era": "2020s",
+   "tm": "Thunder"
+  },
+  {
+   "id": "nurkic",
+   "n": "Jusuf Nurkic",
+   "ovr": 85,
+   "pos": "C",
+   "alt": [],
+   "arc": "post-scorer",
+   "era": "2020s",
+   "tm": "Blazers"
+  },
+  {
+   "id": "smits",
+   "n": "Rik Smits",
+   "ovr": 85,
+   "pos": "C",
+   "alt": [],
+   "arc": "post-scorer",
+   "era": "1990s",
+   "tm": "Pacers"
+  },
+  {
+   "id": "ilgauskas",
+   "n": "Zydrunas Ilgauskas",
+   "ovr": 85,
+   "pos": "C",
+   "alt": [],
+   "arc": "post-scorer",
+   "era": "2000s",
+   "tm": "Cavaliers"
+  }
+ ]
 }

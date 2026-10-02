@@ -30,6 +30,24 @@ const ok = (c, msg, extra = '') => {
 let clock = 1e6;
 const tick = () => (clock += 400);
 
+// Un tavolo di soli bot, con un numero di squadre GIOCABILE.
+//
+// Tre sezioni qui dentro facevano "aggiungi tutti i bot" e partivano. Andava
+// finche i bot erano quattro; al quinto diventavano cinque squadre, che non
+// e un numero valido (sopra i quattro si gioca solo in pari), startAuction
+// rifiutava e lo stato diventava undefined. Il numero di bot non deve stare
+// scritto da nessuna parte: si prende il piu grande numero giocabile che ci
+// sta nei bot disponibili.
+function tavoloDiBot(seed) {
+  const quanti = S.NUMERI_SQUADRE.filter((v) => v <= Bot.ID_BOT.length).pop();
+  let s = S.newGame(seed, 'host');
+  for (const b of Bot.ID_BOT.slice(0, quanti)) s = S.aggiungiBot(s, b);
+  const keys = S.attive(s);
+  s = S.startAuction(s, clock, keys);
+  if (!s) { male('tavolo di bot non avviabile', `${keys.length} squadre`); return null; }
+  return { s, keys };
+}
+
 /* ---------- Gli avversari finti, per il confronto ---------- */
 // Gli ultimi due sono i soli che contano davvero: i primi tre offrono cifre
 // basse, e contro di loro un bot tirchio sembra bravo perche i prezzi restano
@@ -351,10 +369,8 @@ console.log('\n3. I BOT FRA LORO  (120 tornei in quattro)\n');
    lotto conteso e in quanto tempo, su un cronometro di quindici secondi. */
 console.log('\n3b. COME SALE IL PREZZO IN UN LOTTO CONTESO\n');
 {
-  let s = S.newGame('ritmo-asta', 'host');
-  for (const b of Bot.ID_BOT) s = S.aggiungiBot(s, b);
-  const keys = S.attive(s);
-  s = S.startAuction(s, 1e7, keys);
+  const t1 = tavoloDiBot('ritmo-asta');
+  let s = t1.s; const keys = t1.keys;
 
   const memoria = {};
   const rilanci = [];       // quanti cambi di prezzo per lotto
@@ -435,20 +451,21 @@ console.log('\n3d. CHI SI SIEDE NON E SEMPRE LO STESSO\n');
     `${visti} bot diversi in 200 partite`);
   ok(max < 90, 'e nessuno si siede quasi sempre', `il piu frequente ${max}/200`);
 
-  // Aggiungendone quattro devono essere quattro diversi, non quattro copie.
-  let s4 = S.newGame('quattro', 'host');
+  // Aggiungendoli tutti devono essere teste diverse, non copie. Il numero
+  // non si scrive: lo dice l'elenco dei bot, o al prossimo che si aggiunge
+  // il test fallisce senza che ci sia niente di rotto.
+  let s4 = S.newGame('quanti', 'host');
   for (let i = 0; i < Bot.ID_BOT.length + 2; i++) s4 = S.aggiungiBot(s4) || s4;
   const dentro = Object.values(s4.bots || {});
-  ok(new Set(dentro).size === 4, 'e aggiungendone quattro sono quattro teste diverse', dentro.join(', '));
-  ok(S.aggiungiBot(s4) === undefined, 'il quinto non esiste: sono quattro');
+  ok(new Set(dentro).size === Bot.ID_BOT.length,
+    'e aggiungendoli tutti sono teste diverse', dentro.join(', '));
+  ok(S.aggiungiBot(s4) === undefined, 'e oltre non ce ne sono');
 }
 
 console.log('\n3c. NESSUN BOT OFFRE PER UN GIOCATORE CHE VUOLE SALTARE\n');
 {
-  let s = S.newGame('coerenza', 'host');
-  for (const b of Bot.ID_BOT) s = S.aggiungiBot(s, b);
-  const keys = S.attive(s);
-  s = S.startAuction(s, 2e7, keys);
+  const t2 = tavoloDiBot('coerenza');
+  let s = t2.s; const keys = t2.keys;
 
   const memoria = {};
   let contraddizioni = 0, voti = 0, offerte = 0, lotti = 0;
@@ -473,10 +490,8 @@ console.log('\n3c. NESSUN BOT OFFRE PER UN GIOCATORE CHE VUOLE SALTARE\n');
 
   // E la regola deve saltare quando resta un posto solo: li chiunque e
   // meglio di un buco, quindi si compra e non si salta.
-  let s2 = S.newGame('ultimo-posto', 'host');
-  for (const b of Bot.ID_BOT) s2 = S.aggiungiBot(s2, b);
-  const k2 = S.attive(s2);
-  s2 = S.startAuction(s2, 3e7, k2);
+  const t4 = tavoloDiBot('ultimo-posto');
+  let s2 = t4.s; const k2 = t4.keys;
   const uno = k2[0];
   for (let i = 0; i < ROSTER_SIZE - 1; i++) {
     s2 = S.placeBid(s2, uno, 1, tick());
@@ -488,10 +503,8 @@ console.log('\n3c. NESSUN BOT OFFRE PER UN GIOCATORE CHE VUOLE SALTARE\n');
 
 console.log('\n4. QUANTO CI METTONO A PENSARE\n');
 {
-  let s = S.newGame('tempi', 'host');
-  for (const b of Bot.ID_BOT) s = S.aggiungiBot(s, b);
-  const keys = S.attive(s);
-  s = S.startAuction(s, tick(), keys);
+  const t3 = tavoloDiBot('tempi');
+  let s = t3.s; const keys = t3.keys;
 
   const pid = S.currentPlayerId(s);
   let t0 = performance.now();
