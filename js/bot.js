@@ -528,7 +528,36 @@ export function tatticaBot(st, k, S) {
   }
   cls.sort((a, b) => b.s - a.s);
 
-  const coach = [null, ...sbloccati.map((c) => c.id)];
+  // Quanto vale una combinazione: tiene contro TUTTE le strategie che gli
+  // avversari potrebbero scegliere, non solo contro quella che hanno adesso.
+  const voto = (lu, tac) => {
+    let T;
+    try { T = buildTeam(k, lu, tac); } catch { return null; }
+    if (!avversari.length) return T.off + T.def;
+    let somma = 0, peggio = Infinity;
+    for (const O of avversari) {
+      const m = matchup(T, O);
+      const d = (m.offA - m.defB) - (m.offB - m.defA);
+      somma += d; if (d < peggio) peggio = d;
+    }
+    let s = (somma / avversari.length) * (1 - tr.prudenza) + peggio * tr.prudenza;
+    if (tac.strategy === tr.gusti.strategy) s += GUSTO;
+    if (tac.ritmo === tr.gusti.ritmo) s += GUSTO;
+    return s;
+  };
+
+  // L'ALLENATORE SI SCEGLIE DOPO, non dentro il giro grande.
+  //
+  // Stava dentro, e moltiplicava tutto il resto per il numero di allenatori
+  // sbloccati: da due a sei a seconda della rosa. Misurato cinque volte, i
+  // tempi erano 781, 867, 870, 1880 e 1897 ms — bimodali, e il doppio
+  // toccava a chi aveva comprato cinque giocatori di cinque squadre diverse.
+  // Su un telefono, quattro volte piu lento, erano sette secondi di schermo
+  // bloccato appena finita l'asta.
+  //
+  // Si puo spostare fuori perche l'allenatore aggiunge e toglie punti agli
+  // attributi: non cambia QUALE disposizione o quale strategia conviene, ne
+  // sposta i valori. Prima si decide come giocare, poi chi mette in panchina.
   const v1c = ord.slice(0, 3).map((p) => p.id);
   const v2c = ord.slice(0, 4).map((p) => p.id);
   let best = null;
@@ -536,27 +565,21 @@ export function tatticaBot(st, k, S) {
     for (const v1 of v1c) for (const v2 of v2c) {
       if (v1 === v2) continue;
       for (const strategy of Object.keys(STRATEGIES)) {
-        for (const ritmo of Object.keys(RITMI)) for (const c of coach) {
-          const tac = { v1, v2, strategy, ritmo, coach: c };
-          let T;
-          try { T = buildTeam(k, lu, tac); } catch { continue; }
-          let s;
-          if (!avversari.length) s = T.off + T.def;
-          else {
-            let somma = 0, peggio = Infinity;
-            for (const O of avversari) {
-              const m = matchup(T, O);
-              const d = (m.offA - m.defB) - (m.offB - m.defA);
-              somma += d; if (d < peggio) peggio = d;
-            }
-            s = (somma / avversari.length) * (1 - tr.prudenza) + peggio * tr.prudenza;
-            if (strategy === tr.gusti.strategy) s += GUSTO;
-            if (ritmo === tr.gusti.ritmo) s += GUSTO;
-          }
-          if (!best || s > best.s) best = { s, lu, tac };
+        for (const ritmo of Object.keys(RITMI)) {
+          const tac = { v1, v2, strategy, ritmo, coach: null };
+          const s = voto(lu, tac);
+          if (s !== null && (!best || s > best.s)) best = { s, lu, tac };
         }
       }
     }
+  }
+  if (!best) return null;
+
+  // Adesso l'allenatore, a tattica ferma.
+  for (const c of sbloccati) {
+    const tac = { ...best.tac, coach: c.id };
+    const s = voto(best.lu, tac);
+    if (s !== null && s > best.s) best = { s, lu: best.lu, tac };
   }
   return best;
 }

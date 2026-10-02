@@ -447,7 +447,7 @@ console.log('\n3d. CHI SI SIEDE NON E SEMPRE LO STESSO\n');
   const visti = Object.keys(conta).length;
   const max = Math.max(...Object.values(conta));
   console.log('  ' + Bot.ID_BOT.map((b) => `${Bot.BOT[b].nome} ${conta[b] || 0}`).join('  ·  '));
-  ok(visti === Bot.ID_BOT.length, 'con lo stesso codice stanza escono comunque tutti e quattro',
+  ok(visti === Bot.ID_BOT.length, 'con lo stesso codice stanza escono comunque tutti',
     `${visti} bot diversi in 200 partite`);
   ok(max < 90, 'e nessuno si siede quasi sempre', `il piu frequente ${max}/200`);
 
