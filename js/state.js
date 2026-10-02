@@ -152,7 +152,7 @@ export function aggiungiBot(s, chiedi, rnd) {
   if (!libera) return undefined;
   const presi = Object.values(s.bots || {});
   const quale = (chiedi && BOT[chiedi] && !presi.includes(chiedi)) ? chiedi : prossimoBot(s, rnd);
-  if (!quale) return undefined; // finiti: sono quattro
+  if (!quale) return undefined; // finiti
   const uid = uidBot(libera);
   return {
     ...s,

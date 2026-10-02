@@ -97,6 +97,10 @@ const { buildTeam, componiTabellone, simSeriesUpTo, costruisciBracket, matchup, 
 const { TEAM_KEYS, STRATEGIES, db, TEAM_NAMES } = await import('../js/core.js');
 const BotAI = await import('../js/bot.js');
 const { SLOTS: SLOTS_D } = await import('../js/core.js');
+// Le etichette delle statistiche: il test deve controllare che ci siano
+// TUTTE, e saperle da sole significherebbe tenerle allineate a mano.
+const ATTR_LAB = { sco: 'Realizzazione', tre: 'Tiro da 3', pla: 'Playmaking', reb: 'Rimbalzi',
+  dif: 'Protezione ferro', dpe: 'Difesa perimetro', atl: 'Atletismo', usg: 'Palla richiesta' };
 
 console.log('\nCollaudo interfaccia (modalita locale, DOM simulato)\n');
 
@@ -304,6 +308,36 @@ ok(has('class="identita"'), 'il profilo del quintetto viene spiegato, non solo m
 ok(has('data-act="toggle-lineup"'), 'il quintetto si puo comunque sbloccare e correggere');
 ok(!has('data-act="pick-slot"'), 'ma di partenza e in sola lettura: non e una decisione finta');
 ok(Object.values(STRATEGIES).every((v) => has(v.label)), 'tutte le strategie sono selezionabili');
+
+// L'overall di squadra e la media dei cinque: e il numero che si cerca per
+// primo guardando una rosa, e prima toccava farlo a mente.
+{
+  ok(has('class="ovr-squadra"'), 'ogni squadra mostra il suo overall medio');
+  const k = S.attive(F.state)[0];
+  const cinque = SLOTS_D.map((sl) => db().byId[F.state.lineups[k][sl]]).filter(Boolean);
+  const atteso = (cinque.reduce((a, p) => a + p.ovr, 0) / cinque.length).toFixed(1);
+  ok(has(`>${atteso}<`), 'ed e davvero la media, non un numero qualunque', atteso);
+}
+
+// Toccando l'overall si apre la scheda del giocatore. Scegliere violini,
+// strategia e allenatore senza vedere i numeri voleva dire sceglierli a
+// memoria: tiro da tre e protezione del ferro decidono quali strategie
+// funzionano, e si vedevano solo durante l'asta.
+{
+  ok(has('data-act="scheda"'), 'l\'overall di ogni giocatore e un tasto');
+  ok(!has('class="velo"'), 'e di partenza la scheda e chiusa');
+  const pid = F.state.lineups[S.attive(F.state)[0]].PG;
+  ui.scheda = pid;
+  render(els.app, { state: F.state, session: F.session });
+  const p = db().byId[pid];
+  ok(has('class="velo"', 'class="scheda-pop"'), 'aprendola compare la scheda');
+  ok(has(esc(p.n)) && Object.values(ATTR_LAB).every((l) => has(l)),
+    'con il nome e tutte e otto le statistiche');
+  ok(has('data-act="chiudi-scheda"'), 'e si chiude');
+  ui.scheda = null;
+  render(els.app, { state: F.state, session: F.session });
+  ok(!has('class="velo"'), 'chiudendola sparisce');
+}
 
 /* Tutte le impostazioni tecniche in una schermata sola */
 {
@@ -595,6 +629,17 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
   await F.session.apply((s) => S.togliBot(s, primo));
   ok(!S.botDi(F.state).includes(primo), 'un bot si può togliere');
   ok(!F.state.seats[`bot:${primo}`], 'e la sedia torna libera');
+
+  // Si tolgono bot finche il numero di squadre non e giocabile. Prima qui ne
+  // bastava togliere uno, perche i bot erano quattro e uno umano faceva
+  // cinque: tolto quello, quattro. Era aritmetica legata al numero di bot, e
+  // al quinto bot il test ha smesso di partire — l'asta rifiutava cinque
+  // squadre e restava in lobby. Adesso il conto se lo fa da solo.
+  while (!S.numeroValido(S.attive(F.state).length) && S.botDi(F.state).length) {
+    await F.session.apply((s) => S.togliBot(s, S.botDi(s)[0]));
+  }
+  ok(S.numeroValido(S.attive(F.state).length), 'si arriva a un numero di squadre giocabile',
+    `${S.attive(F.state).length} squadre`);
 
   // A partita avviata non si tocca più niente.
   await F.session.apply((s) => S.startAuction(s, now(), S.attive(s)));

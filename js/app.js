@@ -518,6 +518,21 @@ document.addEventListener('click', async (ev) => {
         await session.apply((s) => S.cambiaNome(s, s.seats[session.uid]));
         break;
 
+      // La scheda di un giocatore: si apre toccando il suo overall nel
+      // quintetto. Non passa dallo stato condiviso — e una cosa mia, gli
+      // altri non devono vedere i miei popup aprirsi e chiudersi.
+      case 'scheda':
+        ui.scheda = el.dataset.pid;
+        paint();
+        return;
+
+      case 'chiudi-scheda':
+        // Solo se si tocca il velo o il tasto, non la scheda stessa.
+        if (el.dataset.act !== 'chiudi-scheda') return;
+        ui.scheda = null;
+        paint();
+        return;
+
       case 'copy-link':
         await navigator.clipboard.writeText(`${location.origin}${location.pathname}?r=${session.code}`);
         flash('Link copiato.');

@@ -9,8 +9,9 @@
 // gia sullo schermo di tutti — e passano dagli stessi controlli: canBid, la
 // regola di riserva, il tetto di spesa. Nessuna scorciatoia.
 //
-// SONO QUATTRO E DIVERSI. Non per fare scena: quattro copie dello stesso bot
-// ottimo renderebbero ogni asta identica. Uno solo gioca bene davvero.
+// SONO CINQUE E DIVERSI. Non per fare scena: cinque copie dello stesso bot
+// ottimo renderebbero ogni asta identica. Nessuno dei cinque e il migliore
+// in assoluto, ma nessuno e li solo per perdere.
 
 import { db, allenatoriDi, hashStr, SLOTS, STRATEGIES, ROSTER_SIZE } from './core.js';
 import { buildTeam, matchup, RITMI } from './engine.js';
@@ -195,6 +196,14 @@ const TRATTI = {
     curva: [2.8, 2.05, 1.20, 0.60, 0.28], spinta: 1.52, fretta: 1.15, prudenza: 0.30,
     gusti: { strategy: 'transizione', ritmo: 'run-gun' },
   },
+  // Il quinto non doveva somigliare a nessuno dei quattro. Lascia perdere i
+  // fuoriclasse — sulla fascia altissima ha la curva piu bassa del gruppo —
+  // e punta forte sulla seconda: quelli che costano meta e valgono quasi
+  // uguale. Chi compra i nomi grossi gli lascia il campo libero proprio li.
+  enzo: {
+    curva: [1.3, 2.7, 1.70, 0.75, 0.30], spinta: 1.50, fretta: 0.95, prudenza: 0.60,
+    gusti: { strategy: 'motion', ritmo: 'medio' },
+  },
 };
 
 // Fino a quanto sale questo bot su questo giocatore. Il resto — riserva,
@@ -311,6 +320,7 @@ export const BOT = {
   bruno: creaBot('bruno', 'Bruno', 'punta tutto su due fuoriclasse e riempie con gli avanzi', [600, 2100]),
   cleo: creaBot('cleo', 'Cleo', 'spende poco su tanti e aspetta che finiate i crediti', [800, 2600]),
   dino: creaBot('dino', 'Dino', 'svuota la cassa subito, prima che ci pensiate voi', [550, 2000]),
+  enzo: creaBot('enzo', 'Enzo', 'vi lascia i fuoriclasse e si prende tutti i secondi', [700, 2300]),
 };
 
 export const ID_BOT = Object.keys(BOT);
@@ -331,7 +341,7 @@ export const eBot = (uid) => String(uid || '').startsWith('bot:');
 export function prossimoBot(st, rnd) {
   const usati = new Set(Object.values(st.bots || {}));
   const liberi = ID_BOT.filter((b) => !usati.has(b));
-  if (!liberi.length) return null;   // finiti: sono quattro
+  if (!liberi.length) return null;   // finiti
   const r = typeof rnd === 'function' ? rnd() : Math.random();
   return liberi[Math.min(liberi.length - 1, Math.floor(r * liberi.length))];
 }

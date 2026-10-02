@@ -21,6 +21,7 @@ export const ui = {
   editLineup: null,   // squadra con il quintetto sbloccato per la modifica
   allIn: null,        // { team, at } — All in armato, valido finché l'offerta non cambia
   bidTeam: null,      // chi ospita molte squadre: per quale sta rilanciando adesso
+  scheda: null,       // id del giocatore di cui e aperta la scheda: cosa mia, non condivisa
 };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -48,7 +49,41 @@ export function render(root, ctx) {
   root.innerHTML =
     (ui.banner ? `<div class="banner${ui.banner.err ? ' err' : ''}">${esc(ui.banner.text)}</div>` : '')
     + body
-    + resetZone(ctx);
+    + resetZone(ctx)
+    + schedaGiocatore();
+}
+
+// La scheda di un giocatore, aperta toccando il suo overall. Scegliere
+// quintetto, violini e allenatore senza poter vedere i numeri voleva dire
+// sceglierli a memoria: il tiro da tre e la protezione del ferro decidono
+// quali strategie funzionano, ed erano visibili solo durante l'asta.
+//
+// Quale scheda e aperta sta in `ui`, non nello stato condiviso: e una cosa
+// mia, gli altri non devono vedere i miei popup aprirsi.
+function schedaGiocatore() {
+  if (!ui.scheda) return '';
+  const D = db();
+  const p = D.byId[ui.scheda];
+  if (!p) return '';
+  const arc = D.archetypes[p.arc];
+  const tess = Object.entries(ATTR_LABELS).map(([kk, lbl]) => `
+    <div class="attr"><div class="lbl"><span>${lbl}</span><b>${p.attrs[kk]}</b></div>
+      <div class="bar"><i style="width:${p.attrs[kk]}%"></i></div></div>`).join('');
+
+  return `<div class="velo" data-act="chiudi-scheda">
+    <div class="scheda-pop" role="dialog" aria-label="Statistiche di ${esc(p.n)}">
+      <div class="jumbo">
+        <div class="tabellina">
+          <span>${p.pos}${p.alt?.length ? ' / ' + p.alt.join('/') : ''} · ${esc(p.tm)} ${p.era}</span>
+          <span>OVR ${p.ovr}</span>
+        </div>
+        <div class="pop-nome">${esc(p.n)}</div>
+        <div class="pop-arc">${esc(arc?.label || p.arc)}</div>
+        <div class="attrs">${tess}</div>
+      </div>
+      <button class="primary wide mt" data-act="chiudi-scheda">Chiudi</button>
+    </div>
+  </div>`;
 }
 
 // Un unico punto per ricominciare, in fondo a ogni schermata a partita
@@ -228,7 +263,7 @@ function botCard(s, n) {
       <button class="sm" data-act="aggiungi-bot" ${pieno || finiti ? 'disabled' : ''}>Aggiungi un bot</button>
     </div>
     <p class="tiny muted mt">${finiti
-      ? 'I bot disponibili sono quattro, e ci sono già tutti.'
+      ? `I bot disponibili sono ${ID_BOT.length}, e ci sono già tutti.`
       : ok
         ? `Siete in ${n} e si può giocare. ${mancano ? `Con ${mancano} bot in più si gioca in ${prossimo}.` : ''}`
         : `Siete in ${n}: servono ${mancano} bot per arrivare a ${prossimo} e far partire il tabellone.`}</p>
@@ -589,26 +624,42 @@ function viewSquadra({ state: s, session }) {
 
     const slots = SLOTS.map((sl) => {
       const p = D.byId[s.lineups[k][sl]];
-      if (!p) return `<div class="slot"><span class="pos">${sl}</span><span class="nm muted">vuoto</span></div>`;
+      if (!p) return `<div class="slot-riga"><div class="slot"><span class="pos">${sl}</span><span class="nm muted">vuoto</span></div></div>`;
       const off = p.pos !== sl && !(p.alt || []).includes(sl);
       const sel = ui.selSlot && ui.selSlot.team === k && ui.selSlot.slot === sl;
       const attivo = editLineup && canEdit;
-      return `<button class="slot ${sel ? 'sel' : ''}" ${attivo ? `data-act="pick-slot" data-team="${k}" data-slot="${sl}"` : 'disabled'}>
-        <span class="pos">${sl}</span>
-        <span class="nm">${esc(p.n)}${off ? ' <span class="warn">fuori ruolo</span>' : ''}</span>
-        <span class="ov">${p.ovr}</span>
-      </button>`;
+      // L'overall e un tasto a parte, fuori da quello dello scambio: due
+      // pulsanti annidati non si possono fare, e qui sono due azioni diverse
+      // — uno sposta il giocatore, l'altro apre la sua scheda.
+      return `<div class="slot-riga">
+        <button class="slot ${sel ? 'sel' : ''}" ${attivo ? `data-act="pick-slot" data-team="${k}" data-slot="${sl}"` : 'disabled'}>
+          <span class="pos">${sl}</span>
+          <span class="nm">${esc(p.n)}${off ? ' <span class="warn">fuori ruolo</span>' : ''}</span>
+        </button>
+        <button class="ovbtn" data-act="scheda" data-pid="${p.id}"
+                title="Le statistiche di ${esc(p.n)}">${p.ovr}</button>
+      </div>`;
     }).join('');
 
     const roster = s.teams[k].roster.map((id) => D.byId[id]).filter(Boolean);
     const opt = (sel, exclude) => roster.filter((p) => p.id !== exclude)
       .map((p) => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(p.n)} (${p.ovr})</option>`).join('');
 
+    // L'overall della squadra: la media dei cinque. E' il numero che si
+    // cerca per primo guardando una rosa, e senza toccava farlo a mente.
+    const rosaOvr = SLOTS.map((sl) => D.byId[s.lineups[k][sl]]).filter(Boolean);
+    const mediaOvr = rosaOvr.length
+      ? (rosaOvr.reduce((a, p) => a + p.ovr, 0) / rosaOvr.length) : 0;
+
     return `<div class="card t-${k} ${mia ? 'mine' : ''}">
       <div class="row spread">
         <h3><span class="dot" style="display:inline-block;margin-right:7px"></span>${TEAM_NAMES[k]}${mia ? ' <span class="tiny muted">(tu)</span>' : ''}</h3>
         ${canEdit ? `<button class="sm ghost" data-act="toggle-lineup" data-team="${k}">${editLineup ? 'Fatto' : 'Modifica'}</button>` : ''}
       </div>
+      ${rosaOvr.length ? `<div class="ovr-squadra">
+        <span>Overall squadra</span><b>${mediaOvr.toFixed(1)}</b>
+        <span class="tiny muted">media dei ${rosaOvr.length}</span>
+      </div>` : ''}
       ${identity ? `<p class="identita">${esc(identity)}</p>` : ''}
       ${campo(s, k, editLineup && canEdit)}
       <div class="slots mt">${slots}</div>

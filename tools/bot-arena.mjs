@@ -297,12 +297,13 @@ console.log('\n2b. OGNI BOT CONTRO OGNI ALTRO BOT  (50 serie per coppia)\n');
   console.log('  sopra i 25 due di loro sono li solo per perdere.');
 }
 
-console.log('\n3. I QUATTRO BOT FRA LORO  (120 tornei in quattro)\n');
+console.log('\n3. I BOT FRA LORO  (120 tornei in quattro)\n');
 {
   const titoli = {}; const st = {};
   for (const b of Bot.ID_BOT) st[b] = { n: 0, ovr: 0, top: 0, caro: 0, spesi: 0, quinto: 0 };
   for (let i = 0; i < 120; i++) {
-    const r = partita('tutti-' + i, { a: 'ada', b: 'bruno', c: 'cleo', d: 'dino' });
+    const q = Bot.ID_BOT.slice(i % Bot.ID_BOT.length).concat(Bot.ID_BOT.slice(0, i % Bot.ID_BOT.length)).slice(0, 4);
+    const r = partita('tutti-' + i, { a: q[0], b: q[1], c: q[2], d: q[3] });
     if (!r) continue;
     const chi = r.s.bots[r.campione];
     titoli[chi] = (titoli[chi] || 0) + 1;
@@ -436,7 +437,7 @@ console.log('\n3d. CHI SI SIEDE NON E SEMPRE LO STESSO\n');
 
   // Aggiungendone quattro devono essere quattro diversi, non quattro copie.
   let s4 = S.newGame('quattro', 'host');
-  for (let i = 0; i < 4; i++) s4 = S.aggiungiBot(s4) || s4;
+  for (let i = 0; i < Bot.ID_BOT.length + 2; i++) s4 = S.aggiungiBot(s4) || s4;
   const dentro = Object.values(s4.bots || {});
   ok(new Set(dentro).size === 4, 'e aggiungendone quattro sono quattro teste diverse', dentro.join(', '));
   ok(S.aggiungiBot(s4) === undefined, 'il quinto non esiste: sono quattro');
