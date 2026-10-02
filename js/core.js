@@ -134,6 +134,13 @@ const ATTR_KEYS = ['sco', 'tre', 'pla', 'reb', 'dif', 'dpe', 'atl', 'usg'];
 const OVR_MIN = 85, OVR_MAX = 100;
 const SCALA_MIN = 0.76, SCALA_MAX = 1.16;
 
+// Quanto l'overall conta sull'attributo-firma dell'archetipo, rispetto a
+// quanto conta su tutto il resto. A 1 non cambia niente rispetto a prima; a
+// 0 due giocatori dello stesso archetipo avrebbero la firma identica a
+// qualunque overall. Un quarto lascia un vantaggio ai fuoriclasse senza
+// renderli i migliori anche nel mestiere degli altri.
+const FORZA_FIRMA = 0.25;
+
 export function deriveAttrs(p, archetypes) {
   const arc = archetypes[p.arc];
   if (!arc) throw new Error(`Archetipo sconosciuto: ${p.arc} (${p.n})`);
@@ -144,6 +151,27 @@ export function deriveAttrs(p, archetypes) {
   // Kidd rimbalzava come un'ala pur essendo un playmaker puro, Penny molto
   // meno di quanto dica il suo archetipo. Senza questo, due giocatori dello
   // stesso archetipo differiscono solo per l'overall.
+  // L'ATTRIBUTO-FIRMA QUASI NON SCALA.
+  //
+  // Finche l'overall moltiplicava tutto, uno specialista non poteva essere il
+  // migliore nemmeno nella sua specialita. Misurato: Mutombo, quattro volte
+  // difensore dell'anno, proteggeva il ferro diciotto punti sotto Shaq;
+  // Rodman, sette titoli di rimbalzi, rimbalzava meno di otto giocatori. Nel
+  // gioco "specialista" voleva dire solo "meno forte", e infatti fra il
+  // miglior archetipo e il peggiore c'erano 17,5 punti di valore, con
+  // three-and-d a meno di zero: metterlo in squadra la peggiorava.
+  //
+  // Ogni archetipo dichiara in `firma` l'attributo che lo definisce. Su
+  // quello la forbice si stringe a un quarto: chi e bravo in generale resta
+  // un po' avanti, ma a decidere chi stoppa di piu e il PROFILO, cioe che
+  // giocatore sei, non quanto sei forte in tutto il resto.
+  //
+  // Non azzerata del tutto: un fuoriclasse resta un po' meglio anche nella
+  // specialita altrui, e senza nessuna scala due sharpshooter di overall
+  // diverso tirerebbero identici.
+  const scalaFirma = 1 + (scala - 1) * FORZA_FIRMA;
+  const firma = new Set(arc.firma || []);
+
   const mod = p.mod || {};
   const out = {};
   for (const k of ATTR_KEYS) {
@@ -151,7 +179,8 @@ export function deriveAttrs(p, archetypes) {
     // stesso archetipo non devono essere cloni perfetti.
     const jitter = (hashStr(p.id + ':' + k) % 1000) / 1000;
     const nudge = (jitter - 0.5) * 6; // -3 .. +3
-    out[k] = Math.round(clamp((arc.p[k] + (mod[k] || 0)) * scala + nudge, 20, 99));
+    const s = firma.has(k) ? scalaFirma : scala;
+    out[k] = Math.round(clamp((arc.p[k] + (mod[k] || 0)) * s + nudge, 20, 99));
   }
   return out;
 }

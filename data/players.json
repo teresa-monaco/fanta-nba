@@ -1303,7 +1303,10 @@
    ],
    "arc": "glue-forward",
    "era": "1990s",
-   "tm": "Bulls"
+   "tm": "Bulls",
+   "mod": {
+    "reb": 14
+   }
   },
   {
    "id": "benwallace",

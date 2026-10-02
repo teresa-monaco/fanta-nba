@@ -13,7 +13,10 @@
     "dpe": 62,
     "atl": 58,
     "usg": 70
-   }
+   },
+   "firma": [
+    "pla"
+   ]
   },
   "scoring-pg": {
    "label": "Playmaker realizzatore",
@@ -27,7 +30,10 @@
     "dpe": 46,
     "atl": 68,
     "usg": 95
-   }
+   },
+   "firma": [
+    "sco"
+   ]
   },
   "combo-guard": {
    "label": "Guardia combo",
@@ -41,7 +47,10 @@
     "dpe": 48,
     "atl": 70,
     "usg": 88
-   }
+   },
+   "firma": [
+    "sco"
+   ]
   },
   "two-way-guard": {
    "label": "Guardia two-way",
@@ -55,7 +64,10 @@
     "dpe": 94,
     "atl": 72,
     "usg": 62
-   }
+   },
+   "firma": [
+    "dpe"
+   ]
   },
   "sharpshooter": {
    "label": "Tiratore",
@@ -69,7 +81,10 @@
     "dpe": 56,
     "atl": 54,
     "usg": 60
-   }
+   },
+   "firma": [
+    "tre"
+   ]
   },
   "three-and-d": {
    "label": "3&D",
@@ -83,7 +98,11 @@
     "dpe": 96,
     "atl": 70,
     "usg": 38
-   }
+   },
+   "firma": [
+    "tre",
+    "dpe"
+   ]
   },
   "slasher": {
    "label": "Attaccante del ferro",
@@ -97,7 +116,10 @@
     "dpe": 66,
     "atl": 96,
     "usg": 88
-   }
+   },
+   "firma": [
+    "atl"
+   ]
   },
   "iso-scorer": {
    "label": "Realizzatore da isolamento",
@@ -111,7 +133,10 @@
     "dpe": 56,
     "atl": 76,
     "usg": 97
-   }
+   },
+   "firma": [
+    "sco"
+   ]
   },
   "all-around-star": {
    "label": "Stella completa",
@@ -125,7 +150,8 @@
     "dpe": 90,
     "atl": 94,
     "usg": 95
-   }
+   },
+   "firma": []
   },
   "point-forward": {
    "label": "Ala playmaker",
@@ -139,7 +165,10 @@
     "dpe": 74,
     "atl": 82,
     "usg": 92
-   }
+   },
+   "firma": [
+    "pla"
+   ]
   },
   "two-way-wing": {
    "label": "Ala two-way",
@@ -153,7 +182,10 @@
     "dpe": 95,
     "atl": 82,
     "usg": 78
-   }
+   },
+   "firma": [
+    "dpe"
+   ]
   },
   "athletic-wing": {
    "label": "Ala atletica",
@@ -167,7 +199,10 @@
     "dpe": 72,
     "atl": 98,
     "usg": 76
-   }
+   },
+   "firma": [
+    "atl"
+   ]
   },
   "stretch-four": {
    "label": "Ala grande tiratrice",
@@ -181,7 +216,10 @@
     "dpe": 44,
     "atl": 52,
     "usg": 80
-   }
+   },
+   "firma": [
+    "tre"
+   ]
   },
   "power-forward": {
    "label": "Ala grande classica",
@@ -195,7 +233,10 @@
     "dpe": 58,
     "atl": 74,
     "usg": 82
-   }
+   },
+   "firma": [
+    "reb"
+   ]
   },
   "glue-forward": {
    "label": "Ala di sistema",
@@ -209,7 +250,10 @@
     "dpe": 90,
     "atl": 74,
     "usg": 28
-   }
+   },
+   "firma": [
+    "reb"
+   ]
   },
   "post-scorer": {
    "label": "Realizzatore in post",
@@ -223,7 +267,10 @@
     "dpe": 44,
     "atl": 62,
     "usg": 86
-   }
+   },
+   "firma": [
+    "sco"
+   ]
   },
   "dominant-center": {
    "label": "Centro dominante",
@@ -237,7 +284,11 @@
     "dpe": 42,
     "atl": 74,
     "usg": 92
-   }
+   },
+   "firma": [
+    "sco",
+    "reb"
+   ]
   },
   "playmaking-center": {
    "label": "Centro regista",
@@ -251,7 +302,10 @@
     "dpe": 38,
     "atl": 42,
     "usg": 84
-   }
+   },
+   "firma": [
+    "pla"
+   ]
   },
   "rim-runner": {
    "label": "Centro verticale",
@@ -265,7 +319,10 @@
     "dpe": 42,
     "atl": 92,
     "usg": 32
-   }
+   },
+   "firma": [
+    "atl"
+   ]
   },
   "defensive-anchor": {
    "label": "Ancora difensiva",
@@ -279,7 +336,10 @@
     "dpe": 46,
     "atl": 76,
     "usg": 22
-   }
+   },
+   "firma": [
+    "dif"
+   ]
   },
   "stretch-center": {
    "label": "Centro che tira",
@@ -293,7 +353,10 @@
     "dpe": 40,
     "atl": 54,
     "usg": 84
-   }
+   },
+   "firma": [
+    "tre"
+   ]
   },
   "midrange-scorer": {
    "label": "Realizzatore dal medio",
@@ -307,7 +370,10 @@
     "dpe": 50,
     "atl": 60,
     "usg": 90
-   }
+   },
+   "firma": [
+    "sco"
+   ]
   }
  },
  "positionSize": {
