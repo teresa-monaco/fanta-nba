@@ -511,7 +511,7 @@ console.log('\nUNA SQUADRA HA FINITO, LE ALTRE NO\n');
     sx = S.joinGame(sx, 'u1', 'P1');
     sx = S.joinGame(sx, 'u2', 'P2');
     sx = S.startAuction(sx, t0, S.attive(sx));
-    // Il tempo del lotto e i quindici secondi per offrire PIU l'apertura
+    // Il tempo del lotto e i secondi per offrire PIU l'apertura
     // della pallina, che si aggiunge e non si toglie.
     const pieno = S.BID_SECONDS * 1000 + S.RIVELA_MS;
     ok(S.tempoRimasto(sx, t0) === pieno,

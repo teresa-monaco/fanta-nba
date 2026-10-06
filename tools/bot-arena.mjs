@@ -108,7 +108,7 @@ function partita(seed, chi) {
     if (!pid) break;
     const p = D.byId[pid];
 
-    // SI SEGUE IL CRONOMETRO VERO: quindici secondi a passi di 200 ms.
+    // SI SEGUE IL CRONOMETRO VERO: la durata vera del lotto, a passi di 200 ms.
     //
     // Prima erano trenta giri da 700 ms con uscita anticipata dopo sei giri
     // di silenzio. Andava bene finche ogni bot si svegliava una volta sola
@@ -366,7 +366,7 @@ console.log('\n3. I BOT FRA LORO  (120 tornei in quattro)\n');
    Con la sveglia unica per lotto i bot si buttavano tutti dentro nei primi
    secondi: il prezzo arrivava al massimo in un lampo e poi per dieci secondi
    non succedeva piu niente. Si misura quante volte il prezzo si muove in un
-   lotto conteso e in quanto tempo, su un cronometro di quindici secondi. */
+   lotto conteso e in quanto tempo, sulla durata vera del lotto. */
 console.log('\n3b. COME SALE IL PREZZO IN UN LOTTO CONTESO\n');
 {
   const t1 = tavoloDiBot('ritmo-asta');
@@ -380,7 +380,7 @@ console.log('\n3b. COME SALE IL PREZZO IN UN LOTTO CONTESO\n');
   while (s.phase === 'auction' && lotti < 40) {
     const t0 = s.auction.deadline - S.BID_SECONDS * 1000;
     let mosse = 0, ultimo = null;
-    // Si segue il cronometro vero: 15 secondi a passi di 100 ms.
+    // Si segue il cronometro vero, a passi di 100 ms.
     for (let t = t0; t <= t0 + S.BID_SECONDS * 1000; t += 100) {
       for (const k of keys) {
         const q = Bot.offerta(s, k, S, t, memoria);

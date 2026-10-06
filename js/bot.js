@@ -304,7 +304,7 @@ function tettoRagionato(st, k, pid, S, tr) {
 //
 // LE QUATTRO FORCHETTE SI SOMIGLIANO DI PROPOSITO. Da quando i bot ci
 // ripensano a ogni rilancio, chi reagisce prima ha piu occasioni di
-// rilanciare dentro gli stessi quindici secondi: il tempo di reazione era
+// rilanciare dentro gli stessi secondi del lotto: il tempo di reazione era
 // diventato un vantaggio competitivo. Misurato con le forchette larghe di
 // prima (Dino 300-1100 contro Cleo 1800-3400), nel torneo a quattro Dino
 // faceva 53 titoli su 120 e Cleo 12, con la quota equa a 30. I riflessi non

@@ -8,11 +8,14 @@
 import { TEAM_KEYS, TEAM_NAMES, SLOTS, START_CREDITS, ROSTER_SIZE, NUMERI_SQUADRE, makeRng, shuffle, db, allenatoriDi, prossimoNome } from './core.js';
 import { BOT, prossimoBot, uidBot, eBot } from './bot.js';
 
-export const BID_SECONDS = 15;
+// Era 15. Abbassato a 12 giocando: con i bot che ci ripensano a ogni rilancio
+// e chi gioca ormai esperto, gli ultimi secondi di un lotto erano spesso
+// silenzio. Su una ventina di lotti sono un minuto abbondante in meno.
+export const BID_SECONDS = 12;
 
 // Quanto dura l'apertura della pallina del draft fra un giocatore e l'altro.
 //
-// SI AGGIUNGE AL CRONOMETRO, non si toglie: i quindici secondi per offrire
+// SI AGGIUNGE AL CRONOMETRO, non si toglie: i secondi per offrire
 // restano interi e nessuno perde tempo di decisione guardando un'animazione.
 // Su una ventina di lotti sono una quindicina di secondi in piu sull'asta.
 //
@@ -269,7 +272,7 @@ export function openLot(s, now) {
   for (let step = 0; step < a.order.length; step++) {
     idx = (idx + 1) % a.order.length;
     if (!owned.has(a.order[idx])) {
-      // Il tempo della pallina si aggiunge: i quindici secondi per offrire
+      // Il tempo della pallina si aggiunge: i secondi per offrire
       // partono quando la scheda e scoperta, non prima.
       return { ...s, auction: { ...fresh, idx, deadline: now + BID_SECONDS * 1000 + RIVELA_MS, running: true } };
     }
