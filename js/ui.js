@@ -684,8 +684,9 @@ function viewSquadra({ state: s, session }) {
 
         ${coachPicker(s, k, t, canEdit)}
       </div>
-      ${canEdit ? `<button class="conferma ${confermata ? 'fatta' : ''}" data-act="conferma-pronto" data-team="${k}">
-        ${confermata ? '&#10003; Pronta — tocca per ripensarci' : 'Ho finito, sono pronto'}
+      ${canEdit ? `<button class="conferma ${confermata ? 'fatta' : ''}" data-act="conferma-pronto" data-team="${k}"
+        title="${confermata ? 'Tocca per ripensarci' : 'Dice a chi ospita che hai finito'}">
+        ${confermata ? '&#10003; Ready' : 'Ready'}
       </button>` : ''}
     </div>`;
   }).join('');
