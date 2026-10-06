@@ -71,6 +71,10 @@ globalThis.addEventListener = () => {};
 // fondo vuoto — e sembra uno schermo nero.
 let risalite = 0;
 globalThis.scrollTo = () => { risalite++; };
+// Il momento del campione si appende al body, fuori dalla pagina che
+// render() riscrive: si conta quante volte compare, perche deve essere una.
+let festa = 0;
+globalThis.document.body = { insertAdjacentHTML: (_, h) => { if (h.includes('class="rivela')) festa++; } };
 
 let uncaught = null;
 process.on('unhandledRejection', (e) => { uncaught = e; });
@@ -427,7 +431,34 @@ for (const k of S.attive(F.state)) T[k] = buildTeam(k, F.state.lineups[k], F.sta
 const tab = componiTabellone(T, F.state.seed);
 ok(tab.serie.join(',') === '2,1', 'con quattro squadre: due semifinali e una finale');
 await F.session.apply((s) => S.toPlayoffs(s, tab));
-ok(clean() && has('Playoff', 'Semifinale 1', 'Semifinale 2'), 'il tabellone si disegna');
+ok(clean() && has('class="jumbo br-jumbo"', 'Semifinale 1', 'Semifinale 2'), 'il tabellone si disegna');
+
+// IL TABELLONE DEI PLAYOFF. Era una lista di card una sotto l'altra e il
+// torneo non si vedeva mai d'un colpo.
+ok(has('class="bracket"') && (html().match(/class="br-col"/g) || []).length >= 2,
+  'con una colonna per turno', `${(html().match(/class="br-col"/g) || []).length} colonne`);
+ok((html().match(/class="br-cella viva/g) || []).length === 2,
+  'e le due semifinali giocabili sono segnalate', `${(html().match(/class="br-cella viva/g) || []).length} vive`);
+ok(has('data-act="vai-serie"'), 'toccando una casella si va alla serie');
+ok(html().indexOf('class="jumbo br-jumbo"') < html().indexOf('class="card serie"'),
+  'e il tabellone sta sopra le serie, non in fondo');
+ok(!has('class="champ'), 'a playoff appena iniziati il campione non c\'e');
+
+// Ogni serie ha il suo tabellone e il suo tasto: con due semifinali aperte
+// se ne vedono due, uno sotto l'altro, e si gioca una gara per semifinale
+// senza doverne chiudere una per passare all'altra. Si controlla ADESSO,
+// con le due serie aperte: chiuse, diventano una riga.
+{
+  const board = (html().match(/class="jumbo serie-jumbo/g) || []).length;
+  const tasti = (html().match(/data-act="avanza:0:/g) || []).length;
+  ok(board === 2, 'ogni semifinale ha il suo tabellone', `${board} tabelloni`);
+  ok(tasti === 2, 'e il suo tasto, cosi si avanza una gara per semifinale', `${tasti} tasti`);
+  ok(has('class="serie-conto"'), 'il conto della serie sta sul tabellone');
+  // I sette pallini: uno per gara, l'andamento si legge senza numeri.
+  const dots = (html().match(/<div class="pallini"[^>]*>(.*?)<\/div>/s) || [])[1] || '';
+  ok((dots.match(/<i /g) || []).length === 7, 'ogni serie ha i suoi sette pallini',
+    `${(dots.match(/<i /g) || []).length} pallini`);
+}
 // Una gara per volta in TUTTI i turni. Prima i turni prima della finale ne
 // scoprivano due: con il punteggio che si anima diventavano due punteggi che
 // salgono insieme, per due serie aperte, e non se ne seguiva nessuno.
@@ -439,7 +470,18 @@ for (let i = 0; i < 7; i++) {
   await F.session.apply((s) => S.advanceSeries(s, 0, 0, S.PASSO_GARA));
   await F.session.apply((s) => S.advanceSeries(s, 0, 1, S.PASSO_GARA));
 }
-ok(clean() && has('Gara 1', 'MVP della serie', 'Perché ha vinto'), 'le semifinali mostrano gare, MVP e spiegazione');
+// LE SERIE FINITE SI CHIUDONO A UNA RIGA. Restavano aperte per intero, e in
+// quattro con la finalina la pagina era lunghissima.
+ok((html().match(/class="serie-riga/g) || []).length === 2,
+  'le semifinali finite si chiudono a una riga', `${(html().match(/class="serie-riga/g) || []).length} righe`);
+ok(has('class="mvp-mini"'), 'e la riga dice comunque chi e stato l\'MVP');
+ok((html().match(/class="br-sq t-[^"]* vince/g) || []).length >= 2,
+  'mentre sul tabellone i vincitori risultano', `${(html().match(/class="br-sq t-[^"]* vince/g) || []).length}`);
+
+// Riaperta, la serie ha tutto quello che aveva prima.
+ui.serieAperte.add('0-0');
+render(els.app, { state: F.state, session: F.session });
+ok(clean() && has('Gara 1', 'MVP della serie', 'Perché ha vinto'), 'riaperta, la serie mostra gare, MVP e spiegazione');
 // Le gare gia lette si richiudono: aperte tutte, chi guarda senza toccare
 // restava fermo su gara 1 mentre il tavolo era a gara 6.
 ok(has('game chiusa'), 'le gare precedenti si richiudono a una riga');
@@ -448,17 +490,6 @@ ok((html().match(/class="story"/g) || []).length < (html().match(/class="gname"/
   'e non sono tutte aperte insieme',
   `${(html().match(/class="story"/g) || []).length} cronache su ${(html().match(/class="gname"/g) || []).length} gare`);
 ok(has('Box score'), 'il box score e consultabile');
-// Ogni serie ha il suo tabellone e il suo tasto: con due semifinali aperte
-// se ne vedono due, uno sotto l'altro, e si gioca una gara per semifinale
-// senza doverne chiudere una per passare all'altra.
-{
-  const board = (html().match(/class="jumbo serie-jumbo"/g) || []).length;
-  const tasti = (html().match(/data-act="avanza:0:/g) || []).length;
-  ok(board >= 2, 'ogni semifinale ha il suo tabellone', `${board} tabelloni`);
-  ok(tasti === 2 || html().includes('MVP della serie'),
-    'e il suo tasto, cosi si avanza una gara per semifinale', `${tasti} tasti`);
-  ok(has('class="serie-conto"'), 'il conto della serie sta sul tabellone');
-}
 // Il punteggio sale invece di comparire. Il numero finale deve stare COMUNQUE
 // nel markup: se il javascript non gira, o si e chiesto meno movimento, si
 // deve leggere il risultato e non due zeri.
@@ -468,18 +499,48 @@ ok(has('Box score'), 'il box score e consultabile');
   ok(pt.every(([, a, b]) => a === b),
     'e il risultato vero e gia scritto: senza javascript si legge lo stesso');
 }
+ok(has('>Richiudi<'), 'e si richiude');
+ui.serieAperte.delete('0-0');
+render(els.app, { state: F.state, session: F.session });
+
 ok(has('Finale') && has('Vai — Gara 1'), 'la finale si apre da sola quando le semifinali sono chiuse');
 
-// Una gara alla volta, come chiedono le regole.
-let steps = 0, sawStop = false;
+// Una gara alla volta, come chiedono le regole. Si aspetta il BANNER del
+// campione, non la parola "Campione": quella sta sempre nel tabellone, come
+// titolo dell'ultima colonna. Cercandola, il ciclo si fermava dopo una gara,
+// la finale non finiva mai e l'albo restava vuoto.
+let steps = 0, sawStop = false, vistaGara7 = false;
+const festaPrima = festa;
 while (steps++ < 8) {
   await F.session.apply((s) => S.advanceSeries(s, 1, 0, S.PASSO_GARA));
-  if (html().includes('Campione')) { sawStop = true; break; }
+  if (html().includes('serie-jumbo gara7')) vistaGara7 = true;
+  if (html().includes('class="champ')) { sawStop = true; break; }
 }
 ok(sawStop, 'la finale si chiude e proclama il campione', `${steps} gare`);
-ok(clean() && has('MVP della serie'), 'l\'MVP viene assegnato');
+// Gara 7: sul tre pari il tabellone diventa rosso. Vale solo se la serie ci
+// e arrivata davvero, quindi il controllo dipende da come e andata.
+{
+  const f = costruisciBracket(F.state.po, T)[1][0].res;
+  const settima = f.games.length === 7;
+  ok(!settima || vistaGara7, 'arrivati alla gara 7 il tabellone diventa rosso',
+    settima ? `finale ${f.wins.a}-${f.wins.b}, gara 7 vista` : 'la finale non e arrivata a sette');
+}
+// Il momento a schermo intero compare UNA volta, quando la finale si chiude.
+ok(festa - festaPrima === 1, 'chiusa la finale parte il momento del campione, una volta sola',
+  `${festa - festaPrima} volte`);
+await F.session.apply((s) => ({ ...s }));
+ok(festa - festaPrima === 1, 'e non riparte a ogni ridisegno');
+ok(clean() && has('MVP delle Finals'), 'l\'MVP delle Finals viene assegnato');
+// Il campione in cima: prima finiva a meta pagina, sopra la card della
+// finale e sotto tutto il resto.
+ok(html().indexOf('class="champ') < html().indexOf('class="jumbo br-jumbo"'),
+  'il campione sta in cima, sopra il tabellone');
+ok(has('class="trofeo"'), 'col trofeo disegnato');
+ok(/class="br-cella br-oro chiusa"/.test(html()), 'e la casella del campione nel tabellone si riempie');
 
 /* Il referto: senza, nessuna delle cinque scelte si impara mai */
+ui.serieAperte.add('1-0');
+render(els.app, { state: F.state, session: F.session });
 ok(has('Il referto'), 'a serie chiusa compare il referto tattico');
 ok(has('class="referto"') && has('Strategia') && has('Ritmo') && has('Allenatore') && has('Primo violino'),
   'e copre tutte e quattro le scelte misurabili');
@@ -490,6 +551,8 @@ ok(html().indexOf('Perché ha vinto') < html().indexOf('Il referto'),
 // il test falliva appena il verdetto prendeva un ramo diverso.
 ok(html().includes('unti a partita rispetto a scegliere a caso'),
   'il referto dichiara l\'unita: punti a partita, non unita del motore');
+ui.serieAperte.delete('1-0');
+render(els.app, { state: F.state, session: F.session });
 ok(has('finale 3°/4° posto'), 'viene proposta la finalina fra le due eliminate');
 {
   const turni = costruisciBracket(F.state.po, T);

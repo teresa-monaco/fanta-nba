@@ -22,6 +22,7 @@ export const ui = {
   allIn: null,        // { team, at } — All in armato, valido finché l'offerta non cambia
   bidTeam: null,      // chi ospita molte squadre: per quale sta rilanciando adesso
   scheda: null,       // id del giocatore di cui e aperta la scheda: cosa mia, non condivisa
+  serieAperte: new Set(),  // serie finite che ho riaperto io: resta aperto anche ridisegnando
 };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -901,22 +902,27 @@ function viewPlayoffs({ state: s, session }) {
   const tot = turni.length;
   const conTeste = po.teste > 0;
 
-  let out = `<h2>Playoff</h2>
-    <div class="card tight">
-      <p class="tiny muted mb">${po.n} squadre · ${turni.reduce((a, r) => a + r.length, 0)} serie</p>
-      ${po.reasons.map((r) => `<p class="small muted" style="margin-bottom:6px">${esc(r)}</p>`).join('')}
-    </div>`;
+  const finale = turni[tot - 1]?.[0];
+  const finita = !!finale?.res?.done;
+  let out = '';
 
-  // Chi salta il primo turno, detto una volta e chiaramente.
-  if (conTeste) {
-    out += `<div class="card tight center"><p class="small">
-      <span class="muted">Salta${po.teste > 1 ? 'no' : ''} il preliminare:</span>
-      <b>${po.ordine.slice(0, po.teste).map((k) => esc(TEAM_NAMES[k])).join(', ')}</b></p></div>`;
-  }
+  // IL CAMPIONE STA IN CIMA. Prima il banner veniva inserito sopra la card
+  // della finale, e dopo c'erano ancora finalina e albo: il momento piu alto
+  // della serata finiva a meta pagina, in mezzo allo scroll.
+  if (finita) out += bannerCampione(finale, T);
 
-  let campione = null;
+  // IL TABELLONE. I playoff erano una lista verticale di card, una sotto
+  // l'altra, e il torneo non si vedeva mai d'un colpo: chi sta da quale
+  // parte, chi incontra chi dopo. Nei playoff il tabellone E' l'immagine.
+  out += tabellonePlayoff(turni, T, conTeste);
+
+  // Il perche degli accoppiamenti: utile la prima volta, poi ingombra.
+  out += `<details class="po-info"><summary>${po.n} squadre · ${turni.reduce((a, r) => a + r.length, 0)} serie
+    ${conTeste ? `· salta${po.teste > 1 ? 'no' : ''} il preliminare ${po.ordine.slice(0, po.teste).map((k) => esc(TEAM_NAMES[k])).join(', ')}` : ''}</summary>
+    ${po.reasons.map((r) => `<p class="small muted" style="margin-top:6px">${esc(r)}</p>`).join('')}
+  </details>`;
+
   for (let r = 0; r < tot; r++) {
-    const ultimo = r === tot - 1;
     const passo = S.PASSO_GARA;
     const nome = nomeTurno(r, tot, conTeste);
     const round = turni[r];
@@ -926,19 +932,19 @@ function viewPlayoffs({ state: s, session }) {
     const precedenteChiuso = r === 0 || turni[r - 1].every((m) => m.res?.done);
     if (!precedenteChiuso) break;
 
-    if (ultimo && round[0]?.res?.done) {
-      const m = round[0];
-      const W = m.res.winner === m.a ? T[m.a] : T[m.b];
-      campione = m.res;
-      out += `<div class="champ"><div class="t">Campione</div><div class="n">${esc(W.name)}</div>
-        <div class="small" style="font-weight:700">${Math.max(m.res.wins.a, m.res.wins.b)}-${Math.min(m.res.wins.a, m.res.wins.b)} nella serie</div></div>`;
-    }
-
     round.forEach((m, i) => {
       const titolo = round.length > 1 ? `${nome} ${i + 1}` : nome;
-      out += serieCard(titolo, T[m.a], T[m.b], m.res, m, passo, isHost, `avanza:${r}:${i}`);
+      const id = `${r}-${i}`;
+      // Le serie finite si chiudono a una riga; aperta resta solo quella in
+      // corso, e quella che hai riaperto tu.
+      if (m.res?.done && !ui.serieAperte.has(id)) {
+        out += serieRiga(titolo, T[m.a], T[m.b], m.res, id);
+      } else {
+        out += serieCard(titolo, T[m.a], T[m.b], m.res, { ...m, id }, passo, isHost, `avanza:${r}:${i}`);
+      }
     });
   }
+  const campione = finita ? finale.res : null;
 
   // Finalina: solo se il penultimo turno aveva due serie, cioe due eliminate.
   if (campione) {
@@ -946,7 +952,9 @@ function viewPlayoffs({ state: s, session }) {
     if (semi && semi.length === 2) {
       if (po.third) {
         const t3 = simSeriesUpTo(T[po.third.a], T[po.third.b], po.third.seed, po.third.gamesPlayed);
-        out += serieCard('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], t3, po.third, S.PASSO_GARA, isHost, 'avanza-third');
+        out += t3.done && !ui.serieAperte.has('third')
+          ? serieRiga('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], t3, 'third')
+          : serieCard('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], t3, { ...po.third, id: 'third' }, S.PASSO_GARA, isHost, 'avanza-third');
       } else if (isHost) {
         out += `<button class="wide ghost" data-act="open-third">Giocare anche la finale 3°/4° posto?</button>`;
       }
@@ -961,6 +969,119 @@ function viewPlayoffs({ state: s, session }) {
     // Il tasto per ricominciare lo mette resetZone(), in fondo a ogni schermata.
   }
   return out;
+}
+
+// IL TABELLONE DEI PLAYOFF. Una colonna per turno, e i vincitori che
+// avanzano si vedono passare da una colonna all'altra.
+//
+// Niente linee di collegamento, di proposito: con le teste di serie chi
+// salta il preliminare entra direttamente al turno dopo, quindi l'albero non
+// e un binario perfetto e delle linee disegnate a regola direbbero cose
+// false. Le colonne distribuite in altezza si leggono lo stesso.
+//
+// Le serie giocabili pulsano; toccandone una ci si scorre sopra.
+function tabellonePlayoff(turni, T, conTeste) {
+  const tot = turni.length;
+  const colonne = turni.map((round, r) => {
+    const celle = round.map((m, i) => {
+      const id = `${r}-${i}`;
+      const A = m.a ? T[m.a] : null;
+      const B = m.b ? T[m.b] : null;
+      const f = m.res;
+      const viva = !!(A && B && f && !f.done);
+      const esito = f?.done ? (f.winner === m.a ? 'a' : 'b') : null;
+      const riga = (X, w, lato) => (X
+        ? `<div class="br-sq t-${X.key} ${esito === lato ? 'vince' : (esito ? 'perde' : '')}">
+             <span class="dot"></span><span class="nm">${esc(X.name)}</span><b>${f ? w : ''}</b></div>`
+        : '<div class="br-sq vuota"><span class="nm">da decidere</span></div>');
+      return `<button class="br-cella ${viva ? 'viva' : ''} ${f?.done ? 'chiusa' : ''}"
+          ${A && B ? `data-act="vai-serie" data-serie="${id}"` : 'disabled'}>
+        ${riga(A, f?.wins.a, 'a')}${riga(B, f?.wins.b, 'b')}
+      </button>`;
+    }).join('');
+    return `<div class="br-col"><div class="br-tit">${esc(nomeTurno(r, tot, conTeste))}</div>
+      <div class="br-celle">${celle}</div></div>`;
+  }).join('');
+
+  // In fondo al tabellone, il campione: e la casella a cui porta tutto.
+  const fin = turni[tot - 1]?.[0];
+  const W = fin?.res?.done ? T[fin.res.winner] : null;
+  const ultima = `<div class="br-col br-campione"><div class="br-tit">Campione</div>
+    <div class="br-celle"><div class="br-cella br-oro ${W ? 'chiusa' : ''}">
+      ${W ? `<div class="br-sq t-${W.key} vince"><span class="dot"></span><span class="nm">${esc(W.name)}</span></div>`
+        : '<div class="br-sq vuota"><span class="nm">?</span></div>'}
+    </div></div></div>`;
+
+  return `<div class="jumbo br-jumbo">
+    <div class="tabellina"><span>Tabellone playoff</span><span>${W ? 'concluso' : 'in corso'}</span></div>
+    <div class="bracket">${colonne}${ultima}</div>
+  </div>`;
+}
+
+// Un trofeo disegnato, non un'emoji: le emoji cambiano da telefono a
+// telefono, e il momento del campione deve essere uguale per tutti.
+function trofeo(dim = 64) {
+  return `<svg class="trofeo" width="${dim}" height="${dim}" viewBox="0 0 64 64" aria-hidden="true">
+    <defs><linearGradient id="oro" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffe7a3"/><stop offset=".5" stop-color="#ffd166"/><stop offset="1" stop-color="#c9921f"/>
+    </linearGradient></defs>
+    <path d="M18 8h28v14c0 9-6 16-14 16s-14-7-14-16z" fill="url(#oro)"/>
+    <path d="M18 12H9c0 8 4 13 10 14M46 12h9c0 8-4 13-10 14" fill="none" stroke="#ffd166" stroke-width="3" stroke-linecap="round"/>
+    <rect x="28" y="38" width="8" height="10" fill="#c9921f"/>
+    <rect x="20" y="48" width="24" height="7" rx="1.5" fill="url(#oro)"/>
+    <path d="M24 13c1 6 3 10 7 12" stroke="#fff6d6" stroke-width="2" fill="none" opacity=".7" stroke-linecap="round"/>
+  </svg>`;
+}
+
+// Il banner del campione, in cima alla pagina a finale chiusa.
+function bannerCampione(m, T) {
+  const W = m.res.winner === m.a ? T[m.a] : T[m.b];
+  const L = W.key === m.a ? T[m.b] : T[m.a];
+  const wv = Math.max(m.res.wins.a, m.res.wins.b), wp = Math.min(m.res.wins.a, m.res.wins.b);
+  return `<div class="champ t-${W.key}">
+    ${trofeo(56)}
+    <div class="t">Campione</div>
+    <div class="n">${esc(W.name)}</div>
+    <div class="small">${wv}-${wp} su ${esc(L.name)}${m.res.mvp ? ` · MVP delle Finals ${esc(m.res.mvp.n)}` : ''}</div>
+    <div class="rosa">${(W.five || []).map((p) => esc(p.n)).join(' · ')}</div>
+  </div>`;
+}
+
+// Il momento del campione a schermo intero. Lo apre app.js UNA volta, nel
+// momento in cui la finale si chiude: non sta dentro render() perche ogni
+// ridisegno lo cancellerebbe, e perche deve vederlo chi era a tavola in quel
+// momento, non chi rientra in stanza un'ora dopo.
+export function rivelaCampione(s) {
+  const T = teamsFromState(s);
+  const turni = costruisciBracket(s.po, T);
+  const m = turni[turni.length - 1]?.[0];
+  if (!m?.res?.done) return '';
+  const W = m.res.winner === m.a ? T[m.a] : T[m.b];
+  const L = W.key === m.a ? T[m.b] : T[m.a];
+  const wv = Math.max(m.res.wins.a, m.res.wins.b), wp = Math.min(m.res.wins.a, m.res.wins.b);
+  // Coriandoli: posizioni e ritardi fissati dal seme della finale, cosi
+  // sono gli stessi su ogni telefono invece di cambiare a ogni apertura.
+  let h = 0;
+  for (const c of String(m.seed)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const rnd = () => ((h = (h * 1103515245 + 12345) >>> 0) / 4294967296);
+  const COL = ['#ffd166', '#e01b2e', '#34d399', '#6ee7ff', '#ffffff'];
+  const pezzi = Array.from({ length: 42 }, () => {
+    const x = (rnd() * 100).toFixed(1), d = (rnd() * 1.6).toFixed(2), t = (2.4 + rnd() * 1.6).toFixed(2);
+    const r = Math.floor(rnd() * 360), c = COL[Math.floor(rnd() * COL.length)];
+    return `<i style="left:${x}%;animation-delay:${d}s;animation-duration:${t}s;background:${c};transform:rotate(${r}deg)"></i>`;
+  }).join('');
+  return `<div class="rivela t-${W.key}" data-act="chiudi-rivela" role="dialog" aria-label="Campione: ${esc(W.name)}">
+    <div class="coriandoli">${pezzi}</div>
+    <div class="rivela-box">
+      ${trofeo(96)}
+      <div class="t">Campione</div>
+      <div class="n">${esc(W.name)}</div>
+      <div class="small">${wv}-${wp} su ${esc(L.name)}</div>
+      ${m.res.mvp ? `<div class="mvp-r">MVP delle Finals<b>${esc(m.res.mvp.n)}</b></div>` : ''}
+      <div class="rosa">${(W.five || []).map((p) => esc(p.n)).join(' · ')}</div>
+      <p class="tiny muted mt">tocca per chiudere</p>
+    </div>
+  </div>`;
 }
 
 // Il referto: quanto sono valse le scelte tecniche, in punti a partita.
@@ -1043,8 +1164,13 @@ function serieCard(titolo, A, B, f, meta, passo, isHost, act) {
   // numero sale quando si scopre una gara nuova — gli altri punteggi restano
   // fermi, o sarebbe un tabellone impazzito.
   const ultimaG = f.games[f.games.length - 1];
-  const board = `<div class="jumbo serie-jumbo">
-    <div class="tabellina"><span>${esc(titolo)}</span><span>${f.done ? 'chiusa' : `gara ${n} di 7`}</span></div>
+  // GARA 7. Sul tre pari, o quando la settima e stata giocata, il tabellone
+  // diventa rosso: e la partita che decide tutto, e deve sembrarlo.
+  const g7 = (f.wins.a === 3 && f.wins.b === 3) || f.games.length === 7;
+  const board = `<div class="jumbo serie-jumbo ${g7 ? 'gara7' : ''}">
+    <div class="tabellina"><span>${esc(titolo)}</span>
+      <span>${f.done ? 'chiusa' : (g7 ? 'GARA 7' : `gara ${n} di 7`)}</span></div>
+    ${pallini(f, A, B)}
     <div class="punteggio" ${ultimaG ? `data-gara="${f.games.length}"` : ''}>
       <div class="sq t-${A.key}">
         <div class="pt ${ultimaG && ultimaG.scoreA > ultimaG.scoreB ? 'vince' : ''}"
@@ -1060,12 +1186,41 @@ function serieCard(titolo, A, B, f, meta, passo, isHost, act) {
     </div>
   </div>`;
 
-  return `<div class="card serie">
+  return `<div class="card serie" id="serie-${esc(meta.id || '')}">
     ${board}
     <p class="tiny muted mb">${esc(teamIdentity(A))} &nbsp;·&nbsp; ${esc(teamIdentity(B))}</p>
     ${games}
     ${coda}
+    ${f.done && meta.id ? `<button class="sm ghost wide mt" data-act="apri-serie" data-serie="${esc(meta.id)}">Richiudi</button>` : ''}
   </div>`;
+}
+
+// I sette pallini della serie: uno per gara, del colore di chi l'ha vinta,
+// vuoti quelli ancora da giocare. L'andamento si legge senza numeri — una
+// rimonta da 1-3 si vede, un 4-0 anche.
+function pallini(f, A, B) {
+  const dots = Array.from({ length: 7 }, (_, i) => {
+    const g = f.games[i];
+    if (!g) return '<i class="vuoto"></i>';
+    const k = g.scoreA > g.scoreB ? A.key : B.key;
+    return `<i class="t-${k}"></i>`;
+  }).join('');
+  return `<div class="pallini" aria-label="${f.wins.a} a ${f.wins.b}">${dots}</div>`;
+}
+
+// Una serie finita, chiusa a una riga. Le serie chiuse restavano aperte per
+// intero — tabellone, sette gare, MVP, spiegazione, referto — e in quattro
+// con la finalina la pagina era lunghissima. Si riapre al tocco.
+function serieRiga(titolo, A, B, f, id) {
+  const vince = f.winner === A.key ? A : B;
+  const perde = vince === A ? B : A;
+  const wv = Math.max(f.wins.a, f.wins.b), wp = Math.min(f.wins.a, f.wins.b);
+  return `<button class="serie-riga t-${vince.key}" id="serie-${esc(id)}" data-act="apri-serie" data-serie="${esc(id)}">
+    <span class="tit">${esc(titolo)}</span>
+    <span class="esito"><b>${esc(vince.name)}</b> ${wv}-${wp} <span class="muted">${esc(perde.name)}</span></span>
+    ${f.mvp ? `<span class="mvp-mini">MVP ${esc(f.mvp.n)}</span>` : ''}
+    <span class="apri">›</span>
+  </button>`;
 }
 
 /* ---------- Albo d'oro ---------- */

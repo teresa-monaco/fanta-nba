@@ -4,7 +4,7 @@ import { loadData, TEAM_KEYS, TEAM_NAMES, applicaNomi, NOMI_SQUADRE } from './co
 import { simSeriesUpTo, componiTabellone, costruisciBracket, giriStagione, tabelloneDaStagione, RITMI } from './engine.js';
 import * as S from './state.js';
 import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
-import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc, flapHTML } from './ui.js';
+import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc, flapHTML, rivelaCampione } from './ui.js';
 import { sblocca, commutaAudio, tic, martelletto, nuovoLotto } from './suono.js';
 import * as BotAI from './bot.js';
 
@@ -140,8 +140,45 @@ function paint() {
   // a un cambiamento di stato invece di aspettare il prossimo giro.
   guidaBot();
   seguiLaPartita();
+  momentoCampione();
   tieniIlPosto();
   registraAlbo();
+}
+
+// IL MOMENTO DEL CAMPIONE. Si apre una volta sola, nel momento in cui la
+// finale si chiude, a schermo intero sopra tutto il resto.
+//
+// Vive fuori da render(), appeso al body: dentro la pagina il primo
+// ridisegno lo cancellerebbe. E si apre solo sul PASSAGGIO da "finale
+// aperta" a "finale chiusa": chi rientra in stanza un'ora dopo trova il
+// banner in cima, non una festa che non ha visto succedere.
+let finaleVista = null;
+let rivelaTimer = null;
+
+function chiudiRivela() {
+  if (rivelaTimer) { clearTimeout(rivelaTimer); rivelaTimer = null; }
+  document.querySelectorAll('.rivela').forEach((el) => el.remove());
+}
+
+function momentoCampione() {
+  if (!state || state.phase !== 'playoffs' || !state.po) { finaleVista = null; return; }
+  let chiusa = false;
+  try {
+    const T = teamsFromState(state);
+    const turni = costruisciBracket(state.po, T);
+    chiusa = !!turni[turni.length - 1]?.[0]?.res?.done;
+  } catch { return; }
+  const prima = finaleVista;
+  finaleVista = chiusa;
+  if (prima !== false || !chiusa) return;   // solo sul passaggio, mai all'ingresso
+
+  const html = rivelaCampione(state);
+  if (!html || typeof document.body?.insertAdjacentHTML !== 'function') return;
+  chiudiRivela();
+  document.body.insertAdjacentHTML('beforeend', html);
+  // Si chiude da sola dopo un po', se nessuno tocca: un telefono lasciato sul
+  // tavolo non deve restare bloccato su una festa.
+  rivelaTimer = setTimeout(chiudiRivela, 9000);
 }
 
 // CAMBIANDO SCHERMATA SI TORNA IN CIMA.
@@ -535,6 +572,29 @@ document.addEventListener('click', async (ev) => {
         if (el.dataset.act !== 'chiudi-scheda') return;
         ui.scheda = null;
         paint();
+        return;
+
+      // Una serie finita si apre e si richiude. Lo stato sta in `ui`, non
+      // nello stato condiviso: e una cosa mia, e deve sopravvivere ai
+      // ridisegni — se un'altra serie avanza, quella che stavo leggendo non
+      // deve richiudersi da sola.
+      case 'apri-serie': {
+        const id = el.dataset.serie;
+        if (ui.serieAperte.has(id)) ui.serieAperte.delete(id); else ui.serieAperte.add(id);
+        paint();
+        document.getElementById(`serie-${id}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
+      // Dal tabellone alla serie: un tocco su una casella ci scorre sopra.
+      case 'vai-serie': {
+        const id = el.dataset.serie;
+        document.getElementById(`serie-${id}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
+      case 'chiudi-rivela':
+        chiudiRivela();
         return;
 
       // "Ho finito": un segnale a chi ospita, non un vincolo. Si puo
