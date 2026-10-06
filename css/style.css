@@ -831,6 +831,40 @@ details summary {
   background: var(--gold); color: var(--gold-ink); padding: 1px 3px; border-radius: 2px;
 }
 
+/* ---- chi ha finito di decidere ----
+   Il bordo verde si vede scorrendo, senza dover leggere niente: e' il modo
+   piu veloce per sapere chi manca in una pagina lunga quattro schede. */
+.card.pronta {
+  box-shadow: inset 0 0 0 2px var(--ok), 0 0 18px rgba(52, 211, 153, .12);
+}
+.tag.ok {
+  background: var(--ok); color: #08140f;
+  font: 800 9.5px var(--cond); letter-spacing: 1.6px; text-transform: uppercase;
+  padding: 3px 7px; border-radius: var(--r);
+}
+.conferma {
+  width: 100%; margin-top: var(--gap);
+  background: var(--surface-2); border: 1px solid var(--line-2);
+  font-family: var(--cond); font-weight: 800; font-size: 14px;
+  letter-spacing: 1.4px; text-transform: uppercase;
+}
+.conferma.fatta { background: var(--ok); border-color: var(--ok); color: #08140f; }
+
+/* Il conto sta appiccicato in alto: con quattro squadre si scorre a lungo,
+   e chi ospita deve sapere se sta aspettando qualcuno senza rifare la
+   pagina per contare i bordi verdi. */
+.conta-pronti {
+  position: sticky; top: 56px; z-index: 15;
+  display: flex; align-items: baseline; gap: 9px;
+  background: var(--surface); border-left: 4px solid var(--line-2);
+  padding: 8px 12px; margin-bottom: var(--gap);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, .35);
+}
+.conta-pronti b { font: 800 19px var(--cond); letter-spacing: 1px; }
+.conta-pronti span { font-size: 12.5px; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.conta-pronti.tutti { border-left-color: var(--ok); }
+.conta-pronti.tutti b { color: var(--ok); }
+
 /* ---- l'overall apre la scheda ----
    Lo scambio e la scheda sono due azioni diverse sullo stesso giocatore,
    quindi sono due tasti affiancati: dentro un pulsante non se ne puo mettere

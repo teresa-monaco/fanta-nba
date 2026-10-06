@@ -651,9 +651,12 @@ function viewSquadra({ state: s, session }) {
     const mediaOvr = rosaOvr.length
       ? (rosaOvr.reduce((a, p) => a + p.ovr, 0) / rosaOvr.length) : 0;
 
-    return `<div class="card t-${k} ${mia ? 'mine' : ''}">
+    const confermata = S.haConfermato(s, k);
+
+    return `<div class="card t-${k} ${mia ? 'mine' : ''} ${confermata ? 'pronta' : ''}">
       <div class="row spread">
         <h3><span class="dot" style="display:inline-block;margin-right:7px"></span>${TEAM_NAMES[k]}${mia ? ' <span class="tiny muted">(tu)</span>' : ''}</h3>
+        ${confermata ? '<span class="tag ok">pronta</span>' : ''}
         ${canEdit ? `<button class="sm ghost" data-act="toggle-lineup" data-team="${k}">${editLineup ? 'Fatto' : 'Modifica'}</button>` : ''}
       </div>
       ${rosaOvr.length ? `<div class="ovr-squadra">
@@ -681,6 +684,9 @@ function viewSquadra({ state: s, session }) {
 
         ${coachPicker(s, k, t, canEdit)}
       </div>
+      ${canEdit ? `<button class="conferma ${confermata ? 'fatta' : ''}" data-act="conferma-pronto" data-team="${k}">
+        ${confermata ? '&#10003; Pronta — tocca per ripensarci' : 'Ho finito, sono pronto'}
+      </button>` : ''}
     </div>`;
   }).join('');
 
@@ -717,12 +723,33 @@ function viewSquadra({ state: s, session }) {
   // poi bisognava scorrere oltre quattro quintetti, quattro campi e quattro
   // allenatori per trovare "Ai playoff". Cosi resta sempre sotto il pollice,
   // come i tasti di rilancio durante l'asta.
+  // IL CONTO DI CHI HA FINITO, in cima e appiccicato: con quattro squadre si
+  // scorre a lungo, e chi ospita deve sapere se sta aspettando qualcuno
+  // senza doversi rifare tutta la pagina per contare i bordi verdi.
+  const pronti = S.quantiPronti(s);
+  const mancano = S.attive(s).filter((k) => !S.haConfermato(s, k));
+  const contatore = `<div class="conta-pronti ${pronti === n ? 'tutti' : ''}">
+    <b>${pronti}/${n}</b>
+    <span>${pronti === n ? 'tutti pronti' : `in attesa di ${mancano.map((k) => esc(TEAM_NAMES[k])).join(', ')}`}</span>
+  </div>`;
+
+  // L'azione sta in una barra fissa, non in fondo alla pagina. Con quattro
+  // squadre le schede sono lunghissime: si leggeva la classifica in cima e
+  // poi bisognava scorrere oltre quattro quintetti, quattro campi e quattro
+  // allenatori per trovare "Ai playoff". Cosi resta sempre sotto il pollice,
+  // come i tasti di rilancio durante l'asta.
+  //
+  // Le conferme NON bloccano: chi ospita vede il conto e decide se aspettare
+  // un distratto o partire lo stesso. Se fermassero i playoff, uno che si
+  // allontana dal telefono bloccherebbe la serata di tutti.
   return `
     ${testa}
+    ${contatore}
     ${cards}
     <div class="azione-spacer"></div>
     <div class="azione-fissa">
-      ${isHost ? azione : '<p class="small muted center">In attesa di chi ospita.</p>'}
+      ${isHost ? `${azione}${pronti < n && pronte ? `<p class="tiny muted center mt">${n - pronti} ${n - pronti === 1 ? 'squadra non ha' : 'squadre non hanno'} ancora confermato. Puoi andare lo stesso.</p>` : ''}`
+    : `<p class="small muted center">In attesa di chi ospita.</p>`}
     </div>
   `;
 }

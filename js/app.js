@@ -355,10 +355,14 @@ async function guidaBot() {
         if (m.firmaTattica === firma) continue;
         const best = BotAI.tatticaBot(state, k, S);
         if (!best) continue;
+        // Anche i bot dicono quando hanno finito, nello stesso momento in
+        // cui applicano la tattica: senza, il conto in cima direbbe per
+        // sempre "in attesa di Ada" e chi ospita aspetterebbe un telefono
+        // che non esiste.
         const ok = await session.apply((s) => {
           let x = { ...s, lineups: { ...s.lineups, [k]: best.lu } };
           x = S.setTactics(x, k, best.tac);
-          return x;
+          return S.confermaPronto(x, k, true) || x;
         });
         if (ok) m.firmaTattica = firma;
         break;
@@ -531,6 +535,13 @@ document.addEventListener('click', async (ev) => {
         if (el.dataset.act !== 'chiudi-scheda') return;
         ui.scheda = null;
         paint();
+        return;
+
+      // "Ho finito": un segnale a chi ospita, non un vincolo. Si puo
+      // ritirare, perche cambiare idea dopo aver visto le altre squadre e
+      // esattamente quello che si fa.
+      case 'conferma-pronto':
+        await session.apply((s) => S.confermaPronto(s, el.dataset.team));
         return;
 
       case 'copy-link':

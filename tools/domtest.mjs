@@ -309,6 +309,31 @@ ok(has('data-act="toggle-lineup"'), 'il quintetto si puo comunque sbloccare e co
 ok(!has('data-act="pick-slot"'), 'ma di partenza e in sola lettura: non e una decisione finta');
 ok(Object.values(STRATEGIES).every((v) => has(v.label)), 'tutte le strategie sono selezionabili');
 
+// "Ho finito": un segnale a chi ospita, non un vincolo. Il bordo verde si
+// vede scorrendo, il conto in cima evita di doverli contare.
+{
+  const n = S.attive(F.state).length;
+  ok(has('class="conta-pronti'), 'in cima c\'e il conto di chi ha finito');
+  ok(has(`<b>0/${n}</b>`), 'e parte da zero', `0 su ${n}`);
+  ok(has('data-act="conferma-pronto"'), 'ogni squadra che comandi ha il tasto');
+  ok(!has('class="card t-t1 mine pronta"'), 'e di partenza nessun blocco e verde');
+
+  const mio = S.attive(F.state)[0];
+  await F.session.apply((s) => S.confermaPronto(s, mio));
+  ok(S.haConfermato(F.state, mio), 'confermando lo stato lo registra');
+  ok(has(`<b>1/${n}</b>`), 'il conto sale', `1 su ${n}`);
+  ok(has('pronta"') && has('class="tag ok"'), 'e il blocco diventa verde');
+
+  // Si puo ritirare: cambiare idea dopo aver visto le altre squadre e
+  // esattamente quello che si fa.
+  await F.session.apply((s) => S.confermaPronto(s, mio));
+  ok(!S.haConfermato(F.state, mio) && has(`<b>0/${n}</b>`), 'e si puo ripensarci');
+
+  // NON deve bloccare i playoff: uno che si allontana dal telefono
+  // bloccherebbe la serata di tutti.
+  ok(S.squadraReady(F.state), 'e con nessuno pronto si puo comunque andare avanti');
+}
+
 // L'overall di squadra e la media dei cinque: e il numero che si cerca per
 // primo guardando una rosa, e prima toccava farlo a mente.
 {
@@ -719,6 +744,13 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
       'l\'app muove il bot: la tattica applicata e quella che il bot ha scelto',
       `il bot ha cambiato ${cambi(atteso.tac, atteso.lu).join(', ') || 'niente'},`
       + ` nello stato risulta cambiato ${cambi(t, F.state.lineups[k]).join(', ') || 'niente'}`);
+    // E dice di aver finito. Senza, il conto in cima direbbe per sempre "in
+    // attesa di Ada" e chi ospita aspetterebbe un telefono che non esiste.
+    for (let i = 0; i < 20 && !S.haConfermato(F.state, k); i++) {
+      await new Promise((r) => setTimeout(r, 60));
+    }
+    ok(S.haConfermato(F.state, k), 'e il bot conferma di essere pronto, come una persona');
+
     ok(sceltaVera, 'e non e quella di partenza, altrimenti il controllo non proverebbe niente',
       `il bot ha scelto ${atteso.tac.strategy} · ${atteso.tac.ritmo}, in partenza c'era ${p.strategy} · ${p.ritmo}`);
     ok(SLOTS_D.every((sl) => F.state.lineups[k][sl]), 'e schiera un quintetto completo');

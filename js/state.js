@@ -37,6 +37,7 @@ export function newGame(seed, hostUid) {
     teams, lineups, tactics,
     bots: {},           // teamKey -> quale bot la occupa
     nomi: {},           // teamKey -> indice in NOMI_SQUADRE, per chi in lobby cambia nome
+    pronti: {},         // teamKey -> ha confermato quintetto e tattica
     conStagione: false, // si sceglie in lobby: solo playoff, o stagione + playoff
     stagione: null,     // fotografia di quintetti e tattiche con cui si e giocata
     auction: { order: null, idx: 0, bid: null, deadline: null, running: false, log: [], unsold: [],
@@ -54,7 +55,8 @@ export function hydrate(raw) {
   s.teams = s.teams || {};
   s.lineups = s.lineups || {};
   s.tactics = s.tactics || {};
-  s.nomi = s.nomi || {};   // stanze aperte prima dello zapping: nessun cambio
+  s.nomi = s.nomi || {};     // stanze aperte prima dello zapping: nessun cambio
+  s.pronti = s.pronti || {}; // stanze aperte prima del tasto conferma
   for (const k of TEAM_KEYS) {
     s.teams[k] = { credits: START_CREDITS, roster: [], ...(s.teams[k] || {}) };
     s.teams[k].roster = s.teams[k].roster || [];
@@ -453,6 +455,33 @@ export function squadraReady(s) {
   return lineupsReady(s) && tacticsReady(s);
 }
 
+/* ---------- Chi ha finito di decidere ---------- */
+
+// Quintetto e tattica si possono cambiare fino all'ultimo, quindi avere dei
+// valori validi non vuol dire aver finito: chi ospita non sapeva se stavi
+// ancora pensando o se eri andato a prendere da bere. Questo e un segnale
+// esplicito — "per me si puo andare" — e si puo ritirare, perche cambiare
+// idea dopo aver guardato le altre squadre e esattamente quello che si fa.
+//
+// NON BLOCCA NIENTE. Chi ospita vede il conto e decide: aspettare un
+// distratto o partire lo stesso. Se il tasto fermasse i playoff, uno che si
+// allontana dal telefono bloccherebbe la serata di tutti.
+export function confermaPronto(s, teamKey, valore) {
+  if (s.phase !== 'squadra' || !attive(s).includes(teamKey)) return undefined;
+  const pronti = { ...(s.pronti || {}) };
+  const ora = valore === undefined ? !pronti[teamKey] : !!valore;
+  if (ora) pronti[teamKey] = true; else delete pronti[teamKey];
+  return { ...s, pronti };
+}
+
+export function haConfermato(s, teamKey) {
+  return !!(s.pronti || {})[teamKey];
+}
+
+export function quantiPronti(s) {
+  return attive(s).filter((k) => (s.pronti || {})[k]).length;
+}
+
 // Assegnazione automatica: minimizza il costo totale di "fuori ruolo"
 // provando tutte le 120 permutazioni. Con 5 giocatori e istantaneo.
 export function autoLineup(roster) {
@@ -565,7 +594,9 @@ export function giocaStagione(s, giri) {
     lineups[k] = { ...s.lineups[k] };
     tactics[k] = { ...s.tactics[k] };
   }
-  return { ...s, stagione: { giri, seedBase: s.seed, lineups, tactics } };
+  // Finita la stagione le tattiche si ritoccano, quindi le conferme date per
+  // giocarla non valgono piu: si ricomincia a dire quando si e pronti.
+  return { ...s, pronti: {}, stagione: { giri, seedBase: s.seed, lineups, tactics } };
 }
 
 /* ---------- Playoff ---------- */
