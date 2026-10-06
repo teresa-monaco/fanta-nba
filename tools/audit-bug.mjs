@@ -439,6 +439,53 @@ console.log('\nIL NOME SI CAMBIA IN LOBBY\n');
 }
 
 /* ==========================================================
+   Le rivalita fra serate
+   ==========================================================
+
+   Si contano su serate inventate di cui si sa il risultato a mente: tre
+   serate, con un vecchio record senza serie in mezzo, che deve essere
+   saltato e non inventato. */
+console.log('\nLE RIVALITA FRA SERATE\n');
+{
+  const albo = [
+    { seed: 's1', serie: [{ a: 'Diego', b: 'Fabio', va: 4, vb: 2 }, { a: 'Teresa', b: 'Ada', va: 1, vb: 4 }, { a: 'Diego', b: 'Ada', va: 4, vb: 3 }] },
+    { seed: 'vecchia', champion: 't1', runnerUp: 't2' },              // registrata prima: niente serie
+    { seed: 's2', serie: [{ a: 'Fabio', b: 'Diego', va: 4, vb: 1 }, { a: 'Ada', b: 'Teresa', va: 4, vb: 0 }, { a: 'Fabio', b: 'Ada', va: 2, vb: 4 }] },
+    { seed: 's3', serie: [{ a: 'Diego', b: 'Ada', va: 0, vb: 4 }, { a: 'Diego', b: 'Ada', va: 1, vb: 4 }] },
+  ];
+  const { coppie, persone } = S.rivalita(albo);
+  const coppia = (x, y) => coppie.find((c) => (c.a === x && c.b === y) || (c.a === y && c.b === x));
+
+  // Diego-Fabio: Diego vince nella prima serata, Fabio nella seconda.
+  const df = coppia('Diego', 'Fabio');
+  ok(df && df.va + df.vb === 2, 'Diego e Fabio si sono incontrati due volte', df && `${df.a} ${df.va}-${df.vb} ${df.b}`);
+  ok(df && df.va === 1 && df.vb === 1, 'e sono uno pari');
+
+  // Diego-Ada: 1 vinta (s1), poi due perse (s3).
+  const da = coppia('Ada', 'Diego');
+  const adaV = da.a === 'Ada' ? da.va : da.vb;
+  ok(da.va + da.vb === 3 && adaV === 2, 'Ada conduce su Diego 2-1', `${da.a} ${da.va}-${da.vb} ${da.b}`);
+
+  // Diego-Fabio e Fabio-Diego sono la stessa rivalita, non due.
+  ok(coppie.filter((c) => [c.a, c.b].sort().join() === 'Diego,Fabio').length === 1,
+    'Diego-Fabio e Fabio-Diego sono una rivalita sola');
+
+  // Il vecchio record senza serie non inventa niente.
+  ok(coppie.every((c) => c.a !== 't1' && c.b !== 't1'), 'una serata registrata prima viene saltata, non inventata');
+
+  // Bestia nera: Diego ha perso di piu contro Ada (2 perse, 1 vinta).
+  ok(persone.Diego.bestiaNera?.nome === 'Ada', 'la bestia nera di Diego e Ada',
+    persone.Diego.bestiaNera ? `${persone.Diego.bestiaNera.nome} ${persone.Diego.bestiaNera.vinte}-${persone.Diego.bestiaNera.perse}` : 'nessuna');
+  // Con Fabio Diego e pari: una rivalita, non una bestia nera.
+  ok(persone.Fabio.bestiaNera === null || persone.Fabio.bestiaNera.nome !== 'Diego',
+    'contro chi sei in parita non e una bestia nera');
+  ok(persone.Ada.vinte === 5 && persone.Ada.perse === 1, 'Ada: cinque serie vinte e una persa', `${persone.Ada.vinte}-${persone.Ada.perse}`);
+
+  // Un albo vuoto o assente non rompe niente.
+  ok(S.rivalita([]).coppie.length === 0 && S.rivalita(undefined).coppie.length === 0, 'senza serate non ci sono rivalita');
+}
+
+/* ==========================================================
    Chi ha finito la rosa mentre gli altri comprano ancora
    ==========================================================
 

@@ -234,6 +234,7 @@ function viewLobby({ state: s, session }) {
 
     ${sceltaFormato}
     ${alboCard(s)}
+    ${rivalitaCard(s, session)}
 
     <div class="azione-spacer"></div>
     <div class="azione-fissa">
@@ -972,6 +973,7 @@ function viewPlayoffs({ state: s, session }) {
         <span class="muted">eliminato in semifinale.</span></p></div>`;
     }
     out += alboCard(s);
+    out += rivalitaCard(s, session);
     // Il tasto per ricominciare lo mette resetZone(), in fondo a ogni schermata.
   }
   return out;
@@ -1245,6 +1247,30 @@ function serieRiga(titolo, A, B, f, id) {
     ${f.mvp ? `<span class="mvp-mini">MVP ${esc(f.mvp.n)}</span>` : ''}
     <span class="apri">›</span>
   </button>`;
+}
+
+/* ---------- Rivalita ---------- */
+
+// Chi ha battuto chi, su tutte le serate. Sta accanto all'albo: l'albo dice
+// chi vince, questa dice CONTRO CHI — che e quello di cui si parla davvero a
+// tavola fra una serata e l'altra.
+export function rivalitaCard(s, session) {
+  const { coppie, persone } = S.rivalita(s.albo);
+  if (!coppie.length) return '';
+  const mio = session ? s.names?.[session.uid] : null;
+  const io = mio ? persone[mio] : null;
+  const righe = coppie.slice(0, 8).map((c) => `<div class="riv-riga">
+      <span class="riv-n ${c.va > c.vb ? 'vince' : ''} ${c.a === mio ? 'io' : ''}">${esc(c.a)}</span>
+      <b class="riv-c">${c.va}<i>-</i>${c.vb}</b>
+      <span class="riv-n destra ${c.vb > c.va ? 'vince' : ''} ${c.b === mio ? 'io' : ''}">${esc(c.b)}</span>
+    </div>`).join('');
+  return `<div class="card rivalita">
+    <h3 class="mb">Rivalità</h3>
+    ${io?.bestiaNera ? `<p class="bestia">La tua bestia nera: <b>${esc(io.bestiaNera.nome)}</b>
+      <span class="muted">— ${io.bestiaNera.vinte}-${io.bestiaNera.perse} nelle serie</span></p>` : ''}
+    ${righe}
+    <p class="tiny muted mt">Serie vinte fra persone, su tutte le serate.</p>
+  </div>`;
 }
 
 /* ---------- Albo d'oro ---------- */

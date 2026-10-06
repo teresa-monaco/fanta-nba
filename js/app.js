@@ -258,6 +258,13 @@ async function registraAlbo() {
     if (!r?.done) return;
     if ((state.albo || []).some((e) => e.seed === f.seed)) return;
     const perdente = r.winner === f.a ? f.b : f.a;
+    // Per le rivalita fra serate servono TUTTE le serie, non solo la finale,
+    // e col nome di chi giocava invece della sedia: le sedie possono cambiare
+    // padrone da una serata all'altra, le persone no. Chi ospita e il nome
+    // scritto in lobby; un bot si chiama come si chiama.
+    const chi = (k) => S.nameOfSeat(state, k) || TEAM_NAMES[k];
+    const serie = turni.flat().filter((m) => m.res?.done && m.a && m.b)
+      .map((m) => ({ a: chi(m.a), b: chi(m.b), va: m.res.wins.a, vb: m.res.wins.b }));
     const voce = {
       seed: f.seed,
       quando: Date.now(),
@@ -269,6 +276,9 @@ async function registraAlbo() {
       mvp: r.mvp?.n || null,
       roster: T[r.winner].five.map((p) => p.n),
       squadre: state.po.n,
+      championChi: chi(r.winner),
+      runnerUpChi: chi(perdente),
+      serie,
     };
     await session.apply((s) => S.recordAlbo(s, voce));
   } catch (err) {

@@ -676,6 +676,56 @@ export function classifica(s) {
   return Object.values(t).sort((a, b) => b.titoli - a.titoli || b.finali - a.finali);
 }
 
+/* ---------- Le rivalita fra serate ---------- */
+
+// Chi ha battuto chi, sommando tutte le serate. L'albo sapeva chi aveva vinto
+// il titolo, non chi aveva eliminato chi: il testa a testa fra persone e il
+// cuore delle discussioni fra una serata e l'altra, ed era l'unica cosa che
+// mancava per averle.
+//
+// Si conta per PERSONA e non per sedia, perche le sedie possono cambiare
+// padrone. Le serate registrate prima che esistesse questo conto non hanno
+// le serie dentro: si saltano invece di inventarle.
+export function rivalita(albo) {
+  const coppie = {};
+  const persone = {};
+  const io = (n) => (persone[n] ||= { nome: n, vinte: 0, perse: 0, contro: {} });
+
+  for (const e of albo || []) {
+    for (const x of e.serie || []) {
+      if (!x.a || !x.b || x.a === x.b) continue;
+      const vince = x.va > x.vb ? x.a : x.b;
+      const perde = vince === x.a ? x.b : x.a;
+      // La coppia si chiude sempre nello stesso ordine, cosi Diego-Fabio e
+      // Fabio-Diego sono la stessa rivalita.
+      const [p, q] = [x.a, x.b].sort();
+      const c = (coppie[`${p}|${q}`] ||= { a: p, b: q, va: 0, vb: 0 });
+      if (vince === p) c.va++; else c.vb++;
+      io(vince).vinte++;
+      io(perde).perse++;
+      const cp = (io(perde).contro[vince] ||= { vinte: 0, perse: 0 });
+      cp.perse++;
+      const cv = (io(vince).contro[perde] ||= { vinte: 0, perse: 0 });
+      cv.vinte++;
+    }
+  }
+
+  // La bestia nera: l'avversario contro cui hai perso piu serie, e almeno
+  // piu di quante gliene hai vinte — se siete pari non e una bestia nera,
+  // e una rivalita.
+  for (const p of Object.values(persone)) {
+    const peggio = Object.entries(p.contro)
+      .filter(([, r]) => r.perse > r.vinte)
+      .sort((a, b) => (b[1].perse - b[1].vinte) - (a[1].perse - a[1].vinte) || b[1].perse - a[1].perse)[0];
+    p.bestiaNera = peggio ? { nome: peggio[0], ...peggio[1] } : null;
+  }
+
+  return {
+    coppie: Object.values(coppie).sort((x, y) => (y.va + y.vb) - (x.va + x.vb) || Math.abs(y.va - y.vb) - Math.abs(x.va - x.vb)),
+    persone,
+  };
+}
+
 /* ---------- Ricominciare ---------- */
 
 // Nuova partita da zero, ma tenendo chi e seduto dove: nessuno deve

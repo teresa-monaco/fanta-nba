@@ -599,6 +599,13 @@ ok(has('Albo d\'oro'), 'l\'albo compare a fine partita');
   const voce = F.state.albo[0];
   ok(!!voce.championName && !!voce.mvp && Array.isArray(voce.roster) && voce.roster.length === 5,
     'la voce ha campione, MVP e quintetto', `${voce.championName} b. ${voce.runnerUpName} ${voce.wins}`);
+  // Per le rivalita la voce porta TUTTE le serie della serata, col nome di
+  // chi giocava — non solo la finale, e non la sedia.
+  ok(Array.isArray(voce.serie) && voce.serie.length === 3,
+    'la voce salva tutte le serie della serata, non solo la finale', `${voce.serie?.length} serie`);
+  ok(voce.serie.every((x) => x.a && x.b && x.a !== x.b && Math.max(x.va, x.vb) === 4),
+    'ognuna con chi giocava e come e finita');
+  ok(has('class="card rivalita"'), 'e a fine torneo compaiono le rivalita');
   const doppio = S.recordAlbo(F.state, voce);
   ok(doppio === undefined, 'registrarla due volte non fa niente');
   const dopoReset = S.resetGame(F.state, 'altro-seed');
