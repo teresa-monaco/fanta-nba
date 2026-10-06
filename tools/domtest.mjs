@@ -536,6 +536,34 @@ ok(clean() && has('MVP delle Finals'), 'l\'MVP delle Finals viene assegnato');
 ok(html().indexOf('class="champ') < html().indexOf('class="jumbo br-jumbo"'),
   'il campione sta in cima, sopra il tabellone');
 ok(has('class="trofeo"'), 'col trofeo disegnato');
+
+// I premi di fine serata, subito sotto il campione. Si controlla che i numeri
+// siano GIUSTI, non solo che ci sia una card: un premio sbagliato e peggio di
+// nessun premio, perche e quello che finisce in chat.
+{
+  const { premiSerata } = await import('../js/premi.js');
+  const premi = premiSerata(F.state, teamsFromState(F.state));
+  ok(has('class="premi"'), 'a fine torneo compaiono i premi della serata');
+  ok(html().indexOf('class="champ') < html().indexOf('class="premi"')
+    && html().indexOf('class="premi"') < html().indexOf('class="jumbo br-jumbo"'),
+    'subito sotto il campione e sopra il tabellone');
+  for (const k of ['mvp', 'punti', 'rimbalzi', 'colpo']) {
+    ok(premi.some((p) => p.chiave === k), `c'e il premio ${k}`);
+  }
+  // Il colpo dell'asta e davvero il miglior rapporto overall/prezzo.
+  const colpo = premi.find((p) => p.chiave === 'colpo');
+  const D = db();
+  const migliore = F.state.auction.log
+    .map((l) => ({ id: l.playerId, v: (D.byId[l.playerId].ovr - 84) / l.price }))
+    .sort((a, b) => b.v - a.v)[0];
+  ok(colpo && colpo.id === migliore.id, 'il colpo dell\'asta e davvero il miglior affare',
+    colpo ? `${colpo.nome}: ${colpo.riga}` : 'nessuno');
+  // Il bidone, se c'e, e costato almeno dieci crediti: uno preso a uno che
+  // rende poco e un riempitivo, non un errore.
+  const bid = premi.find((p) => p.chiave === 'bidone');
+  const prezzoBid = bid ? F.state.auction.log.find((l) => l.playerId === bid.id)?.price : null;
+  ok(!bid || prezzoBid >= 10, 'il bidone e uno che e costato caro', bid ? `${bid.nome}, ${prezzoBid} crediti` : 'nessun bidone in questa partita');
+}
 ok(/class="br-cella br-oro chiusa"/.test(html()), 'e la casella del campione nel tabellone si riempie');
 
 /* Il referto: senza, nessuna delle cinque scelte si impara mai */

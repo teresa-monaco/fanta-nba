@@ -11,6 +11,7 @@ import { now } from './net.js';
 import { audioAcceso } from './suono.js';
 import { avatarSVG } from './avatar.js';
 import { ID_BOT, BOT } from './bot.js';
+import { premiSerata } from './premi.js';
 
 export const ui = {
   nickname: localStorage.getItem('nbaf:nick') || '',
@@ -909,7 +910,12 @@ function viewPlayoffs({ state: s, session }) {
   // IL CAMPIONE STA IN CIMA. Prima il banner veniva inserito sopra la card
   // della finale, e dopo c'erano ancora finalina e albo: il momento piu alto
   // della serata finiva a meta pagina, in mezzo allo scroll.
-  if (finita) out += bannerCampione(finale, T);
+  if (finita) {
+    out += bannerCampione(finale, T);
+    // I premi subito sotto: sono il resto del finale della serata, e il
+    // posto dove l'asta torna a farsi sentire.
+    out += premiCard(premiSerata(s, T));
+  }
 
   // IL TABELLONE. I playoff erano una lista verticale di card, una sotto
   // l'altra, e il torneo non si vedeva mai d'un colpo: chi sta da quale
@@ -1031,6 +1037,24 @@ function trofeo(dim = 64) {
     <rect x="20" y="48" width="24" height="7" rx="1.5" fill="url(#oro)"/>
     <path d="M24 13c1 6 3 10 7 12" stroke="#fff6d6" stroke-width="2" fill="none" opacity=".7" stroke-linecap="round"/>
   </svg>`;
+}
+
+// I premi di fine serata. Il bidone ha il suo colore: e l'unico premio che
+// nessuno vuole vincere, e deve sembrarlo.
+function premiCard(premi) {
+  if (!premi.length) return '';
+  const ICONA = { mvp: '&#9733;', punti: '&#9673;', rimbalzi: '&#9650;', colpo: '&#10003;', bidone: '&#10007;' };
+  return `<div class="premi">
+    <div class="premi-tit">Premi della serata</div>
+    ${premi.map((p) => `<div class="premio ${p.chiave === 'bidone' ? 'bidone' : ''} ${p.team ? `t-${p.team}` : ''}">
+      <span class="pr-ic">${ICONA[p.chiave] || '&#9733;'}</span>
+      <div class="pr-testo">
+        <span class="pr-tit">${esc(p.titolo)}</span>
+        <span class="pr-nome">${esc(p.nome)}${p.team ? ` <span class="pr-sq">${esc(TEAM_NAMES[p.team] || '')}</span>` : ''}</span>
+        <span class="pr-riga">${esc(p.riga)}</span>
+      </div>
+    </div>`).join('')}
+  </div>`;
 }
 
 // Il banner del campione, in cima alla pagina a finale chiusa.
