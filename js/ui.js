@@ -12,7 +12,7 @@ import { audioAcceso } from './suono.js';
 import { avatarSVG } from './avatar.js';
 import { ID_BOT, BOT } from './bot.js';
 import { premiSerata } from './premi.js';
-import { serieDelTabellone, classificaPronostici, puntiDi } from './pronostici.js';
+import { serieDelTabellone, classificaPronostici, puntiDi, reDeiPronostici } from './pronostici.js';
 
 export const ui = {
   nickname: localStorage.getItem('nbaf:nick') || '',
@@ -914,6 +914,9 @@ function viewPlayoffs({ state: s, session }) {
   // della serata finiva a meta pagina, in mezzo allo scroll.
   if (finita) {
     out += bannerCampione(finale, T);
+    // La serata in un'immagine, per la chat: sta subito sotto il campione,
+    // che e il momento in cui viene voglia di mandarla.
+    out += '<button class="primary wide condividi" data-act="condividi-card">Condividi la serata</button>';
     // I premi subito sotto: sono il resto del finale della serata, e il
     // posto dove l'asta torna a farsi sentire.
     out += premiCard(premiSerata(s, T));
@@ -1305,9 +1308,8 @@ function pronosticiCard(s, T, session) {
   const cl = classificaPronostici(s, T);
   if (!cl.length) return '';
   const mia = s.seats?.[session.uid];
-  // Il re solo se e uno: a pari punti e pari esatti non si incorona nessuno.
-  const pari = cl[1] && cl[1].punti === cl[0].punti && cl[1].esatti === cl[0].esatti;
-  const finita = !pari && serieDelTabellone(s, T).every((x) => !x.a || !x.b || x.f?.done);
+  const finita = serieDelTabellone(s, T).every((x) => !x.a || !x.b || x.f?.done);
+  const re = finita ? reDeiPronostici(cl) : null;
   const righe = cl.map((r, n) => `<div class="pron-cl ${r.key === mia ? 'io' : ''}">
       <span class="pos">${n + 1}</span>
       <span class="nm">${esc(S.nameOfSeat(s, r.key) || TEAM_NAMES[r.key])}</span>
@@ -1315,7 +1317,7 @@ function pronosticiCard(s, T, session) {
       <b>${r.punti}</b>
     </div>`).join('');
   return `<div class="card pronostici">
-    <h3 class="mb">${finita && cl[0].punti > 0 ? `Re dei pronostici: ${esc(S.nameOfSeat(s, cl[0].key) || TEAM_NAMES[cl[0].key])}` : 'Pronostici'}</h3>
+    <h3 class="mb">${re ? `Re dei pronostici: ${esc(S.nameOfSeat(s, re.key) || TEAM_NAMES[re.key])}` : 'Pronostici'}</h3>
     ${righe}
     <p class="tiny muted mt">Vincente giusto 1 punto, numero di gare esatto altri 2.</p>
   </div>`;

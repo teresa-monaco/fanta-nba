@@ -566,6 +566,49 @@ ok(has('class="trofeo"'), 'col trofeo disegnato');
 }
 ok(/class="br-cella br-oro chiusa"/.test(html()), 'e la casella del campione nel tabellone si riempie');
 
+// LA CARD DA CONDIVIDERE. In Node non c'e un canvas: se ne finge uno che
+// annota tutto quello che gli si chiede di scrivere, e si controlla il testo.
+// Le misure le fa a 0,55 px per pixel di font per carattere, abbastanza da
+// far scattare il rimpicciolimento sui nomi lunghi.
+{
+  ok(has('data-act="condividi-card"'), 'sotto il campione c\'e il tasto per condividere la serata');
+  const { datiCard, disegnaCard, LARGHEZZA } = await import('../js/card.js');
+  globalThis.Path2D ??= class { constructor(d) { this.d = d; } };
+  const scritte = [];
+  let fuori = 0;
+  const ctx = {
+    font: '10px x', textAlign: 'left', letterSpacing: '0px',
+    measureText(t) { return { width: String(t).length * parseFloat(/(\d+)px/.exec(this.font)[1]) * 0.55 }; },
+    fillText(t, x) {
+      scritte.push(String(t));
+      const w = this.measureText(t).width;
+      const da = this.textAlign === 'center' ? x - w / 2 : (this.textAlign === 'right' ? x - w : x);
+      if (da < 0 || da + w > LARGHEZZA) fuori++;
+    },
+    fillRect() {}, save() {}, restore() {}, translate() {}, scale() {}, stroke() {}, fill() {},
+    createLinearGradient: () => ({ addColorStop() {} }),
+  };
+  const Tc = teamsFromState(F.state);
+  const d = datiCard(F.state, Tc);
+  ok(!!d, 'a finale chiusa la card ha i suoi dati');
+  disegnaCard(ctx, d, {});
+  const tutto = scritte.join(' | ');
+  const fin = costruisciBracket(F.state.po, Tc)[1][0];
+  ok(tutto.includes(Tc[fin.res.winner].name.toUpperCase()), 'la card porta il nome del campione', Tc[fin.res.winner].name);
+  ok(d.rosa.length === 5 && d.rosa.every((p) => tutto.includes(p.n.toUpperCase())), 'e tutto il quintetto',
+    d.rosa.map((p) => `${p.n} ${p.prezzo}cr`).join(', '));
+  ok(d.rosa.every((p) => p.prezzo === F.state.auction.log.find((l) => l.playerId === db().byId[F.state.lineups[fin.res.winner][p.pos]].id)?.price),
+    'con il prezzo pagato all\'asta per ognuno');
+  ok(tutto.includes(fin.res.mvp.n.toUpperCase()), 'e l\'MVP delle Finals', fin.res.mvp.n);
+  ok(d.riquadri.some((r) => r.tit.includes('colpo')), 'e il colpo dell\'asta');
+  ok(!/undefined|NaN|null/.test(tutto), 'niente "undefined" o "NaN" nell\'immagine');
+  ok(fuori === 0, 'nessuna scritta esce dai bordi', `${fuori} fuori`);
+  ok(/^Fanta NBA — Campione: /.test(d.testo), 'e il messaggio che l\'accompagna dice chi ha vinto', d.testo);
+  // Prima della fine non c'e niente da condividere.
+  ok(datiCard({ ...F.state, po: { ...F.state.po, turni: F.state.po.turni.map((r) => r.map((m) => ({ ...m, gamesPlayed: 0 }))) } }, Tc) === null,
+    'a torneo aperto la card non esiste');
+}
+
 /* Il referto: senza, nessuna delle cinque scelte si impara mai */
 ui.serieAperte.add('1-0');
 render(els.app, { state: F.state, session: F.session });

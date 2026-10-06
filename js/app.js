@@ -8,6 +8,7 @@ import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState,
 import { sblocca, commutaAudio, tic, martelletto, nuovoLotto } from './suono.js';
 import * as BotAI from './bot.js';
 import { serieDelTabellone, aperta, pronosticoBot } from './pronostici.js';
+import { datiCard, disegnaCard, LARGHEZZA, ALTEZZA } from './card.js';
 
 const root = document.getElementById('app');
 const topbar = document.getElementById('topbar');
@@ -159,6 +160,40 @@ let rivelaTimer = null;
 function chiudiRivela() {
   if (rivelaTimer) { clearTimeout(rivelaTimer); rivelaTimer = null; }
   document.querySelectorAll('.rivela').forEach((el) => el.remove());
+}
+
+// LA CARD DELLA SERATA. Dal telefono si apre la condivisione di sistema, e
+// l'immagine va dritta in WhatsApp o dove si vuole; dal computer, che quella
+// finestra non ce l'ha, si scarica. I font sono gia quelli della pagina: si
+// aspetta solo che siano pronti, o il canvas scriverebbe in Arial.
+async function condividiSerata() {
+  const d = datiCard(state, teamsFromState(state));
+  if (!d) return;
+  try {
+    await Promise.all(['800 40px "Saira Condensed"', '700 40px "Saira Condensed"', '500 30px Barlow', '600 30px Barlow']
+      .map((f) => document.fonts?.load?.(f)));
+  } catch { /* si disegna lo stesso, col font di riserva */ }
+  const cv = document.createElement('canvas');
+  cv.width = LARGHEZZA; cv.height = ALTEZZA;
+  // I colori delle squadre si leggono dal CSS: stanno li e solo li.
+  const st = getComputedStyle(document.documentElement);
+  const colori = {};
+  for (const k of TEAM_KEYS) { const c = st.getPropertyValue(`--${k}`).trim(); if (c) colori[k] = c; }
+  disegnaCard(cv.getContext('2d'), d, colori);
+  const blob = await new Promise((r) => cv.toBlob(r, 'image/png'));
+  if (!blob) return flash('Non sono riuscito a creare l\'immagine.', true);
+  const nome = `fanta-nba-${d.squadra.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`;
+  const file = new File([blob], nome, { type: 'image/png' });
+  if (navigator.canShare?.({ files: [file] })) {
+    try { await navigator.share({ files: [file], text: d.testo }); return; }
+    catch (e) { if (e?.name === 'AbortError') return; /* altrimenti si scarica */ }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nome;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  flash('Immagine salvata.');
 }
 
 function momentoCampione() {
@@ -639,6 +674,11 @@ document.addEventListener('click', async (ev) => {
 
       case 'chiudi-rivela':
         chiudiRivela();
+        return;
+
+      case 'condividi-card':
+        el.disabled = true;
+        try { await condividiSerata(); } finally { el.disabled = false; }
         return;
 
       // Si cambia idea quante volte si vuole, finche la serie non parte.

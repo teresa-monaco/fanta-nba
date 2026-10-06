@@ -964,6 +964,8 @@ details summary {
 .riv-c { font: 800 17px var(--cond); color: var(--gold); white-space: nowrap; }
 .riv-c i { font-style: normal; color: var(--muted); margin: 0 2px; }
 
+.condividi { margin: 10px 0 14px; }
+
 /* ---- i pronostici ---- */
 .pron { margin: 4px 0 12px; padding: 9px 10px; background: rgba(255, 255, 255, .03); border-left: 3px solid var(--gold); }
 .pron-tit { font: 800 10px var(--cond); letter-spacing: 1.8px; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }

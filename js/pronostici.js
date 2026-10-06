@@ -65,6 +65,14 @@ export function classificaPronostici(s, T) {
     b.punti - a.punti || b.esatti - a.esatti || (a.chiusi - a.giusti) - (b.chiusi - b.giusti) || a.key.localeCompare(b.key));
 }
 
+// Il re dei pronostici, se c'e: il primo, ma solo se e uno — a pari punti e
+// pari esatti non si incorona nessuno — e solo se ha preso qualcosa.
+export function reDeiPronostici(cl) {
+  if (!cl?.length || cl[0].punti <= 0) return null;
+  const pari = cl[1] && cl[1].punti === cl[0].punti && cl[1].esatti === cl[0].esatti;
+  return pari ? null : cl[0];
+}
+
 // IL PRONOSTICO DI UN BOT. Non usa il motore: saprebbe gia come finisce,
 // perche il risultato sta tutto nel seme. Guarda quello che vedono tutti —
 // l'overall medio dei due quintetti — e ci mette del suo, come chiunque.
