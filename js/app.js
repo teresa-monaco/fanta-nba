@@ -7,6 +7,7 @@ import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
 import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc, flapHTML, rivelaCampione } from './ui.js';
 import { sblocca, commutaAudio, tic, martelletto, nuovoLotto } from './suono.js';
 import * as BotAI from './bot.js';
+import { serieDelTabellone, aperta, pronosticoBot } from './pronostici.js';
 
 const root = document.getElementById('app');
 const topbar = document.getElementById('topbar');
@@ -368,6 +369,7 @@ function startClock() {
 
 const memoriaBot = {};   // per bot: il lotto gia valutato e quando si sveglia
 let botOccupato = false; // una scrittura alla volta, o si accavallano
+const serieViste = { firma: null, T: null, lista: [] }; // per i pronostici dei bot
 
 async function guidaBot() {
   if (!state || !session || state.host !== session.uid || botOccupato) return;
@@ -413,6 +415,38 @@ async function guidaBot() {
         });
         if (ok) m.firmaTattica = firma;
         break;
+      }
+    } else if (state.phase === 'playoffs' && state.po) {
+      // Anche i bot pronosticano, o la classifica dei pronostici in una
+      // serata con due persone e due bot sarebbe una gara a due. Prima un
+      // controllo da niente: se tutte le serie sono partite non c'e niente
+      // da pronosticare, e non si ricalcola il tabellone a ogni tic.
+      const po = state.po;
+      const daIniziare = po.turni.some((round) => round.some((m) => !m.gamesPlayed))
+        || (po.third && !po.third.gamesPlayed);
+      if (!daIniziare) return;
+      // Il tabellone si ricalcola solo quando una serie avanza: il cronometro
+      // gira quattro volte al secondo e le serie si rigiocherebbero ogni volta.
+      const firma = `${state.seed}|${po.turni.map((r) => r.map((m) => m.gamesPlayed).join('.')).join('|')}|${po.third?.gamesPlayed ?? '-'}`;
+      if (serieViste.firma !== firma) {
+        serieViste.T = teamsFromState(state);
+        serieViste.lista = serieDelTabellone(state, serieViste.T);
+        serieViste.firma = firma;
+      }
+      const T = serieViste.T;
+      for (const x of serieViste.lista) {
+        if (!aperta(x)) continue;
+        for (const k of squadreBot) {
+          if (k === x.a || k === x.b || po.pron?.[x.id]?.[k]) continue;
+          // Ognuno ci pensa un attimo, e non tutti nello stesso istante.
+          const m = memoriaBot[k] || (memoriaBot[k] = {});
+          const chiave = `pron:${state.seed}:${x.id}`;
+          if (!m[chiave]) { m[chiave] = Date.now() + 700 + Math.random() * 2300; continue; }
+          if (Date.now() < m[chiave]) continue;
+          const p = pronosticoBot(T[x.a], T[x.b]);
+          await session.apply((s) => S.pronostica(s, k, x.id, x.a, x.b, p.v, p.g));
+          return;
+        }
       }
     }
   } catch (err) {
@@ -606,6 +640,14 @@ document.addEventListener('click', async (ev) => {
       case 'chiudi-rivela':
         chiudiRivela();
         return;
+
+      // Si cambia idea quante volte si vuole, finche la serie non parte.
+      case 'pronostico': {
+        const d = el.dataset;
+        const ok = await session.apply((s) => S.pronostica(s, s.seats[session.uid], d.serie, d.a, d.b, d.v, Number(d.g)));
+        if (!ok) flash('La serie è già iniziata: pronostici chiusi.', true);
+        return;
+      }
 
       // "Ho finito": un segnale a chi ospita, non un vincolo. Si puo
       // ritirare, perche cambiare idea dopo aver visto le altre squadre e

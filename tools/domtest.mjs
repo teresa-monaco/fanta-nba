@@ -854,6 +854,61 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
     ok(SLOTS_D.every((sl) => F.state.lineups[k][sl]), 'e schiera un quintetto completo');
   }
 
+  // I PRONOSTICI, al tavolo con i bot: il riquadro a chi non gioca la serie,
+  // le scelte degli altri nascoste fino a gara 1, i bot che pronosticano da
+  // soli, i punti a serie chiusa.
+  if (S.attive(F.state).length >= 4) {
+    const Tq = {};
+    for (const k of S.attive(F.state)) Tq[k] = buildTeam(k, F.state.lineups[k], F.state.tactics[k]);
+    await F.session.apply((s) => S.toPlayoffs(s, componiTabellone(Tq, s.seed)));
+    const stanza = { ...F.session, mode: 'room', uid: 'io' };
+    const mia = F.state.seats.io;
+    const turno = costruisciBracket(F.state.po, Tq)[0];
+    const fuori = turno.findIndex((m) => m.a !== mia && m.b !== mia);
+    const dentro = turno.findIndex((m) => m.a === mia || m.b === mia);
+    render(els.app, { state: F.state, session: stanza });
+    ok(clean() && has('Il tuo pronostico'), 'a chi non gioca una semifinale si chiede il pronostico');
+    ok((html().match(/data-act="pronostico"/g) || []).length === 8,
+      'solo su quella: due squadre per quattro esiti, e niente sulla propria serie',
+      `${(html().match(/data-act="pronostico"/g) || []).length} tasti`);
+
+    // Pronostico: la serie che non gioco.
+    const m = turno[fuori];
+    await F.session.apply((s) => S.pronostica(s, mia, `0-${fuori}`, m.a, m.b, m.a, 6));
+    render(els.app, { state: F.state, session: stanza });
+    ok(has('class="tag ok">fatto'), 'fatto il pronostico, la serie lo dice');
+    ok(/class="sm primary"\s+data-act="pronostico"[^>]*data-v="[^"]+" data-g="6"/.test(html()),
+      'e la scelta resta accesa');
+
+    // I bot pronosticano da soli, con un attimo di ritardo. Li muove l'app.
+    const botFuori = (i) => S.botDi(F.state).filter((k) => k !== turno[i].a && k !== turno[i].b);
+    const attesi = botFuori(0).length + botFuori(1).length;
+    const fatti = () => [0, 1].reduce((a, i) => a + botFuori(i).filter((k) => F.state.po.pron?.[`0-${i}`]?.[k]).length, 0);
+    for (let i = 0; i < 80 && fatti() < attesi; i++) await new Promise((r) => setTimeout(r, 100));
+    ok(fatti() === attesi, 'i bot pronosticano le serie che non giocano', `${fatti()}/${attesi}`);
+    ok(S.botDi(F.state).every((k) => [0, 1].every((i) => !(k === turno[i].a || k === turno[i].b) || !F.state.po.pron?.[`0-${i}`]?.[k])),
+      'e mai la propria');
+    // Nel riquadro della serie che gioco io si vede chi ha pronosticato, non cosa.
+    render(els.app, { state: F.state, session: stanza });
+    ok(has('Hanno pronosticato:'), 'si vede chi ha gia pronosticato');
+    ok(!/class="pron-voce/.test(html()), 'ma non cosa, finche la serie non parte');
+    ok(has('class="card pronostici"'), 'e la classifica dei pronostici compare');
+
+    // Chiuse le semifinali, le scelte si scoprono e danno punti.
+    for (let g = 0; g < 7; g++) for (const i of [0, 1]) await F.session.apply((s) => S.advanceSeries(s, 0, i, S.PASSO_GARA));
+    ui.serieAperte.add(`0-${fuori}`);
+    render(els.app, { state: F.state, session: stanza });
+    ok(/class="pron-voce (preso|mancato)/.test(html()), 'a serie chiusa ogni pronostico ha il suo esito');
+    const f = costruisciBracket(F.state.po, Tq)[0][fuori].res;
+    const attesoPunti = f.winner === m.a ? (f.games.length === 6 ? 3 : 1) : 0;
+    const P = await import('../js/pronostici.js');
+    const io = P.classificaPronostici(F.state, Tq).find((r) => r.key === mia);
+    ok(io && io.punti === attesoPunti, 'e i miei punti sono quelli giusti',
+      `${m.a} in 6 contro ${f.winner} in ${f.games.length}: ${io?.punti} punti`);
+    ui.serieAperte.clear();
+    ok(clean() && !html().includes('undefined'), 'la schermata coi pronostici non ha buchi');
+  }
+
   // L'azzeramento li lascia seduti: sono parte del tavolo, non della partita.
   const quanti = S.botDi(F.state).length;
   const dopo = S.resetGame(F.state, 'altro');

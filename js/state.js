@@ -99,6 +99,7 @@ export function hydrate(raw) {
       turni: (s.po.turni || []).map((round) => (round || []).map((m) => ({ gamesPlayed: 0, ...m }))),
     };
     if (s.po.third) s.po.third = { gamesPlayed: 0, ...s.po.third };
+    s.po.pron = s.po.pron || {}; // stanze aperte prima dei pronostici
   }
   return s;
 }
@@ -653,6 +654,30 @@ export function advanceThird(s, passo) {
 export function openThird(s, a, b) {
   if (s.po?.third || !a || !b) return undefined;
   return { ...s, po: { ...s.po, third: { a, b, seed: `${s.seed}:third`, gamesPlayed: 0 } } };
+}
+
+/* ---------- Pronostici ---------- */
+
+// Chi gioca una serie dal secondo turno in poi non sta nello stato, lo deduce
+// il tabellone: per questo i due nomi li passa chi chiama, e qui si controlla
+// che il pronostico abbia senso rispetto a quelli. Una serie gia iniziata non
+// si pronostica piu: dopo gara 1 sarebbe facile.
+export function pronostica(s, chi, id, a, b, vince, gare) {
+  if (s.phase !== 'playoffs' || !s.po) return undefined;
+  if (!attive(s).includes(chi) || !a || !b || chi === a || chi === b) return undefined;
+  if (vince !== a && vince !== b) return undefined;
+  if (!Number.isInteger(gare) || gare < 4 || gare > 7) return undefined;
+  let meta;
+  if (id === 'third') {
+    meta = s.po.third;
+    if (meta && (meta.a !== a || meta.b !== b)) return undefined;
+  } else {
+    const [r, i] = String(id).split('-').map(Number);
+    meta = s.po.turni?.[r]?.[i];
+  }
+  if (!meta || meta.gamesPlayed > 0) return undefined;
+  const pron = s.po.pron || {};
+  return { ...s, po: { ...s.po, pron: { ...pron, [id]: { ...(pron[id] || {}), [chi]: { v: vince, g: gare } } } } };
 }
 
 /* ---------- Albo d'oro ---------- */

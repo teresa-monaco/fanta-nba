@@ -964,6 +964,26 @@ details summary {
 .riv-c { font: 800 17px var(--cond); color: var(--gold); white-space: nowrap; }
 .riv-c i { font-style: normal; color: var(--muted); margin: 0 2px; }
 
+/* ---- i pronostici ---- */
+.pron { margin: 4px 0 12px; padding: 9px 10px; background: rgba(255, 255, 255, .03); border-left: 3px solid var(--gold); }
+.pron-tit { font: 800 10px var(--cond); letter-spacing: 1.8px; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+/* Il nome a sinistra, le quattro gare a destra: si sceglie con un tocco. */
+.pron-riga { display: grid; grid-template-columns: 1fr repeat(4, auto); align-items: center; gap: 5px; padding: 3px 0; }
+.pron-riga .nm { font: 700 13px var(--cond); letter-spacing: .5px; text-transform: uppercase; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pron-riga .nm .dot { display: inline-block; margin-right: 6px; }
+.pron-riga button { padding: 5px 8px; min-width: 0; }
+.pron-voci { display: flex; flex-wrap: wrap; gap: 5px 12px; }
+.pron-voce { font-size: 12.5px; color: var(--muted-2); }
+.pron-voce b { color: #fff; font-weight: 700; }
+.pron-voce i { font-style: normal; font-weight: 800; color: var(--ok); }
+.pron-voce.mancato { opacity: .55; text-decoration: line-through; text-decoration-color: var(--muted); }
+.pron-cl { display: grid; grid-template-columns: 22px 1fr auto 28px; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.pron-cl:last-of-type { border-bottom: none; }
+.pron-cl .pos { font: 800 13px var(--cond); color: var(--muted); }
+.pron-cl .nm { font: 700 14px var(--cond); letter-spacing: .6px; text-transform: uppercase; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pron-cl b { font: 800 18px var(--cond); color: var(--gold); text-align: right; }
+.pron-cl.io .nm { text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 3px; }
+
 /* ---- il momento del campione, a schermo intero ---- */
 .rivela {
   position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 18px;

@@ -12,6 +12,7 @@ import { audioAcceso } from './suono.js';
 import { avatarSVG } from './avatar.js';
 import { ID_BOT, BOT } from './bot.js';
 import { premiSerata } from './premi.js';
+import { serieDelTabellone, classificaPronostici, puntiDi } from './pronostici.js';
 
 export const ui = {
   nickname: localStorage.getItem('nbaf:nick') || '',
@@ -929,6 +930,12 @@ function viewPlayoffs({ state: s, session }) {
     ${po.reasons.map((r) => `<p class="small muted" style="margin-top:6px">${esc(r)}</p>`).join('')}
   </details>`;
 
+  // La classifica dei pronostici sta in alto, sotto il tabellone: e quello
+  // che guarda chi e gia uscito, e non deve scorrere tutte le serie per
+  // trovarla.
+  out += pronosticiCard(s, T, session);
+  const dettaglio = Object.fromEntries(serieDelTabellone(s, T).map((x) => [x.id, x]));
+
   for (let r = 0; r < tot; r++) {
     const passo = S.PASSO_GARA;
     const nome = nomeTurno(r, tot, conTeste);
@@ -947,7 +954,8 @@ function viewPlayoffs({ state: s, session }) {
       if (m.res?.done && !ui.serieAperte.has(id)) {
         out += serieRiga(titolo, T[m.a], T[m.b], m.res, id);
       } else {
-        out += serieCard(titolo, T[m.a], T[m.b], m.res, { ...m, id }, passo, isHost, `avanza:${r}:${i}`);
+        out += serieCard(titolo, T[m.a], T[m.b], m.res, { ...m, id }, passo, isHost, `avanza:${r}:${i}`,
+          pronosticoBox(s, session, dettaglio[id], T));
       }
     });
   }
@@ -961,7 +969,8 @@ function viewPlayoffs({ state: s, session }) {
         const t3 = simSeriesUpTo(T[po.third.a], T[po.third.b], po.third.seed, po.third.gamesPlayed);
         out += t3.done && !ui.serieAperte.has('third')
           ? serieRiga('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], t3, 'third')
-          : serieCard('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], t3, { ...po.third, id: 'third' }, S.PASSO_GARA, isHost, 'avanza-third');
+          : serieCard('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], t3, { ...po.third, id: 'third' }, S.PASSO_GARA, isHost, 'avanza-third',
+            pronosticoBox(s, session, dettaglio.third, T));
       } else if (isHost) {
         out += `<button class="wide ghost" data-act="open-third">Giocare anche la finale 3°/4° posto?</button>`;
       }
@@ -1148,7 +1157,7 @@ function refertoCard(A, B, f) {
 
 // Una sola carta per tutte le serie: cambia solo di quante gare si avanza
 // a ogni tocco. Semifinali e finalina due, Finals una.
-function serieCard(titolo, A, B, f, meta, passo, isHost, act) {
+function serieCard(titolo, A, B, f, meta, passo, isHost, act, pron = '') {
   if (!A || !B || !f) {
     return `<div class="card"><div class="series-hdr"><div>
       <div class="tiny muted" style="text-transform:uppercase;letter-spacing:.08em;font-weight:800">${esc(titolo)}</div>
@@ -1215,6 +1224,7 @@ function serieCard(titolo, A, B, f, meta, passo, isHost, act) {
   return `<div class="card serie" id="serie-${esc(meta.id || '')}">
     ${board}
     <p class="tiny muted mb">${esc(teamIdentity(A))} &nbsp;·&nbsp; ${esc(teamIdentity(B))}</p>
+    ${pron}
     ${games}
     ${coda}
     ${f.done && meta.id ? `<button class="sm ghost wide mt" data-act="apri-serie" data-serie="${esc(meta.id)}">Richiudi</button>` : ''}
@@ -1247,6 +1257,68 @@ function serieRiga(titolo, A, B, f, id) {
     ${f.mvp ? `<span class="mvp-mini">MVP ${esc(f.mvp.n)}</span>` : ''}
     <span class="apri">›</span>
   </button>`;
+}
+
+/* ---------- Pronostici ---------- */
+
+// Il riquadro del pronostico dentro la serie. Prima di gara 1, a chi non la
+// gioca: la squadra e il numero di gare, un tocco solo. Degli altri si vede
+// CHI ha pronosticato ma non COSA, o l'ultimo a scegliere copierebbe. Da gara
+// 1 in poi le scelte sono di tutti, e a serie chiusa ognuna ha il suo esito.
+function pronosticoBox(s, session, x, T) {
+  if (!x || !x.a || !x.b || !x.f) return '';
+  const scelte = s.po?.pron?.[x.id] || {};
+  const chiAlTavolo = (k) => esc(S.nameOfSeat(s, k) || TEAM_NAMES[k]);
+  const mia = s.seats?.[session.uid];
+  const puo = mia && S.attive(s).includes(mia) && mia !== x.a && mia !== x.b;
+  const chi = Object.keys(scelte);
+
+  if (x.giocate === 0) {
+    const io = puo ? scelte[mia] : null;
+    const riga = (k) => `<div class="pron-riga t-${k}">
+        <span class="nm"><span class="dot"></span>${esc(T[k].name)}</span>
+        ${[4, 5, 6, 7].map((g) => `<button class="sm ${io?.v === k && io?.g === g ? 'primary' : 'ghost'}"
+          data-act="pronostico" data-serie="${esc(x.id)}" data-a="${x.a}" data-b="${x.b}" data-v="${k}" data-g="${g}">in ${g}</button>`).join('')}
+      </div>`;
+    const altri = chi.filter((k) => k !== mia);
+    if (!puo && !chi.length) return '';
+    return `<div class="pron">
+      ${puo ? `<div class="pron-tit">Il tuo pronostico${io ? ` <span class="tag ok">fatto</span>` : ''}</div>${riga(x.a)}${riga(x.b)}` : ''}
+      ${altri.length ? `<p class="tiny muted ${puo ? 'mt' : ''}">Hanno pronosticato: ${altri.map(chiAlTavolo).join(', ')}
+        <span>— le scelte si scoprono a gara 1.</span></p>` : ''}
+    </div>`;
+  }
+
+  if (!chi.length) return '';
+  const righe = chi.map((k) => {
+    const p = scelte[k];
+    const pt = x.f.done ? puntiDi(p, x.f) : null;
+    return `<span class="pron-voce ${pt === null ? '' : (pt ? 'preso' : 'mancato')}">
+      <b>${chiAlTavolo(k)}</b> ${esc(T[p.v]?.name || '')} in ${p.g}${pt ? ` <i>+${pt}</i>` : ''}</span>`;
+  }).join('');
+  return `<div class="pron chiuso"><div class="pron-tit">Pronostici</div><div class="pron-voci">${righe}</div></div>`;
+}
+
+// La classifica dei pronostici. Compare dal primo pronostico fatto; il primo
+// in classifica a serate finita e il "re dei pronostici".
+function pronosticiCard(s, T, session) {
+  const cl = classificaPronostici(s, T);
+  if (!cl.length) return '';
+  const mia = s.seats?.[session.uid];
+  // Il re solo se e uno: a pari punti e pari esatti non si incorona nessuno.
+  const pari = cl[1] && cl[1].punti === cl[0].punti && cl[1].esatti === cl[0].esatti;
+  const finita = !pari && serieDelTabellone(s, T).every((x) => !x.a || !x.b || x.f?.done);
+  const righe = cl.map((r, n) => `<div class="pron-cl ${r.key === mia ? 'io' : ''}">
+      <span class="pos">${n + 1}</span>
+      <span class="nm">${esc(S.nameOfSeat(s, r.key) || TEAM_NAMES[r.key])}</span>
+      <span class="tiny muted">${r.giusti}/${r.chiusi} presi${r.esatti ? ` · ${r.esatti} esatt${r.esatti === 1 ? 'o' : 'i'}` : ''}</span>
+      <b>${r.punti}</b>
+    </div>`).join('');
+  return `<div class="card pronostici">
+    <h3 class="mb">${finita && cl[0].punti > 0 ? `Re dei pronostici: ${esc(S.nameOfSeat(s, cl[0].key) || TEAM_NAMES[cl[0].key])}` : 'Pronostici'}</h3>
+    ${righe}
+    <p class="tiny muted mt">Vincente giusto 1 punto, numero di gare esatto altri 2.</p>
+  </div>`;
 }
 
 /* ---------- Rivalita ---------- */
