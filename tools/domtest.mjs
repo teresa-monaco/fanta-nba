@@ -897,6 +897,19 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
     ok(SLOTS_D.every((sl) => F.state.lineups[k][sl]), 'e schiera un quintetto completo');
   }
 
+  // FINITA LA STAGIONE REGOLARE I BOT RIDICONO "PRONTO". Le conferme si
+  // azzerano per tutti, perche prima dei playoff le tattiche si ritoccano;
+  // ma le rose non cambiano, e il bot — che si muoveva solo a rose cambiate —
+  // restava fermo: tutti pronti tranne lui. Visto giocando.
+  {
+    await F.session.apply((s) => S.giocaStagione(s, giriStagione(S.attive(s).length)));
+    ok(!!F.state.stagione, 'la stagione regolare si gioca');
+    const tuttiPronti = () => S.botDi(F.state).every((k) => S.haConfermato(F.state, k));
+    for (let i = 0; i < 30 && !tuttiPronti(); i++) await new Promise((r) => setTimeout(r, 60));
+    ok(tuttiPronti(), 'e dopo la stagione i bot confermano di nuovo di essere pronti',
+      S.botDi(F.state).map((k) => `${F.state.names[`bot:${k}`]} ${S.haConfermato(F.state, k) ? 'si' : 'no'}`).join(', '));
+  }
+
   // I PRONOSTICI, al tavolo con i bot: il riquadro a chi non gioca la serie,
   // le scelte degli altri nascoste fino a gara 1, i bot che pronosticano da
   // soli, i punti a serie chiusa.

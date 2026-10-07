@@ -436,7 +436,16 @@ async function guidaBot() {
         // Si rifa solo se e cambiato qualcosa da cui dipende la risposta.
         const firma = S.attive(state).map((o) => `${state.teams[o].roster.join('.')}`).join('|');
         const m = memoriaBot[k] || (memoriaBot[k] = {});
-        if (m.firmaTattica === firma) continue;
+        if (m.firmaTattica === firma) {
+          // Rose uguali, tattica gia scelta: non c'e niente da ricalcolare.
+          // Ma la conferma puo essere sparita — finita la stagione regolare
+          // si azzera per tutti, perche le tattiche si possono ritoccare
+          // prima dei playoff. Le rose non cambiano, e il bot restava fermo
+          // a guardare: tutti pronti tranne lui. Ora la ridice.
+          if (S.haConfermato(state, k)) continue;
+          await session.apply((s) => S.confermaPronto(s, k, true));
+          break;
+        }
         const best = BotAI.tatticaBot(state, k, S);
         if (!best) continue;
         // Anche i bot dicono quando hanno finito, nello stesso momento in
