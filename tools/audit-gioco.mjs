@@ -221,4 +221,61 @@ console.log('='.repeat(72));
   const p = vinceMigliore / n;
   console.log(`\n  ${p > 0.85 ? 'Troppo deterministico: chi vince l asta ha gia vinto.' : p > 0.62 ? 'Equilibrio sano: la rosa conta, ma non basta.' : 'Troppo caotico: l asta conta poco.'}`);
 }
+
+console.log('\n' + '='.repeat(72));
+console.log('7. LA SERATA DEI GIOCATORI: QUANTO OSCILLANO I PUNTI?');
+console.log('='.repeat(72));
+// Prima la quota di punti di ognuno oscillava del 12% al massimo: uno da 30
+// ne faceva fra 27 e 33, e il miglior marcatore di una serie era scritto in
+// partenza (il favorito al 94%, dal terzo in giu mai). Qui si controlla che
+// resti nei valori veri: abbastanza da avere serate storte e serate da 45,
+// non tanto da trasformare un gregario in un capocannoniere.
+let fallite = 0;
+{
+  const verifica = (c, label, extra) => {
+    console.log(`  ${c ? 'PASS' : 'FAIL'}  ${label}${extra ? ' — ' + extra : ''}`);
+    if (!c) fallite++;
+  };
+  const { simSeriesUpTo } = await import('../js/engine.js');
+  const cvTop = [], favorito = [];
+  let sommeGiuste = true, record = 0;
+  for (let i = 0; i < 25; i++) {
+    const rng = makeRng('serata' + i);
+    const pool = shuffle(D.players.map((p) => p.id), rng);
+    const A = squadra(TEAM_KEYS[0], pool.slice(0, 5), 'equilibrato');
+    const B = squadra(TEAM_KEYS[1], pool.slice(5, 10), 'equilibrato');
+    const punti = {}, vinte = {};
+    for (let k = 0; k < 200; k++) {
+      const f = simSeriesUpTo(A, B, `sv${i}:${k}`, 7);
+      const tot = {};
+      for (const g of f.games) {
+        if (g.boxA.reduce((a, l) => a + l.pts, 0) !== g.scoreA) sommeGiuste = false;
+        for (const l of [...g.boxA, ...g.boxB]) {
+          (punti[l.n] ||= []).push(l.pts);
+          tot[l.n] = (tot[l.n] || 0) + l.pts;
+          record = Math.max(record, l.pts);
+        }
+      }
+      const top = Object.entries(tot).sort((a, b) => b[1] - a[1])[0][0];
+      vinte[top] = (vinte[top] || 0) + 1;
+    }
+    const st = Object.values(punti).map((v) => {
+      const m = v.reduce((a, x) => a + x, 0) / v.length;
+      return { m, sd: Math.sqrt(v.reduce((a, x) => a + (x - m) ** 2, 0) / v.length) };
+    }).sort((a, b) => b.m - a.m);
+    cvTop.push(st[0].sd / st[0].m);
+    favorito.push(Math.max(...Object.values(vinte)) / 200);
+  }
+  const media = (v) => v.reduce((a, x) => a + x, 0) / v.length;
+  const cv = media(cvTop), fav = media(favorito);
+  console.log(`\n  il primo marcatore oscilla del ${(cv * 100).toFixed(0)}% da una gara all'altra (NBA vera: 20-25%)`);
+  console.log(`  il favorito vince il premio di miglior marcatore nel ${(fav * 100).toFixed(0)}% delle serie`);
+  console.log(`  record in una gara: ${record} punti\n`);
+  verifica(cv >= 0.16 && cv <= 0.28, 'i punti oscillano come nella realta, non come un orologio', `${(cv * 100).toFixed(0)}%`);
+  verifica(fav <= 0.78, 'il miglior marcatore di una serie non e scritto in partenza', `favorito ${(fav * 100).toFixed(0)}%`);
+  verifica(fav >= 0.5, 'ma il favorito resta il favorito', `${(fav * 100).toFixed(0)}%`);
+  verifica(record <= 75, 'nessuna serata da fumetto', `${record}`);
+  verifica(sommeGiuste, 'i punti dei cinque fanno sempre il punteggio della squadra');
+}
 console.log('');
+process.exit(fallite ? 1 : 0);

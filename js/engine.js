@@ -458,6 +458,11 @@ export function simGame(A, B, m, rng, opts = {}) {
   return { scoreA, scoreB, boxA, boxB, mvp, ot, poss, margin: Math.abs(scoreA - scoreB) };
 }
 
+// Quanto oscilla la serata di un giocatore (vedi boxScore). Verificabile con
+// la misura in audit-gioco: oscillazione del primo marcatore intorno al 20%,
+// e il favorito al premio di miglior marcatore di una serie intorno al 70%.
+export const SERATA_SIGMA = 0.25;
+
 // Ripartisce il punteggio di squadra fra i cinque secondo usage e strategia.
 function boxScore(T, teamPts, rng) {
   // Gli esponenti sotto 1 COMPRIMONO le differenze. Servono perche gli
@@ -465,7 +470,19 @@ function boxScore(T, teamPts, rng) {
   // quattro usage 20 si prendeva il 55% dei punti di squadra (uscivano gare
   // da 67 punti individuali). Alzarli concentra di piu su una stella sola.
   const mult = usageMultipliers(T);
-  const raw = T.five.map((p, i) => Math.max(3, Math.pow(p.attrs.usg, 0.75) * mult[i] * (0.88 + rng() * 0.24)));
+  // LA SERATA DI OGNUNO. La quota di punti di un giocatore oscillava di un
+  // 12% al massimo: chi faceva 30 di media ne faceva fra 27 e 33, sempre. Il
+  // miglior marcatore di una serie era scritto prima di cominciare (il
+  // favorito lo vinceva nel 94% delle serie simulate, dal terzo in giu mai),
+  // e i box score erano piatti. Nella NBA vera uno da 30 oscilla di 7-8
+  // punti da una sera all'altra: ha le serate da 45 e quelle da 18.
+  //
+  // Adesso la quota oscilla in modo proporzionale (log-normale), tagliata a
+  // 1,8 deviazioni perche una serata da 70 non e verosimile. Tocca SOLO come
+  // si dividono i punti dentro la squadra: il punteggio di squadra e gia
+  // deciso, e ogni gara ha il suo generatore, quindi nessun risultato cambia.
+  const raw = T.five.map((p, i) => Math.max(3, Math.pow(p.attrs.usg, 0.75) * mult[i]
+    * Math.exp(SERATA_SIGMA * clamp(gauss(rng), -1.8, 1.8))));
   const tot = raw.reduce((s, v) => s + v, 0);
 
   let lines = T.five.map((p, i) => ({
