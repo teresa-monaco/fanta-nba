@@ -657,6 +657,36 @@ console.log('\nI PRONOSTICI A QUOTE\n');
 }
 
 /* ==========================================================
+   I premi per media
+   ==========================================================
+
+   Il caso visto giocando: Nash 400 punti in 10 gare, LaMelo 399 in 9. Il
+   capocannoniere e LaMelo. Si cercano le serate in cui il totale avrebbe
+   premiato un altro, e in tutte deve vincere la media. */
+console.log('\nI PREMI PER MEDIA\n');
+{
+  const { premiSerata } = await import('../js/premi.js');
+  let diverse = 0, sbagliate = [];
+  for (let i = 0; i < 40; i++) {
+    const { s: fs, T: Tf } = partitaFinoA(4, 'fine', `premi${i}`);
+    const conto = {};
+    for (const m of costruisciBracket(fs.po, Tf).flat()) for (const g of m.res?.games || []) {
+      for (const l of [...g.boxA, ...g.boxB]) { const c = (conto[l.id] ||= { pts: 0, reb: 0, g: 0 }); c.pts += l.pts; c.reb += l.reb; c.g++; }
+    }
+    const pool = Object.entries(conto).filter(([, c]) => c.g >= 4);
+    for (const [k, chiave] of [['pts', 'punti'], ['reb', 'rimbalzi']]) {
+      const perMedia = pool.slice().sort(([, a], [, b]) => b[k] / b.g - a[k] / a.g || b.g - a.g)[0][0];
+      const perTot = pool.slice().sort(([, a], [, b]) => b[k] - a[k])[0][0];
+      const vinto = premiSerata(fs, Tf).find((p) => p.chiave === chiave)?.id;
+      if (perMedia !== perTot) diverse++;
+      if (vinto !== perMedia) sbagliate.push(`${chiave} serata ${i}`);
+    }
+  }
+  ok(diverse > 0, 'ci sono serate in cui il totale premierebbe un altro', `${diverse} premi su 80`);
+  ok(sbagliate.length === 0, 'e in tutte vince chi ha la media piu alta', sbagliate.slice(0, 3).join(', '));
+}
+
+/* ==========================================================
    I nomi: la persona davanti, il soprannome accanto
    ==========================================================
 

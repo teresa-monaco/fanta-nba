@@ -587,6 +587,30 @@ ok(!/data-act="avanti-serie"/.test(html()), 'e dopo la finale non c\'e nessun "A
   const bid = premi.find((p) => p.chiave === 'bidone');
   const prezzoBid = bid ? F.state.auction.log.find((l) => l.playerId === bid.id)?.price : null;
   ok(!bid || prezzoBid >= 10, 'il bidone e uno che e costato caro', bid ? `${bid.nome}, ${prezzoBid} crediti` : 'nessun bidone in questa partita');
+
+  // Capocannoniere e re dei rimbalzi per MEDIA, non per totale: chi gioca piu
+  // gare non deve vincere solo per quello. Si ricontano le gare da capo,
+  // finalina compresa, fra chi ha giocato almeno una serie intera.
+  {
+    const { ordineSerie } = await import('../js/serie.js');
+    const conto = {};
+    for (const x of ordineSerie(F.state, teamsFromState(F.state))) {
+      for (const g of x.f?.games || []) for (const l of [...g.boxA, ...g.boxB]) {
+        const c = (conto[l.id] ||= { n: l.n, pts: 0, reb: 0, g: 0 });
+        c.pts += l.pts; c.reb += l.reb; c.g++;
+      }
+    }
+    const giocatori = Object.entries(conto).filter(([, c]) => c.g >= 4);
+    const primoPer = (k) => giocatori.slice().sort(([, a], [, b]) => b[k] / b.g - a[k] / a.g || b.g - a.g)[0];
+    const [idP, cp] = primoPer('pts');
+    const [idR, cr] = primoPer('reb');
+    const cap = premi.find((p) => p.chiave === 'punti');
+    const rim = premi.find((p) => p.chiave === 'rimbalzi');
+    ok(cap?.id === idP, 'il capocannoniere e il primo per punti a partita', `${cap?.nome}: ${cap?.riga} · atteso ${cp.n} ${(cp.pts / cp.g).toFixed(1)}`);
+    ok(rim?.id === idR, 'il re dei rimbalzi e il primo per rimbalzi a partita', `${rim?.nome}: ${rim?.riga} · atteso ${cr.n} ${(cr.reb / cr.g).toFixed(1)}`);
+    const perTotale = giocatori.slice().sort(([, a], [, b]) => b.pts - a.pts)[0];
+    if (perTotale[0] !== idP) ok(true, 'e qui il totale avrebbe premiato un altro', `${perTotale[1].n}: ${perTotale[1].pts} punti in ${perTotale[1].g} gare`);
+  }
 }
 // A serata finita torna il tabellone completo, come riassunto.
 ok(has('class="jumbo br-jumbo"') && /class="br-cella br-oro chiusa"/.test(html()), 'e torna il tabellone completo, col campione nella sua casella');

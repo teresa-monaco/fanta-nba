@@ -70,21 +70,26 @@ export function premiSerata(s, T) {
     });
   }
 
-  // Capocannoniere: il totale, come nei record dei playoff veri. Chi arriva in
-  // fondo gioca di piu, ed e giusto che conti.
-  const cap = gioc.slice().sort((a, b) => b.pts - a.pts)[0];
+  // Capocannoniere e re dei rimbalzi: la MEDIA a partita, non il totale. Col
+  // totale vinceva chi arrivava in fondo e giocava piu gare: 400 punti in 10
+  // gare battevano 399 in 9, e non e il migliore realizzatore della serata,
+  // e quello che ha giocato di piu. Fra chi ha giocato almeno una serie
+  // intera, come per l'MVP; a pari media, chi ha giocato di piu.
+  const perMedia = (k) => (candidati.length ? candidati : gioc).slice()
+    .sort((a, b) => media(b, k) - media(a, k) || b.g - a.g)[0];
+  const cap = perMedia('pts');
   if (cap) {
     premi.push({
       chiave: 'punti', titolo: 'Capocannoniere', id: cap.id, nome: cap.n, team: cap.team,
-      riga: `${cap.pts} punti in ${cap.g} gare (${media(cap, 'pts').toFixed(1)} a partita)`,
+      riga: `${media(cap, 'pts').toFixed(1)} punti a partita (${cap.pts} in ${cap.g} gare)`,
     });
   }
 
-  const rimb = gioc.slice().sort((a, b) => b.reb - a.reb)[0];
+  const rimb = perMedia('reb');
   if (rimb) {
     premi.push({
       chiave: 'rimbalzi', titolo: 'Re dei rimbalzi', id: rimb.id, nome: rimb.n, team: rimb.team,
-      riga: `${rimb.reb} rimbalzi in ${rimb.g} gare`,
+      riga: `${media(rimb, 'reb').toFixed(1)} rimbalzi a partita (${rimb.reb} in ${rimb.g} gare)`,
     });
   }
 
