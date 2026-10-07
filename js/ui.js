@@ -5,7 +5,7 @@
 import { db, SLOTS, SLOT_LABEL, TEAM_KEYS, TEAM_NAMES, STRATEGIES, ROSTER_SIZE, START_CREDITS } from './core.js';
 import { buildTeam, simSeriesUpTo, costruisciBracket, nomeTurno,
   simStagione, giriStagione, potenzaSotto, RITMI, refertoTattico } from './engine.js';
-import { narrateGame, explainSeries, teamIdentity, verdettoReferto } from './narrator.js';
+import { narrateGame, teamIdentity, verdettoReferto } from './narrator.js';
 import * as S from './state.js';
 import { now } from './net.js';
 import { audioAcceso } from './suono.js';
@@ -14,6 +14,7 @@ import { ID_BOT, BOT } from './bot.js';
 import { premiSerata } from './premi.js';
 import { quoteSerie, classificaPronostici, puntiDi, reDeiPronostici, marcatoriDi } from './pronostici.js';
 import { ordineSerie, serieCorrente, dopo } from './serie.js';
+import { analisiSerie } from './analisi.js';
 
 export const ui = {
   nickname: localStorage.getItem('nbaf:nick') || '',
@@ -1159,7 +1160,9 @@ function riepilogo(s, x, A, B, f, quote, T) {
     </div>
     ${pronosticiSerie(s, x, A, B, f, quote)}
     <details class="why"><summary>Perché ha vinto ${esc(W.name)}</summary>
-      <ul>${explainSeries(A, B, f).map((w) => `<li>${esc(w)}</li>`).join('')}</ul></details>
+      <ul>${analisiSerie(A, B, f, ['4-0', '4-1', '4-2', '4-3'].reduce((t, k) => t + quote.esiti[k].p, 0))
+        .map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
+      <p class="tiny muted">I numeri fra parentesi sono il peso sul valore d'attacco o di difesa; le squadre stanno fra 50 e 90.</p></details>
     ${refertoCard(A, B, f)}
   </div>`;
 }

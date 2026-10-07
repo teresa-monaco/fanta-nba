@@ -599,6 +599,39 @@ console.log('\nI PRONOSTICI A QUOTE\n');
   vecchia = giroFirebase({ ...vecchia, po: poSenza });
   ok(SR.serieCorrente(vecchia, T).id === '0-1', 'una stanza di prima riprende dalla prima serie non chiusa');
 
+  // IL PERCHE HA VINTO, CON I NUMERI. Si controlla che dica cose vere: il
+  // favorito e la sua probabilita sono quelli delle quote, il fattore piu
+  // pesante citato e davvero il piu pesante, e i giocatori nominati giocano
+  // la serie. Su molte serie, perche le frasi cambiano con i fattori.
+  {
+    const { analisiSerie } = await import('../js/analisi.js');
+    let serie = 0, problemi = [];
+    for (let i = 0; i < 12; i++) {
+      const { s: fs, T: Tf } = partitaFinoA(4, 'fine', `perche${i}`);
+      for (const m of costruisciBracket(fs.po, Tf).flat()) {
+        if (!m.res?.done) continue;
+        serie++;
+        const A = Tf[m.a], B = Tf[m.b];
+        const q = P.quoteSerie(A, B, m.seed);
+        const pA = ['4-0', '4-1', '4-2', '4-3'].reduce((t, k) => t + q.esiti[k].p, 0);
+        const righe = analisiSerie(A, B, m.res, pA);
+        const testo = righe.join(' | ');
+        const W = m.res.winner === A.key ? A : B;
+        const pW = Math.round((W === A ? pA : 1 - pA) * 100);
+        if (/undefined|NaN|null/.test(testo)) problemi.push(`buco: ${testo}`);
+        if (!righe[0].includes(`${Math.max(pW, 100 - pW)} volte su 100`)) problemi.push(`probabilita: ${righe[0]} (attesa ${pW})`);
+        if ((pW < 50) !== /ribaltato il pronostico/.test(righe[0])) problemi.push(`sorpresa detta male: ${righe[0]} (${pW})`);
+        const pesanti = (m.res.matchup.factors || []).filter((x) => !x.infoOnly && !x.varianceOnly && Math.abs(x.delta) >= 0.8);
+        const max = pesanti.reduce((mx, x) => (Math.abs(x.delta) > Math.abs(mx?.delta ?? 0) ? x : mx), null);
+        if (testo.includes('Il fattore più pesante') && !testo.includes(max.label.toLowerCase())) problemi.push(`fattore piu pesante sbagliato: ${testo}`);
+        const nomiSerie = new Set([...A.five, ...B.five].map((p) => p.n));
+        const citati = [...testo.matchAll(/([A-Z][\w.'-]+(?: [A-Z][\w.'-]+)+) \((?:realizzazione|tiro da tre|playmaking|rimbalzi|protezione del ferro|difesa perimetrale|atletismo|palla richiesta) \d+\)/g)].map((x) => x[1]);
+        for (const c of citati) if (!nomiSerie.has(c)) problemi.push(`giocatore estraneo: ${c}`);
+      }
+    }
+    ok(problemi.length === 0, `il "perche ha vinto" dice cose vere su ${serie} serie`, problemi.slice(0, 2).join(' || '));
+  }
+
   // Ogni formato, da cima a fondo seguendo solo "Avanti": tutte le serie
   // giocate una volta, e alla fine un campione. Con e senza finalina.
   for (const n of NUMERI_SQUADRE) for (const conFinalina of [false, true]) {

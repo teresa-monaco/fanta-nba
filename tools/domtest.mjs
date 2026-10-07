@@ -513,6 +513,19 @@ ok(html().includes('unti a partita rispetto a scegliere a caso'), 'il referto di
   const massimo = Math.max(...Object.values(tot));
   ok(html().includes(`${massimo} punti`) && html().includes(esc(n)), 'il miglior marcatore e quello col totale piu alto', `${n} ${massimo}`);
 }
+// IL PERCHE, CON I NUMERI: chi partiva favorito, i fattori con i giocatori
+// che li hanno prodotti e il loro peso, la panchina.
+{
+  const perche = (html().match(/<details class="why">([\s\S]*?)<\/details>/) || [])[1] || '';
+  const voci = (perche.match(/<li>/g) || []).length;
+  ok(/volte su 100/.test(perche), 'il perche dice chi partiva favorito e di quanto');
+  ok(voci >= 3, 'e spiega con piu motivi', `${voci} voci`);
+  const nomi = [...T[costruisciBracket(F.state.po, T)[0][0].a].five, ...T[costruisciBracket(F.state.po, T)[0][0].b].five].map((p) => esc(p.n));
+  ok(nomi.some((n) => perche.includes(n)), 'citando i giocatori che hanno pesato');
+  ok(/\([+−]\d+,\d\)/.test(perche), 'con il peso di ogni fattore');
+  ok(/punti a partita|non la panchina/.test(perche), 'e cosa ha fatto la panchina');
+  ok(!/undefined|NaN/.test(perche), 'senza buchi');
+}
 
 // Avanti: la semifinale 2, da capo con la lavagna.
 await F.session.apply((s) => S.vaiASerie(s, '0-1'));
