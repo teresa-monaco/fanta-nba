@@ -52,7 +52,7 @@ export function datiCard(s, T) {
     riquadri.push({ tit: 'Il colpo dell\'asta', nome: colpo.nome, team: colpo.team,
       riga: `ovr ${D.byId[colpo.id]?.ovr} per ${pz} ${pz === 1 ? 'credito' : 'crediti'}${diChi(colpo)}` });
   }
-  if (re) riquadri.push({ tit: 'Re dei pronostici', nome: chi(re.key) || TEAM_NAMES[re.key], riga: `${re.punti} ${re.punti === 1 ? 'punto' : 'punti'}` });
+  if (re) riquadri.push({ tit: 'Re dei pronostici', nome: chi(re.key) || TEAM_NAMES[re.key], riga: `${re.punti.toFixed(2)} punti, ${re.presi} ${re.presi === 1 ? 'pronostico preso' : 'pronostici presi'}` });
   else if (premio('bidone')) {
     const b = premio('bidone');
     riquadri.push({ tit: 'Il bidone', nome: b.nome, team: b.team, brutto: true,

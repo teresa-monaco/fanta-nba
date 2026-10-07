@@ -631,6 +631,10 @@ export function toPlayoffs(s, tab) {
       daStagione: !!tab.daStagione,
       turni,
       third: null, // nasce solo se il penultimo turno aveva due serie
+      // La serie a schermo (vedi serie.js). Si salva da subito: senza, a
+      // serie chiusa si passava da soli alla prossima, e il riepilogo non lo
+      // vedeva nessuno.
+      corrente: '0-0',
     },
   };
 }
@@ -658,26 +662,37 @@ export function openThird(s, a, b) {
 
 /* ---------- Pronostici ---------- */
 
-// Chi gioca una serie dal secondo turno in poi non sta nello stato, lo deduce
-// il tabellone: per questo i due nomi li passa chi chiama, e qui si controlla
-// che il pronostico abbia senso rispetto a quelli. Una serie gia iniziata non
-// si pronostica piu: dopo gara 1 sarebbe facile.
-export function pronostica(s, chi, id, a, b, vince, gare) {
-  if (s.phase !== 'playoffs' || !s.po) return undefined;
-  if (!attive(s).includes(chi) || !a || !b || chi === a || chi === b) return undefined;
-  if (vince !== a && vince !== b) return undefined;
-  if (!Number.isInteger(gare) || gare < 4 || gare > 7) return undefined;
+// Due mercati per serie: l'esito ("e", per esempio "4-1" dal punto di vista
+// del tabellone, prima squadra a sinistra) e il miglior marcatore ("m", l'id
+// del giocatore). Pronostica chiunque sia al tavolo, anche chi gioca la
+// serie: e tutto gia deciso nel seme, nessuno puo influenzarlo. Una serie
+// gia iniziata non si pronostica piu: dopo gara 1 sarebbe facile.
+export const ESITO_VALIDO = /^(4-[0-3]|[0-3]-4)$/;
+
+export function pronostica(s, chi, id, campo, valore) {
+  if (s.phase !== 'playoffs' || !s.po || !attive(s).includes(chi)) return undefined;
+  if (campo === 'e' ? !ESITO_VALIDO.test(valore) : (campo !== 'm' || !valore)) return undefined;
   let meta;
-  if (id === 'third') {
-    meta = s.po.third;
-    if (meta && (meta.a !== a || meta.b !== b)) return undefined;
-  } else {
+  if (id === 'third') meta = s.po.third;
+  else {
     const [r, i] = String(id).split('-').map(Number);
     meta = s.po.turni?.[r]?.[i];
   }
   if (!meta || meta.gamesPlayed > 0) return undefined;
   const pron = s.po.pron || {};
-  return { ...s, po: { ...s.po, pron: { ...pron, [id]: { ...(pron[id] || {}), [chi]: { v: vince, g: gare } } } } };
+  const mio = { ...(pron[id]?.[chi] || {}) };
+  delete mio.v; delete mio.g; // il formato di prima: vincente e gare
+  mio[campo] = valore;
+  return { ...s, po: { ...s.po, pron: { ...pron, [id]: { ...(pron[id] || {}), [chi]: mio } } } };
+}
+
+/* ---------- La serie in corso ---------- */
+
+// Si gioca una serie alla volta (vedi serie.js). Chi ospita la sposta con
+// "Avanti" quando quella prima e chiusa e il riepilogo e stato letto.
+export function vaiASerie(s, id) {
+  if (s.phase !== 'playoffs' || !s.po || !id) return undefined;
+  return { ...s, po: { ...s.po, corrente: id } };
 }
 
 /* ---------- Albo d'oro ---------- */

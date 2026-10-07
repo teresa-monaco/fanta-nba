@@ -12,7 +12,8 @@ import { audioAcceso } from './suono.js';
 import { avatarSVG } from './avatar.js';
 import { ID_BOT, BOT } from './bot.js';
 import { premiSerata } from './premi.js';
-import { serieDelTabellone, classificaPronostici, puntiDi, reDeiPronostici } from './pronostici.js';
+import { quoteSerie, classificaPronostici, puntiDi, reDeiPronostici, marcatoriDi } from './pronostici.js';
+import { ordineSerie, serieCorrente, dopo } from './serie.js';
 
 export const ui = {
   nickname: localStorage.getItem('nbaf:nick') || '',
@@ -24,7 +25,7 @@ export const ui = {
   allIn: null,        // { team, at } — All in armato, valido finché l'offerta non cambia
   bidTeam: null,      // chi ospita molte squadre: per quale sta rilanciando adesso
   scheda: null,       // id del giocatore di cui e aperta la scheda: cosa mia, non condivisa
-  serieAperte: new Set(),  // serie finite che ho riaperto io: resta aperto anche ridisegnando
+  garaVista: null,    // { serie, g, n }: la gara toccata su un pallino, finche non ne arriva una nuova
 };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -897,6 +898,12 @@ export function stagioneFromState(s) {
   return simStagione(T, keys, s.stagione.seedBase, s.stagione.giri);
 }
 
+// I PLAYOFF, UNA SERIE ALLA VOLTA. Le serie di un turno erano aperte tutte
+// insieme, ognuna con il suo tabellone e il suo tasto, e chi non ospitava
+// doveva scorrere fra l'una e l'altra per capire dove si era. Adesso a
+// schermo c'e solo la serie in corso, e in cima resta quello che cambia: il
+// tabellone della serie, la gara appena giocata. Chi non ospita puo non
+// toccare niente e vedere scorrere la serie da li.
 function viewPlayoffs({ state: s, session }) {
   const isHost = s.host === session.uid;
   const T = teamsFromState(s);
@@ -904,91 +911,287 @@ function viewPlayoffs({ state: s, session }) {
   const turni = costruisciBracket(po, T);
   const tot = turni.length;
   const conTeste = po.teste > 0;
-
+  const ordine = ordineSerie(s, T);
+  const x = serieCorrente(s, T, ordine);
   const finale = turni[tot - 1]?.[0];
-  const finita = !!finale?.res?.done;
+  const finita = !!finale?.res?.done && !!x?.finale;
   let out = '';
 
-  // IL CAMPIONE STA IN CIMA. Prima il banner veniva inserito sopra la card
-  // della finale, e dopo c'erano ancora finalina e albo: il momento piu alto
-  // della serata finiva a meta pagina, in mezzo allo scroll.
+  // A serata finita il campione sta in cima: e il momento piu alto, e la card
+  // da mandare in chat si prende da li.
   if (finita) {
     out += bannerCampione(finale, T);
-    // La serata in un'immagine, per la chat: sta subito sotto il campione,
-    // che e il momento in cui viene voglia di mandarla.
     out += '<button class="primary wide condividi" data-act="condividi-card">Condividi la serata</button>';
-    // I premi subito sotto: sono il resto del finale della serata, e il
-    // posto dove l'asta torna a farsi sentire.
     out += premiCard(premiSerata(s, T));
   }
 
-  // IL TABELLONE. I playoff erano una lista verticale di card, una sotto
-  // l'altra, e il torneo non si vedeva mai d'un colpo: chi sta da quale
-  // parte, chi incontra chi dopo. Nei playoff il tabellone E' l'immagine.
-  out += tabellonePlayoff(turni, T, conTeste);
-
-  // Il perche degli accoppiamenti: utile la prima volta, poi ingombra.
-  out += `<details class="po-info"><summary>${po.n} squadre · ${turni.reduce((a, r) => a + r.length, 0)} serie
-    ${conTeste ? `· salta${po.teste > 1 ? 'no' : ''} il preliminare ${po.ordine.slice(0, po.teste).map((k) => esc(TEAM_NAMES[k])).join(', ')}` : ''}</summary>
-    ${po.reasons.map((r) => `<p class="small muted" style="margin-top:6px">${esc(r)}</p>`).join('')}
-  </details>`;
-
-  // La classifica dei pronostici sta in alto, sotto il tabellone: e quello
-  // che guarda chi e gia uscito, e non deve scorrere tutte le serie per
-  // trovarla.
+  out += strisciaTorneo(ordine, T, x?.id, finale);
+  if (x?.a && x?.b && x.f) out += serieInCorso(s, session, x, T, isHost, ordine);
   out += pronosticiCard(s, T, session);
-  const dettaglio = Object.fromEntries(serieDelTabellone(s, T).map((x) => [x.id, x]));
 
-  for (let r = 0; r < tot; r++) {
-    const passo = S.PASSO_GARA;
-    const nome = nomeTurno(r, tot, conTeste);
-    const round = turni[r];
-
-    // Un turno si apre solo quando il precedente e chiuso: senza, mostrerebbe
-    // caselle vuote e il tasto "Vai" su una serie senza partecipanti.
-    const precedenteChiuso = r === 0 || turni[r - 1].every((m) => m.res?.done);
-    if (!precedenteChiuso) break;
-
-    round.forEach((m, i) => {
-      const titolo = round.length > 1 ? `${nome} ${i + 1}` : nome;
-      const id = `${r}-${i}`;
-      // Le serie finite si chiudono a una riga; aperta resta solo quella in
-      // corso, e quella che hai riaperto tu.
-      if (m.res?.done && !ui.serieAperte.has(id)) {
-        out += serieRiga(titolo, T[m.a], T[m.b], m.res, id);
-      } else {
-        out += serieCard(titolo, T[m.a], T[m.b], m.res, { ...m, id }, passo, isHost, `avanza:${r}:${i}`,
-          pronosticoBox(s, session, dettaglio[id], T));
-      }
-    });
-  }
-  const campione = finita ? finale.res : null;
-
-  // Finalina: solo se il penultimo turno aveva due serie, cioe due eliminate.
-  if (campione) {
+  if (finita) {
     const semi = turni[tot - 2];
-    if (semi && semi.length === 2) {
-      if (po.third) {
-        const t3 = simSeriesUpTo(T[po.third.a], T[po.third.b], po.third.seed, po.third.gamesPlayed);
-        out += t3.done && !ui.serieAperte.has('third')
-          ? serieRiga('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], t3, 'third')
-          : serieCard('Finale 3° / 4° posto', T[po.third.a], T[po.third.b], t3, { ...po.third, id: 'third' }, S.PASSO_GARA, isHost, 'avanza-third',
-            pronosticoBox(s, session, dettaglio.third, T));
-      } else if (isHost) {
-        out += `<button class="wide ghost" data-act="open-third">Giocare anche la finale 3°/4° posto?</button>`;
-      }
-    } else if (semi && semi.length === 1) {
+    if (semi && semi.length === 1 && !po.third) {
       const p = semi[0];
       const terzo = p.res.winner === p.a ? p.b : p.a;
       out += `<div class="card tight center"><p class="small">
         <span class="muted">Terzo posto:</span> <b>${esc(TEAM_NAMES[terzo])}</b>,
         <span class="muted">eliminato in semifinale.</span></p></div>`;
     }
+    // Il tabellone completo torna a fine serata, come riassunto del torneo.
+    out += tabellonePlayoff(turni, T, conTeste);
     out += alboCard(s);
     out += rivalitaCard(s, session);
-    // Il tasto per ricominciare lo mette resetZone(), in fondo a ogni schermata.
   }
+
+  // Il perche degli accoppiamenti: utile la prima volta, poi ingombra.
+  out += `<details class="po-info"><summary>${po.n} squadre · ${turni.reduce((a, r) => a + r.length, 0)} serie
+    ${conTeste ? `· salta${po.teste > 1 ? 'no' : ''} il preliminare ${po.ordine.slice(0, po.teste).map((k) => esc(TEAM_NAMES[k])).join(', ')}` : ''}</summary>
+    ${po.reasons.map((r) => `<p class="small muted" style="margin-top:6px">${esc(r)}</p>`).join('')}
+  </details>`;
   return out;
+}
+
+// LA STRISCIA DEL TORNEO. Il tabellone completo stava in cima e si mangiava
+// mezzo schermo; durante le gare serve solo sapere dove si e. Una riga
+// sottile, la serie in corso accesa, e con tante squadre scorre di lato.
+function strisciaTorneo(ordine, T, ora, finale) {
+  const chip = ordine.map((x) => {
+    const f = x.f;
+    const conto = !!(f && x.giocate);
+    const riga = (k, w) => (k && T[k]
+      ? `<span class="ts-sq t-${k} ${f?.done ? (f.winner === k ? 'vince' : 'perde') : ''}"><span class="dot"></span><span class="nm">${esc(T[k].name)}</span><b>${conto ? w : ''}</b></span>`
+      : '<span class="ts-sq vuota"><span class="nm">da decidere</span></span>');
+    return `<div class="ts-chip ${x.id === ora ? 'ora' : ''} ${f?.done ? 'chiusa' : ''}">
+      <span class="ts-tit">${esc(x.titolo)}</span>${riga(x.a, f?.wins.a)}${riga(x.b, f?.wins.b)}</div>`;
+  }).join('');
+  const W = finale?.res?.done ? T[finale.res.winner] : null;
+  const camp = `<div class="ts-chip ts-oro ${W ? 'chiusa' : ''}"><span class="ts-tit">Campione</span>
+    ${W ? `<span class="ts-sq t-${W.key} vince"><span class="dot"></span><span class="nm">${esc(W.name)}</span></span>` : '<span class="ts-sq vuota"><span class="nm">?</span></span>'}</div>`;
+  return `<div class="torneo">${chip}${camp}</div>`;
+}
+
+// La serie in corso: tabellone, poi quello che serve adesso. Prima di gara 1
+// i quintetti e la lavagna dei pronostici; dopo, la gara appena giocata, che
+// si sovrascrive a ogni gara nuova — interessa quella, non le precedenti.
+function serieInCorso(s, session, x, T, isHost, ordine) {
+  const A = T[x.a], B = T[x.b], f = x.f;
+  const n = f.games.length;
+  const quote = quoteSerie(A, B, x.seed);
+  // La gara a schermo: quella toccata su un pallino, ma solo finche non ne
+  // arriva una nuova — allora si torna da soli all'ultima.
+  const v = ui.garaVista;
+  const idx = v && v.serie === x.id && v.n === n && v.g >= 0 && v.g < n ? v.g : n - 1;
+
+  let out = `<div class="card serie attiva" id="serie-${esc(x.id)}" data-serie-attiva="${esc(x.id)}">`;
+  out += serieBoard(x.titolo, A, B, f, idx);
+  if (n === 0) {
+    out += confronto(A, B);
+    out += lavagna(s, session, x, A, B, quote);
+  } else {
+    out += pannelloGara(A, B, f.games[idx], idx, n);
+  }
+  if (f.done) out += riepilogo(s, x, A, B, f, quote, T);
+  out += azioniSerie(s, session, x, T, isHost, ordine);
+  out += '</div>';
+  if (n > 0 && !f.done) out += pronosticiSerie(s, x, A, B, f, quote);
+  if (n > 0) out += `<details class="confronto-wrap"><summary>I quintetti a confronto</summary>${confronto(A, B)}</details>`;
+  return out;
+}
+
+// IL TABELLONE DELLA SERIE. In cima il punteggio grande della gara a
+// schermo: e li che il numero sale quando si scopre una gara nuova. I sette
+// pallini sono le gare: del colore di chi l'ha vinta, e toccandone uno il
+// riquadro sotto mostra quella gara.
+function serieBoard(titolo, A, B, f, idx) {
+  const n = f.games.length;
+  const g = f.games[idx] || null;
+  const g7 = (f.wins.a === 3 && f.wins.b === 3) || n === 7;
+  const dots = Array.from({ length: 7 }, (_, i) => {
+    const gi = f.games[i];
+    if (!gi) return '<i class="vuoto"></i>';
+    const k = gi.scoreA > gi.scoreB ? A.key : B.key;
+    return `<button class="pal t-${k} ${i === idx ? 'sel' : ''}" data-act="vedi-gara" data-g="${i}" aria-label="Gara ${i + 1}"></button>`;
+  }).join('');
+  const lato = (X, pt, vinto) => `<div class="sq t-${X.key}">
+      <div class="pt ${vinto ? 'vince' : ''}" ${g ? `data-pt="${pt}"` : ''}>${g ? pt : '—'}</div>
+      <div class="nm">${esc(X.name)}</div></div>`;
+  return `<div class="jumbo serie-jumbo ${g7 ? 'gara7' : ''}">
+    <div class="tabellina"><span>${esc(titolo)}</span>
+      <span>${f.done ? 'chiusa' : (g7 ? 'GARA 7' : (n ? `gara ${n} di 7` : 'si parte'))}</span></div>
+    <div class="pallini" aria-label="${f.wins.a} a ${f.wins.b}">${dots}</div>
+    <div class="punteggio" ${g ? `data-gara="${idx + 1}"` : ''}>
+      ${lato(A, g?.scoreA, g && g.scoreA > g.scoreB)}
+      <div class="serie-conto">${f.wins.a}<span>-</span>${f.wins.b}</div>
+      ${lato(B, g?.scoreB, g && g.scoreB > g.scoreA)}
+    </div>
+  </div>`;
+}
+
+// I due quintetti, ruolo per ruolo: e da qui che si sceglie il pronostico.
+function confronto(A, B) {
+  const D = db();
+  const per = (X) => Object.fromEntries(X.five.map((p) => [p.slot, p]));
+  const a = per(A), b = per(B);
+  const ovr = (p) => (p ? D.byId[p.id]?.ovr ?? '' : '');
+  const media = (X) => (X.five.reduce((t, p) => t + (D.byId[p.id]?.ovr || 0), 0) / X.five.length).toFixed(1);
+  const righe = SLOTS.map((sl) => `<div class="cf-riga">
+      <span class="cf-n">${a[sl] ? esc(a[sl].n) : ''}</span><b class="cf-o">${ovr(a[sl])}</b>
+      <span class="cf-pos">${sl}</span>
+      <b class="cf-o">${ovr(b[sl])}</b><span class="cf-n destra">${b[sl] ? esc(b[sl].n) : ''}</span>
+    </div>`).join('');
+  return `<div class="confronto">
+    <div class="cf-testa"><span class="t-${A.key}"><span class="dot"></span>${esc(A.name)} <i>${media(A)}</i></span>
+      <span class="t-${B.key} destra"><i>${media(B)}</i> ${esc(B.name)}<span class="dot"></span></span></div>
+    ${righe}
+  </div>`;
+}
+
+// "4-1" e scritto dal punto di vista del tabellone (prima squadra a
+// sinistra). Per le persone si dice chi vince: "Lakers 4-1".
+function esitoDetto(e, A, B) {
+  const [wa, wb] = e.split('-').map(Number);
+  return wa > wb ? `${A.name} ${wa}-${wb}` : `${B.name} ${wb}-${wa}`;
+}
+
+const fq = (q) => q.toFixed(2);
+
+// LA LAVAGNA. Prima l'esito della serie, poi il miglior marcatore, ognuno
+// con la sua quota. Un tocco per mercato, e si cambia idea finche non parte
+// gara 1. Chi non e seduto al tavolo (la modalita locale) vede le quote ma
+// non pronostica: su un telefono solo non avrebbe senso.
+function lavagna(s, session, x, A, B, quote) {
+  const mia = s.seats?.[session.uid];
+  const puo = !!(mia && S.attive(s).includes(mia));
+  const io = puo ? (s.po.pron?.[x.id]?.[mia] || {}) : {};
+  const tasto = (campo, valore, etichetta, q, sel, cls = '') => (puo
+    ? `<button class="qb ${cls} ${sel ? 'sel' : ''}" data-act="pronostico" data-serie="${esc(x.id)}" data-campo="${campo}" data-valore="${esc(valore)}"><span class="qe">${etichetta}</span><b>${fq(q)}</b></button>`
+    : `<span class="qb fermo ${cls}"><span class="qe">${etichetta}</span><b>${fq(q)}</b></span>`);
+  const esiti = (X, lista) => `<div class="lv-riga t-${X.key}">
+      <span class="nm"><span class="dot"></span>${esc(X.name)}</span>
+      <div class="lv-q">${lista.map((e) => {
+        const [wa, wb] = e.split('-').map(Number);
+        return tasto('e', e, `${Math.max(wa, wb)}-${Math.min(wa, wb)}`, quote.esiti[e].q, io.e === e);
+      }).join('')}</div></div>`;
+  const marcatori = quote.marcatori.map((m) => tasto('m', m.id,
+    `<span class="dot t-${m.team}"></span>${esc(m.n)}`, m.q, io.m === m.id, 'mc')).join('');
+
+  const scelte = s.po.pron?.[x.id] || {};
+  const altri = Object.keys(scelte).filter((k) => k !== mia && (scelte[k]?.e || scelte[k]?.m));
+  const chi = (k) => esc(S.nameOfSeat(s, k) || TEAM_NAMES[k]);
+  return `<div class="lavagna">
+    <div class="lv-testa"><span>${puo ? 'Il tuo pronostico' : 'Le quote della serie'}</span>
+      <span class="tiny muted">${puo ? 'si chiude a gara 1' : ''}</span></div>
+    <div class="lv-tit">Come finisce</div>
+    ${esiti(A, ['4-0', '4-1', '4-2', '4-3'])}
+    ${esiti(B, ['0-4', '1-4', '2-4', '3-4'])}
+    <div class="lv-tit">Miglior marcatore della serie</div>
+    <div class="lv-marc">${marcatori}</div>
+    ${puo ? '<p class="tiny muted mt">Se indovini prendi la quota come punti.</p>' : ''}
+    ${altri.length ? `<p class="tiny muted mt">Hanno pronosticato: ${altri.map(chi).join(', ')} — le scelte si scoprono a gara 1.</p>` : ''}
+  </div>`;
+}
+
+// La gara a schermo: chi ha segnato di piu, il racconto, il box score. Se e
+// una gara vecchia (toccata su un pallino) lo dice, e si torna all'ultima.
+function pannelloGara(A, B, g, idx, n) {
+  const vecchia = idx < n - 1;
+  const top = (box) => box.slice().sort((p, q) => q.pts - p.pts).slice(0, 3)
+    .map((l) => `${esc(l.n)} <b>${l.pts}</b>`).join(' · ');
+  const box = [...g.boxA.map((l) => ({ ...l, t: A })), ...g.boxB.map((l) => ({ ...l, t: B }))]
+    .sort((p, q) => q.pts - p.pts);
+  return `<div class="gara-pan ${vecchia ? 'vecchia' : ''}">
+    ${vecchia ? `<div class="vista-vecchia"><span>Stai guardando gara ${idx + 1}</span>
+      <button class="sm ghost" data-act="vedi-gara" data-g="">Torna a gara ${n}</button></div>` : ''}
+    <div class="gp-tit">Gara ${idx + 1}${g.ot ? ' · supplementari' : ''}</div>
+    <div class="migliori">
+      <div class="t-${A.key}"><span class="dot"></span>${top(g.boxA)}</div>
+      <div class="t-${B.key}"><span class="dot"></span>${top(g.boxB)}</div>
+    </div>
+    <p class="story">${esc(narrateGame(A, B, g))}</p>
+    <details class="box"><summary>Box score</summary>
+      <table>${box.map((l) => `<tr><td class="n"><span class="dot t-${l.t.key}"></span>${esc(l.n)}</td>
+        <td class="num">${l.pts}</td><td class="num">${l.reb}</td><td class="num">${l.ast}</td></tr>`).join('')}</table>
+      <div class="tiny" style="margin-top:4px">punti · rimbalzi · assist</div>
+    </details>
+  </div>`;
+}
+
+// I pronostici della serie, scoperti da gara 1 in poi. A serie chiusa ognuno
+// ha il suo esito e i punti presi.
+function pronosticiSerie(s, x, A, B, f, quote) {
+  const scelte = s.po.pron?.[x.id] || {};
+  const chi = Object.keys(scelte).filter((k) => scelte[k]?.e || scelte[k]?.m);
+  if (!chi.length) return '';
+  const nome = (k) => esc(S.nameOfSeat(s, k) || TEAM_NAMES[k]);
+  const righe = chi.map((k) => {
+    const p = scelte[k];
+    const pt = f.done ? puntiDi(p, f, quote) : null;
+    const voce = (testo, q, preso) => (testo
+      ? `<span class="pv ${pt ? (preso ? 'preso' : 'mancato') : ''}">${esc(testo)} <i>${fq(q)}</i>${pt && preso ? ` <b>+${fq(preso)}</b>` : ''}</span>`
+      : '<span class="pv vuoto">—</span>');
+    const m = p.m ? quote.marcatori.find((y) => y.id === p.m) : null;
+    return `<div class="pv-riga"><span class="pv-chi">${nome(k)}</span>
+      ${voce(p.e ? esitoDetto(p.e, A, B) : '', p.e ? quote.esiti[p.e].q : 0, pt?.e)}
+      ${voce(m ? m.n : '', m ? m.q : 0, pt?.m)}</div>`;
+  }).join('');
+  return `<div class="pron-serie"><div class="lv-tit">I pronostici di questa serie</div>${righe}</div>`;
+}
+
+// IL RIEPILOGO, a serie chiusa: chi passa, MVP, miglior marcatore, chi ha
+// preso i pronostici. Resta a schermo finche chi ospita non preme Avanti:
+// tutti vedono i punti nello stesso momento.
+function riepilogo(s, x, A, B, f, quote, T) {
+  const W = f.winner === A.key ? A : B;
+  const wv = Math.max(f.wins.a, f.wins.b), wp = Math.min(f.wins.a, f.wins.b);
+  const { tot, top } = marcatoriDi(f);
+  const marc = top.map((id) => quote.marcatori.find((m) => m.id === id)).filter(Boolean);
+  const e = `${f.wins.a}-${f.wins.b}`;
+  return `<div class="riepilogo t-${W.key}">
+    <div class="rp-tit">${x.finale ? 'Campione' : (x.id === 'third' ? 'Terzo posto' : 'Passa il turno')}</div>
+    <div class="rp-n"><span class="dot"></span>${esc(W.name)} <span class="rp-c">${wv}-${wp}</span></div>
+    <div class="rp-voci">
+      <div><span>MVP della serie</span><b>${esc(f.mvp.n)}</b>
+        <i>${f.mvp.ppg.toFixed(1)} punti · ${f.mvp.rpg.toFixed(1)} rimbalzi · ${f.mvp.apg.toFixed(1)} assist</i></div>
+      <div><span>Miglior marcatore</span><b>${marc.map((m) => esc(m.n)).join(' e ')}</b>
+        <i>${tot[top[0]]} punti${marc[0] ? ` · era a ${fq(marc[0].q)}` : ''}</i></div>
+      <div><span>Esito</span><b>${esc(esitoDetto(e, A, B))}</b><i>era a ${fq(quote.esiti[e].q)}</i></div>
+    </div>
+    ${pronosticiSerie(s, x, A, B, f, quote)}
+    <details class="why"><summary>Perché ha vinto ${esc(W.name)}</summary>
+      <ul>${explainSeries(A, B, f).map((w) => `<li>${esc(w)}</li>`).join('')}</ul></details>
+    ${refertoCard(A, B, f)}
+  </div>`;
+}
+
+// Chi non ha ancora pronosticato: solo le persone, i bot lo fanno da soli.
+function mancanoPronostici(s, session, x) {
+  if (session.mode === 'local') return [];
+  const scelte = s.po.pron?.[x.id] || {};
+  return S.attive(s).filter((k) => !s.bots?.[k] && S.seatTaken(s, k) && !scelte[k]?.e && !scelte[k]?.m)
+    .map((k) => S.nameOfSeat(s, k) || TEAM_NAMES[k]);
+}
+
+// I tasti di chi ospita, sotto la gara. Gli altri non devono toccare niente.
+function azioniSerie(s, session, x, T, isHost, ordine) {
+  const f = x.f, n = f.games.length;
+  if (f.done) {
+    const strade = dopo(s, T, x, ordine);
+    if (!strade.length) return '';
+    if (!isHost) return '<p class="small muted center mt">Si passa alla prossima quando chi ospita preme Avanti.</p>';
+    return strade.map((st) => `<button class="${st.id === 'third' ? 'ghost' : 'primary'} wide mt" data-act="avanti-serie"
+        data-next="${esc(st.id)}" ${st.a ? `data-a="${st.a}" data-b="${st.b}"` : ''}>${st.id === 'third'
+        ? 'Prima la finale 3° / 4° posto' : `Avanti: ${esc(st.titolo)}`}</button>`).join('');
+  }
+  if (!isHost) return '<p class="small muted center mt">In attesa di chi ospita.</p>';
+  // Prima di gara 1 il tasto dice chi non ha ancora pronosticato. Non blocca:
+  // un telefono in tasca non deve fermare la serata.
+  const mancano = n === 0 ? mancanoPronostici(s, session, x) : [];
+  const nota = mancano.length ? ` · ${mancano.length === 1 ? 'ne manca 1' : `ne mancano ${mancano.length}`}` : '';
+  const dati = `data-serie="${esc(x.id)}" data-mancano="${esc(mancano.join(', '))}"`;
+  return `<button class="primary wide mt" data-act="simula-gara" ${dati}>Simula gara ${n + 1}${nota}</button>
+    ${mancano.length ? `<p class="tiny muted mancano">Non hanno ancora pronosticato: ${mancano.map(esc).join(', ')}</p>` : ''}
+    <button class="sm ghost wide mt" data-act="simula-serie" ${dati}>Simula tutta la serie</button>`;
 }
 
 // IL TABELLONE DEI PLAYOFF. Una colonna per turno, e i vincitori che
@@ -999,25 +1202,23 @@ function viewPlayoffs({ state: s, session }) {
 // e un binario perfetto e delle linee disegnate a regola direbbero cose
 // false. Le colonne distribuite in altezza si leggono lo stesso.
 //
-// Le serie giocabili pulsano; toccandone una ci si scorre sopra.
+// Da quando si gioca una serie alla volta sta in fondo, a serata finita: e il
+// riassunto del torneo. Durante le gare in cima c'e la striscia sottile.
 function tabellonePlayoff(turni, T, conTeste) {
   const tot = turni.length;
   const colonne = turni.map((round, r) => {
-    const celle = round.map((m, i) => {
-      const id = `${r}-${i}`;
+    const celle = round.map((m) => {
       const A = m.a ? T[m.a] : null;
       const B = m.b ? T[m.b] : null;
       const f = m.res;
-      const viva = !!(A && B && f && !f.done);
       const esito = f?.done ? (f.winner === m.a ? 'a' : 'b') : null;
       const riga = (X, w, lato) => (X
         ? `<div class="br-sq t-${X.key} ${esito === lato ? 'vince' : (esito ? 'perde' : '')}">
              <span class="dot"></span><span class="nm">${esc(X.name)}</span><b>${f ? w : ''}</b></div>`
         : '<div class="br-sq vuota"><span class="nm">da decidere</span></div>');
-      return `<button class="br-cella ${viva ? 'viva' : ''} ${f?.done ? 'chiusa' : ''}"
-          ${A && B ? `data-act="vai-serie" data-serie="${id}"` : 'disabled'}>
+      return `<div class="br-cella ${f?.done ? 'chiusa' : ''}">
         ${riga(A, f?.wins.a, 'a')}${riga(B, f?.wins.b, 'b')}
-      </button>`;
+      </div>`;
     }).join('');
     return `<div class="br-col"><div class="br-tit">${esc(nomeTurno(r, tot, conTeste))}</div>
       <div class="br-celle">${celle}</div></div>`;
@@ -1158,168 +1359,27 @@ function refertoCard(A, B, f) {
     ${blocchi}</details>`;
 }
 
-// Una sola carta per tutte le serie: cambia solo di quante gare si avanza
-// a ogni tocco. Semifinali e finalina due, Finals una.
-function serieCard(titolo, A, B, f, meta, passo, isHost, act, pron = '') {
-  if (!A || !B || !f) {
-    return `<div class="card"><div class="series-hdr"><div>
-      <div class="tiny muted" style="text-transform:uppercase;letter-spacing:.08em;font-weight:800">${esc(titolo)}</div>
-      <div class="vs muted">in attesa del turno precedente</div></div></div></div>`;
-  }
-  const n = meta.gamesPlayed;
-  // Il ramo a due gare non serve piu da quando si scopre una gara alla volta,
-  // ma l'etichetta resta costruita sul passo: se un domani si torna indietro
-  // non bisogna ricordarsi anche di questa riga.
-  const etichetta = passo === 1
-    ? `Vai — Gara ${n + 1}`
-    : (n === 0 ? 'Vai — le prime due gare' : `Vai — Gare ${n + 1} e ${n + 2}`);
-
-  // Resta aperta solo l'ultima gara scoperta, quella appena giocata. Le
-  // precedenti si richiudono a una riga, o la pagina cresce sotto le dita.
-  const daAprire = f.done ? 1 : passo;
-  const games = f.games.map((g, i) =>
-    gameBlock(A, B, g, i >= f.games.length - daAprire,
-      i === f.games.length - 1 ? (f.done ? 'chiusa' : 'viva') : null)).join('')
-    || '<p class="small muted center" style="padding:12px 0">Non è ancora iniziata.</p>';
-
-  const coda = f.done
-    ? `<div class="mvp"><div class="t">MVP della serie</div>
-         <div class="n">${esc(f.mvp.n)}</div>
-         <div class="small muted">${f.mvp.ppg.toFixed(1)} punti · ${f.mvp.rpg.toFixed(1)} rimbalzi · ${f.mvp.apg.toFixed(1)} assist di media</div></div>
-       <div class="why"><h3 style="margin:14px 0 8px">Perché ha vinto ${esc(f.winner === A.key ? A.name : B.name)}</h3>
-         <ul>${explainSeries(A, B, f).map((w) => `<li>${esc(w)}</li>`).join('')}</ul></div>
-       ${refertoCard(A, B, f)}`
-    : (isHost
-      ? `<button class="primary wide mt" data-act="${act}">${etichetta}</button>`
-      : '<p class="small muted center mt">In attesa di chi ospita.</p>');
-
-  // IL TABELLONE DELLA SERIE. Ogni serie ha il suo, cosi con due semifinali
-  // aperte insieme si vedono due tabelloni uno sotto l'altro e ognuno ha il
-  // suo tasto: si gioca una gara per semifinale, senza doverne chiudere una
-  // per passare all'altra.
-  //
-  // In cima c'e l'ultima gara giocata, col punteggio grande. E' li che il
-  // numero sale quando si scopre una gara nuova — gli altri punteggi restano
-  // fermi, o sarebbe un tabellone impazzito.
-  const ultimaG = f.games[f.games.length - 1];
-  // GARA 7. Sul tre pari, o quando la settima e stata giocata, il tabellone
-  // diventa rosso: e la partita che decide tutto, e deve sembrarlo.
-  const g7 = (f.wins.a === 3 && f.wins.b === 3) || f.games.length === 7;
-  const board = `<div class="jumbo serie-jumbo ${g7 ? 'gara7' : ''}">
-    <div class="tabellina"><span>${esc(titolo)}</span>
-      <span>${f.done ? 'chiusa' : (g7 ? 'GARA 7' : `gara ${n} di 7`)}</span></div>
-    ${pallini(f, A, B)}
-    <div class="punteggio" ${ultimaG ? `data-gara="${f.games.length}"` : ''}>
-      <div class="sq t-${A.key}">
-        <div class="pt ${ultimaG && ultimaG.scoreA > ultimaG.scoreB ? 'vince' : ''}"
-             ${ultimaG ? `data-pt="${ultimaG.scoreA}"` : ''}>${ultimaG ? ultimaG.scoreA : '—'}</div>
-        <div class="nm">${esc(A.name)}</div>
-      </div>
-      <div class="serie-conto">${f.wins.a}<span>-</span>${f.wins.b}</div>
-      <div class="sq t-${B.key}">
-        <div class="pt ${ultimaG && ultimaG.scoreB > ultimaG.scoreA ? 'vince' : ''}"
-             ${ultimaG ? `data-pt="${ultimaG.scoreB}"` : ''}>${ultimaG ? ultimaG.scoreB : '—'}</div>
-        <div class="nm">${esc(B.name)}</div>
-      </div>
-    </div>
-  </div>`;
-
-  return `<div class="card serie" id="serie-${esc(meta.id || '')}">
-    ${board}
-    <p class="tiny muted mb">${esc(teamIdentity(A))} &nbsp;·&nbsp; ${esc(teamIdentity(B))}</p>
-    ${pron}
-    ${games}
-    ${coda}
-    ${f.done && meta.id ? `<button class="sm ghost wide mt" data-act="apri-serie" data-serie="${esc(meta.id)}">Richiudi</button>` : ''}
-  </div>`;
-}
-
-// I sette pallini della serie: uno per gara, del colore di chi l'ha vinta,
-// vuoti quelli ancora da giocare. L'andamento si legge senza numeri — una
-// rimonta da 1-3 si vede, un 4-0 anche.
-function pallini(f, A, B) {
-  const dots = Array.from({ length: 7 }, (_, i) => {
-    const g = f.games[i];
-    if (!g) return '<i class="vuoto"></i>';
-    const k = g.scoreA > g.scoreB ? A.key : B.key;
-    return `<i class="t-${k}"></i>`;
-  }).join('');
-  return `<div class="pallini" aria-label="${f.wins.a} a ${f.wins.b}">${dots}</div>`;
-}
-
-// Una serie finita, chiusa a una riga. Le serie chiuse restavano aperte per
-// intero — tabellone, sette gare, MVP, spiegazione, referto — e in quattro
-// con la finalina la pagina era lunghissima. Si riapre al tocco.
-function serieRiga(titolo, A, B, f, id) {
-  const vince = f.winner === A.key ? A : B;
-  const perde = vince === A ? B : A;
-  const wv = Math.max(f.wins.a, f.wins.b), wp = Math.min(f.wins.a, f.wins.b);
-  return `<button class="serie-riga t-${vince.key}" id="serie-${esc(id)}" data-act="apri-serie" data-serie="${esc(id)}">
-    <span class="tit">${esc(titolo)}</span>
-    <span class="esito"><b>${esc(vince.name)}</b> ${wv}-${wp} <span class="muted">${esc(perde.name)}</span></span>
-    ${f.mvp ? `<span class="mvp-mini">MVP ${esc(f.mvp.n)}</span>` : ''}
-    <span class="apri">›</span>
-  </button>`;
-}
-
 /* ---------- Pronostici ---------- */
 
-// Il riquadro del pronostico dentro la serie. Prima di gara 1, a chi non la
-// gioca: la squadra e il numero di gare, un tocco solo. Degli altri si vede
-// CHI ha pronosticato ma non COSA, o l'ultimo a scegliere copierebbe. Da gara
-// 1 in poi le scelte sono di tutti, e a serie chiusa ognuna ha il suo esito.
-function pronosticoBox(s, session, x, T) {
-  if (!x || !x.a || !x.b || !x.f) return '';
-  const scelte = s.po?.pron?.[x.id] || {};
-  const chiAlTavolo = (k) => esc(S.nameOfSeat(s, k) || TEAM_NAMES[k]);
-  const mia = s.seats?.[session.uid];
-  const puo = mia && S.attive(s).includes(mia) && mia !== x.a && mia !== x.b;
-  const chi = Object.keys(scelte);
-
-  if (x.giocate === 0) {
-    const io = puo ? scelte[mia] : null;
-    const riga = (k) => `<div class="pron-riga t-${k}">
-        <span class="nm"><span class="dot"></span>${esc(T[k].name)}</span>
-        ${[4, 5, 6, 7].map((g) => `<button class="sm ${io?.v === k && io?.g === g ? 'primary' : 'ghost'}"
-          data-act="pronostico" data-serie="${esc(x.id)}" data-a="${x.a}" data-b="${x.b}" data-v="${k}" data-g="${g}">in ${g}</button>`).join('')}
-      </div>`;
-    const altri = chi.filter((k) => k !== mia);
-    if (!puo && !chi.length) return '';
-    return `<div class="pron">
-      ${puo ? `<div class="pron-tit">Il tuo pronostico${io ? ` <span class="tag ok">fatto</span>` : ''}</div>${riga(x.a)}${riga(x.b)}` : ''}
-      ${altri.length ? `<p class="tiny muted ${puo ? 'mt' : ''}">Hanno pronosticato: ${altri.map(chiAlTavolo).join(', ')}
-        <span>— le scelte si scoprono a gara 1.</span></p>` : ''}
-    </div>`;
-  }
-
-  if (!chi.length) return '';
-  const righe = chi.map((k) => {
-    const p = scelte[k];
-    const pt = x.f.done ? puntiDi(p, x.f) : null;
-    return `<span class="pron-voce ${pt === null ? '' : (pt ? 'preso' : 'mancato')}">
-      <b>${chiAlTavolo(k)}</b> ${esc(T[p.v]?.name || '')} in ${p.g}${pt ? ` <i>+${pt}</i>` : ''}</span>`;
-  }).join('');
-  return `<div class="pron chiuso"><div class="pron-tit">Pronostici</div><div class="pron-voci">${righe}</div></div>`;
-}
-
-// La classifica dei pronostici. Compare dal primo pronostico fatto; il primo
-// in classifica a serate finita e il "re dei pronostici".
+// La classifica dei pronostici della serata. Compare dal primo pronostico; a
+// serata finita il primo e il re dei pronostici, se e uno solo.
 function pronosticiCard(s, T, session) {
   const cl = classificaPronostici(s, T);
-  if (!cl.length) return '';
+  // Prima che si chiuda una serie sarebbe una fila di zeri.
+  if (!cl.some((r) => r.chiusi > 0)) return '';
   const mia = s.seats?.[session.uid];
-  const finita = serieDelTabellone(s, T).every((x) => !x.a || !x.b || x.f?.done);
+  const finita = ordineSerie(s, T).every((x) => !x.a || !x.b || x.f?.done);
   const re = finita ? reDeiPronostici(cl) : null;
   const righe = cl.map((r, n) => `<div class="pron-cl ${r.key === mia ? 'io' : ''}">
       <span class="pos">${n + 1}</span>
       <span class="nm">${esc(S.nameOfSeat(s, r.key) || TEAM_NAMES[r.key])}</span>
-      <span class="tiny muted">${r.giusti}/${r.chiusi} presi${r.esatti ? ` · ${r.esatti} esatt${r.esatti === 1 ? 'o' : 'i'}` : ''}</span>
-      <b>${r.punti}</b>
+      <span class="tiny muted">${r.presi} pres${r.presi === 1 ? 'o' : 'i'} su ${r.chiusi * 2}</span>
+      <b>${r.punti.toFixed(2)}</b>
     </div>`).join('');
   return `<div class="card pronostici">
-    <h3 class="mb">${re ? `Re dei pronostici: ${esc(S.nameOfSeat(s, re.key) || TEAM_NAMES[re.key])}` : 'Pronostici'}</h3>
+    <h3 class="mb">${re ? `Re dei pronostici: ${esc(S.nameOfSeat(s, re.key) || TEAM_NAMES[re.key])}` : 'Classifica pronostici'}</h3>
     ${righe}
-    <p class="tiny muted mt">Vincente giusto 1 punto, numero di gare esatto altri 2.</p>
+    <p class="tiny muted mt">Ogni pronostico indovinato vale la sua quota.</p>
   </div>`;
 }
 
@@ -1375,41 +1435,6 @@ export function alboCard(s) {
     <div class="albo">${righe}</div>
     <details class="mt"><summary>Le ${albo.length} partite giocate</summary>
       <div class="log mt">${storia}</div></details>
-  </div>`;
-}
-
-// Le gare gia lette si richiudono a una riga sola. Aperte tutte, una serie da
-// sette diventava un muro di testo: chi guardava senza toccare niente restava
-// fermo su gara 1 mentre il tavolo era gia a gara 6, e non se ne accorgeva.
-function gameBlock(A, B, g, aperta = true, ultima = null) {
-  const aWon = g.scoreA > g.scoreB;
-  // I due punteggi sono marcati perche app.js possa farli salire quando la
-  // gara e appena stata scoperta. Il numero finale sta gia nel markup: se il
-  // javascript non parte, o se si e chiesto meno movimento, si legge lo
-  // stesso il risultato invece di due zeri.
-  const testa = `<div class="line">
-      <span class="gname">Gara ${g.n}${g.ot ? ' · OT' : ''}</span>
-      <span class="res"><span class="${aWon ? 'w' : ''}">${A.name} <b class="pt" data-pt="${g.scoreA}">${g.scoreA}</b></span> — <span class="${aWon ? '' : 'w'}"><b class="pt" data-pt="${g.scoreB}">${g.scoreB}</b> ${B.name}</span></span>
-    </div>`;
-
-  if (!aperta) {
-    return `<div class="game chiusa">${testa}</div>`;
-  }
-
-  const box = [...g.boxA.map((l) => ({ ...l, t: A.name })), ...g.boxB.map((l) => ({ ...l, t: B.name }))]
-    .sort((x, y) => y.pts - x.pts).slice(0, 5);
-  // Il segnaposto serve ad app.js per portare in vista l'ultima gara appena
-  // scoperta, anche su chi sta solo guardando e non ha premuto niente. Vale
-  // "viva" se la serie e ancora in corso: con due semifinali aperte insieme
-  // e da quella che resta da leggere che si deve ripartire.
-  return `<div class="game"${ultima ? ` data-ultima-gara="${ultima}"` : ''}>
-    ${testa}
-    <div class="story">${esc(narrateGame(A, B, g))}</div>
-    <details class="box"><summary>Box score</summary>
-      <table>${box.map((l) => `<tr><td class="n">${esc(l.n)}</td><td class="muted tiny">${esc(l.t)}</td>
-        <td class="num">${l.pts}</td><td class="num">${l.reb}</td><td class="num">${l.ast}</td></tr>`).join('')}</table>
-      <div class="tiny" style="margin-top:4px">punti · rimbalzi · assist</div>
-    </details>
   </div>`;
 }
 

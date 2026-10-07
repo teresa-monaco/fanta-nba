@@ -425,146 +425,158 @@ ok(Object.values(STRATEGIES).every((v) => has(v.label)), 'tutte le strategie son
 for (const k of TEAM_KEYS) await F.session.apply((s) => S.setTactics(s, k, { strategy: 'pick-roll' }));
 ok(clean(), 'cambiare strategia non rompe il rendering');
 
-/* 5. Playoff */
+/* 5. Playoff — una serie alla volta */
 const T = {};
 for (const k of S.attive(F.state)) T[k] = buildTeam(k, F.state.lineups[k], F.state.tactics[k]);
 const tab = componiTabellone(T, F.state.seed);
 ok(tab.serie.join(',') === '2,1', 'con quattro squadre: due semifinali e una finale');
 await F.session.apply((s) => S.toPlayoffs(s, tab));
-ok(clean() && has('class="jumbo br-jumbo"', 'Semifinale 1', 'Semifinale 2'), 'il tabellone si disegna');
+const P = await import('../js/pronostici.js');
+const conta = (re) => (html().match(re) || []).length;
+const giocaFinoAllaFine = async (r, i) => {
+  for (let g = 0; g < 7 && !costruisciBracket(F.state.po, T)[r][i].res?.done; g++) {
+    await F.session.apply((s) => S.advanceSeries(s, r, i, 1));
+  }
+};
 
-// IL TABELLONE DEI PLAYOFF. Era una lista di card una sotto l'altra e il
-// torneo non si vedeva mai d'un colpo.
-ok(has('class="bracket"') && (html().match(/class="br-col"/g) || []).length >= 2,
-  'con una colonna per turno', `${(html().match(/class="br-col"/g) || []).length} colonne`);
-ok((html().match(/class="br-cella viva/g) || []).length === 2,
-  'e le due semifinali giocabili sono segnalate', `${(html().match(/class="br-cella viva/g) || []).length} vive`);
-ok(has('data-act="vai-serie"'), 'toccando una casella si va alla serie');
-ok(html().indexOf('class="jumbo br-jumbo"') < html().indexOf('class="card serie"'),
-  'e il tabellone sta sopra le serie, non in fondo');
+// UNA SERIE SOLA A SCHERMO. Le serie di un turno erano aperte tutte insieme,
+// ognuna col suo tabellone e il suo tasto: chi non ospitava scorreva fra
+// l'una e l'altra per capire dove si era.
+ok(clean() && has('class="torneo"'), 'in cima c\'e la striscia del torneo');
+ok(has('Semifinale 1', 'Semifinale 2', 'Finale'), 'con tutte le serie, anche quelle da giocare');
+ok(has('data-serie-attiva="0-0"'), 'si parte dalla semifinale 1');
+ok(conta(/class="jumbo serie-jumbo/g) === 1, 'e a schermo c\'e un solo tabellone di serie', `${conta(/class="jumbo serie-jumbo/g)}`);
+ok(html().indexOf('class="torneo"') < html().indexOf('class="jumbo serie-jumbo'), 'sotto la striscia');
 ok(!has('class="champ'), 'a playoff appena iniziati il campione non c\'e');
 
-// Ogni serie ha il suo tabellone e il suo tasto: con due semifinali aperte
-// se ne vedono due, uno sotto l'altro, e si gioca una gara per semifinale
-// senza doverne chiudere una per passare all'altra. Si controlla ADESSO,
-// con le due serie aperte: chiuse, diventano una riga.
+// PRIMA DI GARA 1: i quintetti a confronto e la lavagna.
+ok(conta(/class="cf-riga"/g) === 5, 'i due quintetti a confronto, ruolo per ruolo', `${conta(/class="cf-riga"/g)} righe`);
+ok(has('Come finisce', 'Miglior marcatore della serie'), 'poi la lavagna: prima l\'esito, poi il marcatore');
+ok(html().indexOf('Come finisce') < html().indexOf('Miglior marcatore'), 'in quest\'ordine');
+ok(conta(/class="qb /g) === 18, 'otto esiti e dieci marcatori, ognuno con la sua quota', `${conta(/class="qb /g)}`);
+// In locale nessuno e seduto: le quote si vedono, ma non si pronostica.
+ok(!has('data-act="pronostico"') && has('Le quote della serie'), 'su un telefono solo le quote si leggono e basta');
 {
-  const board = (html().match(/class="jumbo serie-jumbo/g) || []).length;
-  const tasti = (html().match(/data-act="avanza:0:/g) || []).length;
-  ok(board === 2, 'ogni semifinale ha il suo tabellone', `${board} tabelloni`);
-  ok(tasti === 2, 'e il suo tasto, cosi si avanza una gara per semifinale', `${tasti} tasti`);
-  ok(has('class="serie-conto"'), 'il conto della serie sta sul tabellone');
-  // I sette pallini: uno per gara, l'andamento si legge senza numeri.
-  const dots = (html().match(/<div class="pallini"[^>]*>(.*?)<\/div>/s) || [])[1] || '';
-  ok((dots.match(/<i /g) || []).length === 7, 'ogni serie ha i suoi sette pallini',
-    `${(dots.match(/<i /g) || []).length} pallini`);
+  const m = costruisciBracket(F.state.po, T)[0][0];
+  const q = P.quoteSerie(T[m.a], T[m.b], m.seed);
+  const somma = P.ESITI.reduce((a, e) => a + q.esiti[e].p, 0);
+  ok(Math.abs(somma - 1) < 1e-9, 'le probabilita degli esiti fanno 1', somma.toFixed(4));
+  const tutte = [...P.ESITI.map((e) => q.esiti[e].q), ...q.marcatori.map((x) => x.q)];
+  ok(tutte.every((x) => x >= P.QUOTA_MIN && x <= P.QUOTA_MAX), 'ogni quota sta fra 1,05 e 50');
+  ok(q.marcatori.every((x, i, a) => i === 0 || a[i - 1].q <= x.q), 'i marcatori sono in ordine di quota');
+  // Le quote non guardano il risultato: identiche prima e dopo aver giocato.
+  const prima = JSON.stringify(q);
+  const T2 = teamsFromState(F.state);
+  ok(JSON.stringify(P.quoteSerie(T2[m.a], T2[m.b], m.seed)) === prima, 'e sono le stesse a ogni ricalcolo, su ogni telefono');
 }
-// Una gara per volta in TUTTI i turni. Prima i turni prima della finale ne
-// scoprivano due: con il punteggio che si anima diventavano due punteggi che
-// salgono insieme, per due serie aperte, e non se ne seguiva nessuno.
-ok(has('Vai — Gara 1'), 'anche le semifinali vanno una gara alla volta');
-ok(!has('le prime due gare'), 'e non c\'e piu il passo doppio da nessuna parte');
+ok(has('data-act="simula-gara"', 'Simula gara 1'), 'chi ospita ha il tasto per la prima gara');
+ok(has('data-act="simula-serie"'), 'e quello per giocare tutta la serie in un colpo');
 
-// Sette tocchi bastano a chiudere qualunque serie al meglio delle sette.
-for (let i = 0; i < 7; i++) {
-  await F.session.apply((s) => S.advanceSeries(s, 0, 0, S.PASSO_GARA));
-  await F.session.apply((s) => S.advanceSeries(s, 0, 1, S.PASSO_GARA));
-}
-// LE SERIE FINITE SI CHIUDONO A UNA RIGA. Restavano aperte per intero, e in
-// quattro con la finalina la pagina era lunghissima.
-ok((html().match(/class="serie-riga/g) || []).length === 2,
-  'le semifinali finite si chiudono a una riga', `${(html().match(/class="serie-riga/g) || []).length} righe`);
-ok(has('class="mvp-mini"'), 'e la riga dice comunque chi e stato l\'MVP');
-ok((html().match(/class="br-sq t-[^"]* vince/g) || []).length >= 2,
-  'mentre sul tabellone i vincitori risultano', `${(html().match(/class="br-sq t-[^"]* vince/g) || []).length}`);
-
-// Riaperta, la serie ha tutto quello che aveva prima.
-ui.serieAperte.add('0-0');
-render(els.app, { state: F.state, session: F.session });
-ok(clean() && has('Gara 1', 'MVP della serie', 'Perché ha vinto'), 'riaperta, la serie mostra gare, MVP e spiegazione');
-// Le gare gia lette si richiudono: aperte tutte, chi guarda senza toccare
-// restava fermo su gara 1 mentre il tavolo era a gara 6.
-ok(has('game chiusa'), 'le gare precedenti si richiudono a una riga');
-ok(has('data-ultima-gara'), 'l\'ultima gara e marcata, cosi si puo portare in vista');
-ok((html().match(/class="story"/g) || []).length < (html().match(/class="gname"/g) || []).length,
-  'e non sono tutte aperte insieme',
-  `${(html().match(/class="story"/g) || []).length} cronache su ${(html().match(/class="gname"/g) || []).length} gare`);
-ok(has('Box score'), 'il box score e consultabile');
-// Il punteggio sale invece di comparire. Il numero finale deve stare COMUNQUE
-// nel markup: se il javascript non gira, o si e chiesto meno movimento, si
-// deve leggere il risultato e non due zeri.
+// LA GARA SI SCRIVE SOPRA LA PRECEDENTE. Da gara 1 in poi, sotto il
+// tabellone c'e solo la gara appena giocata.
+await F.session.apply((s) => S.advanceSeries(s, 0, 0, 1));
+ok(clean() && has('class="gara-pan', 'Gara 1', 'class="story"', 'Box score'), 'giocata gara 1, sotto il tabellone c\'e la gara');
+ok(!has('Come finisce'), 'e la lavagna se ne va: i pronostici sono chiusi');
+ok(has('Simula gara 2'), 'il tasto passa alla gara dopo');
+ok(conta(/class="pal /g) === 1, 'un pallino toccabile per la gara giocata', `${conta(/class="pal /g)}`);
 {
   const pt = [...html().matchAll(/data-pt="(\d+)"[^>]*>(\d+)</g)];
   ok(pt.length >= 2, 'i punteggi sono marcati per poter salire', `${pt.length} numeri`);
-  ok(pt.every(([, a, b]) => a === b),
-    'e il risultato vero e gia scritto: senza javascript si legge lo stesso');
+  ok(pt.every(([, a, b]) => a === b), 'e il risultato vero e gia scritto: senza javascript si legge lo stesso');
 }
-ok(has('>Richiudi<'), 'e si richiude');
-ui.serieAperte.delete('0-0');
+await F.session.apply((s) => S.advanceSeries(s, 0, 0, 2));
+ok(conta(/class="gara-pan/g) === 1 && has('Gara 3'), 'a gara 3 il riquadro e uno solo, ed e gara 3');
+// I pallini riaprono le gare vecchie, finche non ne arriva una nuova.
+ui.garaVista = { serie: '0-0', g: 0, n: 3 };
 render(els.app, { state: F.state, session: F.session });
+ok(has('Stai guardando gara 1', 'Torna a gara 3'), 'toccando il primo pallino si rivede gara 1');
+ok(/class="pal [^"]*sel"/.test(html()), 'e il pallino resta acceso');
+await F.session.apply((s) => S.advanceSeries(s, 0, 0, 1));
+ok(!has('Stai guardando') && has('Gara 4'), 'ma appena si gioca la gara dopo si torna da soli all\'ultima');
+ui.garaVista = null;
 
-ok(has('Finale') && has('Vai — Gara 1'), 'la finale si apre da sola quando le semifinali sono chiuse');
+// SERIE CHIUSA: il riepilogo resta finche chi ospita non va avanti.
+await giocaFinoAllaFine(0, 0);
+ok(clean() && has('class="riepilogo', 'Passa il turno', 'MVP della serie', 'Miglior marcatore'), 'a serie chiusa c\'e il riepilogo');
+ok(has('data-serie-attiva="0-0"'), 'e si resta li: non si passa da soli alla serie dopo');
+ok(has('data-act="avanti-serie" data-next="0-1"') || /data-act="avanti-serie"\s+data-next="0-1"/.test(html()), 'chi ospita ha "Avanti: Semifinale 2"');
+// Il referto: senza, nessuna delle scelte tecniche si impara mai.
+ok(has('Il referto') && has('class="referto"', 'Strategia', 'Ritmo', 'Allenatore', 'Primo violino'),
+  'nel riepilogo c\'e il referto tattico, con tutte e quattro le scelte');
+ok(html().indexOf('Perché ha vinto') < html().indexOf('Il referto'), 'dopo la spiegazione: prima cosa e successo, poi di chi e la colpa');
+ok(html().includes('unti a partita rispetto a scegliere a caso'), 'il referto dichiara l\'unita: punti a partita');
+{
+  // Il miglior marcatore del riepilogo e davvero quello col totale piu alto.
+  const f = costruisciBracket(F.state.po, T)[0][0].res;
+  const { tot, top } = P.marcatoriDi(f);
+  const n = db().byId[top[0]].n;
+  const massimo = Math.max(...Object.values(tot));
+  ok(html().includes(`${massimo} punti`) && html().includes(esc(n)), 'il miglior marcatore e quello col totale piu alto', `${n} ${massimo}`);
+}
 
-// Una gara alla volta, come chiedono le regole. Si aspetta il BANNER del
-// campione, non la parola "Campione": quella sta sempre nel tabellone, come
-// titolo dell'ultima colonna. Cercandola, il ciclo si fermava dopo una gara,
-// la finale non finiva mai e l'albo restava vuoto.
+// Avanti: la semifinale 2, da capo con la lavagna.
+await F.session.apply((s) => S.vaiASerie(s, '0-1'));
+ok(has('data-serie-attiva="0-1"', 'Come finisce'), 'avanti: la semifinale 2 riparte dalla lavagna');
+await giocaFinoAllaFine(0, 1);
+// Dopo l'ultima semifinale si sceglie: finalina prima, o dritti in finale.
+ok(has('Prima la finale 3° / 4° posto') && /data-next="third"/.test(html()), 'chiuse le semifinali, si puo giocare prima la finalina');
+ok(/data-next="1-0"/.test(html()) && has('Avanti: Finale'), 'o andare dritti in finale');
+{
+  const turni = costruisciBracket(F.state.po, T);
+  const perdenti = turni[0].map((m) => (m.res.winner === m.a ? m.b : m.a));
+  await F.session.apply((s) => S.vaiASerie(S.openThird(s, perdenti[0], perdenti[1]), 'third'));
+  ok(has('data-serie-attiva="third"', 'Finale 3° / 4° posto'), 'la finalina si gioca prima della finale');
+  for (let g = 0; g < 7; g++) await F.session.apply((s) => S.advanceThird(s, 1));
+  ok(has('Terzo posto') && /data-next="1-0"/.test(html()) && !/data-next="third"/.test(html()),
+    'chiusa la finalina, resta solo la finale');
+}
+await F.session.apply((s) => S.vaiASerie(s, '1-0'));
+ok(has('data-serie-attiva="1-0"'), 'e la finale e la serie in corso');
+
+// Una gara alla volta fino al campione.
 let steps = 0, sawStop = false, vistaGara7 = false;
 const festaPrima = festa;
 while (steps++ < 8) {
-  await F.session.apply((s) => S.advanceSeries(s, 1, 0, S.PASSO_GARA));
+  await F.session.apply((s) => S.advanceSeries(s, 1, 0, 1));
   if (html().includes('serie-jumbo gara7')) vistaGara7 = true;
   if (html().includes('class="champ')) { sawStop = true; break; }
 }
 ok(sawStop, 'la finale si chiude e proclama il campione', `${steps} gare`);
-// Gara 7: sul tre pari il tabellone diventa rosso. Vale solo se la serie ci
-// e arrivata davvero, quindi il controllo dipende da come e andata.
 {
   const f = costruisciBracket(F.state.po, T)[1][0].res;
   const settima = f.games.length === 7;
   ok(!settima || vistaGara7, 'arrivati alla gara 7 il tabellone diventa rosso',
     settima ? `finale ${f.wins.a}-${f.wins.b}, gara 7 vista` : 'la finale non e arrivata a sette');
 }
-// Il momento a schermo intero compare UNA volta, quando la finale si chiude.
-ok(festa - festaPrima === 1, 'chiusa la finale parte il momento del campione, una volta sola',
-  `${festa - festaPrima} volte`);
+ok(festa - festaPrima === 1, 'chiusa la finale parte il momento del campione, una volta sola', `${festa - festaPrima} volte`);
 await F.session.apply((s) => ({ ...s }));
 ok(festa - festaPrima === 1, 'e non riparte a ogni ridisegno');
 ok(clean() && has('MVP delle Finals'), 'l\'MVP delle Finals viene assegnato');
-// Il campione in cima: prima finiva a meta pagina, sopra la card della
-// finale e sotto tutto il resto.
-ok(html().indexOf('class="champ') < html().indexOf('class="jumbo br-jumbo"'),
-  'il campione sta in cima, sopra il tabellone');
+ok(html().indexOf('class="champ') < html().indexOf('class="torneo"'), 'il campione sta in cima, sopra tutto');
 ok(has('class="trofeo"'), 'col trofeo disegnato');
+ok(!/data-act="avanti-serie"/.test(html()), 'e dopo la finale non c\'e nessun "Avanti"');
 
-// I premi di fine serata, subito sotto il campione. Si controlla che i numeri
-// siano GIUSTI, non solo che ci sia una card: un premio sbagliato e peggio di
-// nessun premio, perche e quello che finisce in chat.
+// I premi di fine serata, subito sotto il campione.
 {
   const { premiSerata } = await import('../js/premi.js');
   const premi = premiSerata(F.state, teamsFromState(F.state));
   ok(has('class="premi"'), 'a fine torneo compaiono i premi della serata');
   ok(html().indexOf('class="champ') < html().indexOf('class="premi"')
-    && html().indexOf('class="premi"') < html().indexOf('class="jumbo br-jumbo"'),
-    'subito sotto il campione e sopra il tabellone');
-  for (const k of ['mvp', 'punti', 'rimbalzi', 'colpo']) {
-    ok(premi.some((p) => p.chiave === k), `c'e il premio ${k}`);
-  }
-  // Il colpo dell'asta e davvero il miglior rapporto overall/prezzo.
+    && html().indexOf('class="premi"') < html().indexOf('class="torneo"'),
+    'subito sotto il campione e sopra la striscia');
+  for (const k of ['mvp', 'punti', 'rimbalzi', 'colpo']) ok(premi.some((p) => p.chiave === k), `c'e il premio ${k}`);
   const colpo = premi.find((p) => p.chiave === 'colpo');
   const D = db();
   const migliore = F.state.auction.log
     .map((l) => ({ id: l.playerId, v: (D.byId[l.playerId].ovr - 84) / l.price }))
     .sort((a, b) => b.v - a.v)[0];
-  ok(colpo && colpo.id === migliore.id, 'il colpo dell\'asta e davvero il miglior affare',
-    colpo ? `${colpo.nome}: ${colpo.riga}` : 'nessuno');
-  // Il bidone, se c'e, e costato almeno dieci crediti: uno preso a uno che
-  // rende poco e un riempitivo, non un errore.
+  ok(colpo && colpo.id === migliore.id, 'il colpo dell\'asta e davvero il miglior affare', colpo ? `${colpo.nome}: ${colpo.riga}` : 'nessuno');
   const bid = premi.find((p) => p.chiave === 'bidone');
   const prezzoBid = bid ? F.state.auction.log.find((l) => l.playerId === bid.id)?.price : null;
   ok(!bid || prezzoBid >= 10, 'il bidone e uno che e costato caro', bid ? `${bid.nome}, ${prezzoBid} crediti` : 'nessun bidone in questa partita');
 }
-ok(/class="br-cella br-oro chiusa"/.test(html()), 'e la casella del campione nel tabellone si riempie');
+// A serata finita torna il tabellone completo, come riassunto.
+ok(has('class="jumbo br-jumbo"') && /class="br-cella br-oro chiusa"/.test(html()), 'e torna il tabellone completo, col campione nella sua casella');
 
 // LA CARD DA CONDIVIDERE. In Node non c'e un canvas: se ne finge uno che
 // annota tutto quello che gli si chiede di scrivere, e si controlla il testo.
@@ -604,33 +616,8 @@ ok(/class="br-cella br-oro chiusa"/.test(html()), 'e la casella del campione nel
   ok(!/undefined|NaN|null/.test(tutto), 'niente "undefined" o "NaN" nell\'immagine');
   ok(fuori === 0, 'nessuna scritta esce dai bordi', `${fuori} fuori`);
   ok(/^Fanta NBA — Campione: /.test(d.testo), 'e il messaggio che l\'accompagna dice chi ha vinto', d.testo);
-  // Prima della fine non c'e niente da condividere.
   ok(datiCard({ ...F.state, po: { ...F.state.po, turni: F.state.po.turni.map((r) => r.map((m) => ({ ...m, gamesPlayed: 0 }))) } }, Tc) === null,
     'a torneo aperto la card non esiste');
-}
-
-/* Il referto: senza, nessuna delle cinque scelte si impara mai */
-ui.serieAperte.add('1-0');
-render(els.app, { state: F.state, session: F.session });
-ok(has('Il referto'), 'a serie chiusa compare il referto tattico');
-ok(has('class="referto"') && has('Strategia') && has('Ritmo') && has('Allenatore') && has('Primo violino'),
-  'e copre tutte e quattro le scelte misurabili');
-ok(html().indexOf('Perché ha vinto') < html().indexOf('Il referto'),
-  'sta dopo la spiegazione, non prima: prima cosa e successo, poi di chi e la colpa');
-// L'unita va cercata nell'intestazione del referto, che c'e sempre — non
-// nel verdetto, che cambia frase a seconda di come e andata. Cercandola li
-// il test falliva appena il verdetto prendeva un ramo diverso.
-ok(html().includes('unti a partita rispetto a scegliere a caso'),
-  'il referto dichiara l\'unita: punti a partita, non unita del motore');
-ui.serieAperte.delete('1-0');
-render(els.app, { state: F.state, session: F.session });
-ok(has('finale 3°/4° posto'), 'viene proposta la finalina fra le due eliminate');
-{
-  const turni = costruisciBracket(F.state.po, T);
-  const perdenti = turni[0].map((m) => (m.res.winner === m.a ? m.b : m.a));
-  await F.session.apply((s) => S.openThird(s, perdenti[0], perdenti[1]));
-  for (let i = 0; i < 5; i++) await F.session.apply((s) => S.advanceThird(s, S.PASSO_GARA));
-  ok(clean() && has('Finale 3° / 4° posto'), 'la finalina si simula');
 }
 
 /* Albo d'oro: si scrive da solo e sopravvive all'azzeramento */
@@ -910,59 +897,72 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
       S.botDi(F.state).map((k) => `${F.state.names[`bot:${k}`]} ${S.haConfermato(F.state, k) ? 'si' : 'no'}`).join(', '));
   }
 
-  // I PRONOSTICI, al tavolo con i bot: il riquadro a chi non gioca la serie,
-  // le scelte degli altri nascoste fino a gara 1, i bot che pronosticano da
-  // soli, i punti a serie chiusa.
+  // I PRONOSTICI, al tavolo con i bot: pronostica chiunque sia seduto, anche
+  // chi gioca la serie; le scelte degli altri restano nascoste fino a gara 1;
+  // i bot pronosticano da soli; chi ospita sa chi manca; a serie chiusa ogni
+  // pronostico vale la sua quota.
   if (S.attive(F.state).length >= 4) {
     const Tq = {};
     for (const k of S.attive(F.state)) Tq[k] = buildTeam(k, F.state.lineups[k], F.state.tactics[k]);
-    await F.session.apply((s) => S.toPlayoffs(s, componiTabellone(Tq, s.seed)));
-    const stanza = { ...F.session, mode: 'room', uid: 'io' };
-    const mia = F.state.seats.io;
-    const turno = costruisciBracket(F.state.po, Tq)[0];
-    const fuori = turno.findIndex((m) => m.a !== mia && m.b !== mia);
-    const dentro = turno.findIndex((m) => m.a === mia || m.b === mia);
-    render(els.app, { state: F.state, session: stanza });
-    ok(clean() && has('Il tuo pronostico'), 'a chi non gioca una semifinale si chiede il pronostico');
-    ok((html().match(/data-act="pronostico"/g) || []).length === 8,
-      'solo su quella: due squadre per quattro esiti, e niente sulla propria serie',
-      `${(html().match(/data-act="pronostico"/g) || []).length} tasti`);
-
-    // Pronostico: la serie che non gioco.
-    const m = turno[fuori];
-    await F.session.apply((s) => S.pronostica(s, mia, `0-${fuori}`, m.a, m.b, m.a, 6));
-    render(els.app, { state: F.state, session: stanza });
-    ok(has('class="tag ok">fatto'), 'fatto il pronostico, la serie lo dice');
-    ok(/class="sm primary"\s+data-act="pronostico"[^>]*data-v="[^"]+" data-g="6"/.test(html()),
-      'e la scelta resta accesa');
-
-    // I bot pronosticano da soli, con un attimo di ritardo. Li muove l'app.
-    const botFuori = (i) => S.botDi(F.state).filter((k) => k !== turno[i].a && k !== turno[i].b);
-    const attesi = botFuori(0).length + botFuori(1).length;
-    const fatti = () => [0, 1].reduce((a, i) => a + botFuori(i).filter((k) => F.state.po.pron?.[`0-${i}`]?.[k]).length, 0);
-    for (let i = 0; i < 80 && fatti() < attesi; i++) await new Promise((r) => setTimeout(r, 100));
-    ok(fatti() === attesi, 'i bot pronosticano le serie che non giocano', `${fatti()}/${attesi}`);
-    ok(S.botDi(F.state).every((k) => [0, 1].every((i) => !(k === turno[i].a || k === turno[i].b) || !F.state.po.pron?.[`0-${i}`]?.[k])),
-      'e mai la propria');
-    // Nel riquadro della serie che gioco io si vede chi ha pronosticato, non cosa.
-    render(els.app, { state: F.state, session: stanza });
-    ok(has('Hanno pronosticato:'), 'si vede chi ha gia pronosticato');
-    ok(!/class="pron-voce/.test(html()), 'ma non cosa, finche la serie non parte');
-    ok(has('class="card pronostici"'), 'e la classifica dei pronostici compare');
-
-    // Chiuse le semifinali, le scelte si scoprono e danno punti.
-    for (let g = 0; g < 7; g++) for (const i of [0, 1]) await F.session.apply((s) => S.advanceSeries(s, 0, i, S.PASSO_GARA));
-    ui.serieAperte.add(`0-${fuori}`);
-    render(els.app, { state: F.state, session: stanza });
-    ok(/class="pron-voce (preso|mancato)/.test(html()), 'a serie chiusa ogni pronostico ha il suo esito');
-    const f = costruisciBracket(F.state.po, Tq)[0][fuori].res;
-    const attesoPunti = f.winner === m.a ? (f.games.length === 6 ? 3 : 1) : 0;
     const P = await import('../js/pronostici.js');
-    const io = P.classificaPronostici(F.state, Tq).find((r) => r.key === mia);
-    ok(io && io.punti === attesoPunti, 'e i miei punti sono quelli giusti',
-      `${m.a} in 6 contro ${f.winner} in ${f.games.length}: ${io?.punti} punti`);
-    ui.serieAperte.clear();
-    ok(clean() && !html().includes('undefined'), 'la schermata coi pronostici non ha buchi');
+    await F.session.apply((s) => S.toPlayoffs(s, componiTabellone(Tq, s.seed)));
+    const io = { ...F.session, mode: 'room', uid: 'io' };
+    const ospite = { ...F.session, mode: 'room' };   // chi ospita, che non e seduto
+    const mia = F.state.seats.io;
+    const m = costruisciBracket(F.state.po, Tq)[0][0];
+    const quote = P.quoteSerie(Tq[m.a], Tq[m.b], m.seed);
+
+    render(els.app, { state: F.state, session: io });
+    ok(clean() && has('Il tuo pronostico'), 'chi e seduto pronostica la serie in corso',
+      m.a === mia || m.b === mia ? 'e la gioca lui' : 'non la gioca');
+    ok((html().match(/data-act="pronostico"/g) || []).length === 18, 'otto esiti e dieci marcatori da toccare',
+      `${(html().match(/data-act="pronostico"/g) || []).length}`);
+    // Anche chi gioca la serie pronostica: il riduttore lo accetta per lui
+    // come per chiunque, qualunque serie stia giocando.
+    ok(S.pronostica(F.state, m.a, '0-0', 'e', '0-4') !== undefined, 'anche chi gioca la serie, perfino contro se stesso');
+
+    // Chi ospita vede chi non ha ancora pronosticato. I bot non contano: lo
+    // fanno da soli.
+    render(els.app, { state: F.state, session: ospite });
+    ok(has('Non hanno ancora pronosticato: Diego') && /data-mancano="Diego"/.test(html()),
+      'chi ospita sa chi manca, prima di far partire gara 1');
+
+    // Il mio pronostico: esito e marcatore, e si cambia idea.
+    await F.session.apply((s) => S.pronostica(s, mia, '0-0', 'e', '4-0'));
+    await F.session.apply((s) => S.pronostica(s, mia, '0-0', 'e', '4-2'));
+    await F.session.apply((s) => S.pronostica(s, mia, '0-0', 'm', quote.marcatori[0].id));
+    ok(F.state.po.pron['0-0'][mia].e === '4-2' && F.state.po.pron['0-0'][mia].m === quote.marcatori[0].id,
+      'si sceglie esito e marcatore, e vale l\'ultima scelta');
+    render(els.app, { state: F.state, session: io });
+    ok((html().match(/class="qb [^"]*sel"/g) || []).length === 2, 'e le due scelte restano accese');
+    render(els.app, { state: F.state, session: ospite });
+    ok(!has('Non hanno ancora pronosticato'), 'fatto il pronostico, non manca piu nessuno');
+
+    // I bot pronosticano da soli, entrambi i mercati, anche quelli che giocano.
+    const fatti = () => S.botDi(F.state).filter((k) => F.state.po.pron?.['0-0']?.[k]?.e && F.state.po.pron['0-0'][k].m).length;
+    for (let i = 0; i < 80 && fatti() < S.botDi(F.state).length; i++) await new Promise((r) => setTimeout(r, 100));
+    ok(fatti() === S.botDi(F.state).length, 'tutti i bot pronosticano, anche chi gioca la serie', `${fatti()}/${S.botDi(F.state).length}`);
+    ok(S.botDi(F.state).every((k) => S.ESITO_VALIDO.test(F.state.po.pron['0-0'][k].e)
+      && quote.marcatori.some((x) => x.id === F.state.po.pron['0-0'][k].m)), 'con scelte valide');
+    render(els.app, { state: F.state, session: io });
+    ok(has('Hanno pronosticato:') && !has('class="pv-riga"'), 'prima di gara 1 si vede chi ha pronosticato, non cosa');
+
+    // Da gara 1 le scelte sono di tutti; a serie chiusa danno punti.
+    await F.session.apply((s) => S.advanceSeries(s, 0, 0, 1));
+    ok(S.pronostica(F.state, mia, '0-0', 'e', '4-0') === undefined, 'dopo gara 1 non si pronostica piu');
+    render(els.app, { state: F.state, session: io });
+    ok((html().match(/class="pv-riga"/g) || []).length === 1 + S.botDi(F.state).length, 'da gara 1 le scelte si scoprono');
+    for (let g = 0; g < 7; g++) await F.session.apply((s) => S.advanceSeries(s, 0, 0, 1));
+    render(els.app, { state: F.state, session: io });
+    ok(/class="pv (preso|mancato)/.test(html()), 'a serie chiusa ogni pronostico ha il suo esito');
+    const f = costruisciBracket(F.state.po, Tq)[0][0].res;
+    const atteso = (P.esitoDi(f) === '4-2' ? quote.esiti['4-2'].q : 0)
+      + (P.marcatoriDi(f).top.includes(quote.marcatori[0].id) ? quote.marcatori[0].q : 0);
+    const riga = P.classificaPronostici(F.state, Tq).find((r) => r.key === mia);
+    ok(riga && Math.abs(riga.punti - atteso) < 1e-9, 'e i miei punti sono le quote di quello che ho preso',
+      `${P.esitoDi(f)}, marcatore ${P.marcatoriDi(f).top.map((id) => db().byId[id].n).join('/')}: ${riga?.punti} punti`);
+    ok(has('class="card pronostici"'), 'e compare la classifica dei pronostici');
+    ok(clean() && !html().includes('undefined') && !html().includes('NaN'), 'la schermata coi pronostici non ha buchi');
   }
 
   // L'azzeramento li lascia seduti: sono parte del tavolo, non della partita.

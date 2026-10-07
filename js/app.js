@@ -7,7 +7,8 @@ import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
 import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc, flapHTML, rivelaCampione } from './ui.js';
 import { sblocca, commutaAudio, tic, martelletto, nuovoLotto } from './suono.js';
 import * as BotAI from './bot.js';
-import { serieDelTabellone, aperta, pronosticoBot } from './pronostici.js';
+import { quoteSerie, pronosticoBot } from './pronostici.js';
+import { ordineSerie, serieCorrente } from './serie.js';
 import { datiCard, disegnaCard, LARGHEZZA, ALTEZZA } from './card.js';
 
 const root = document.getElementById('app');
@@ -255,28 +256,37 @@ function tieniIlPosto() {
 // non te ne accorgi. Quando il conto delle gare scoperte cresce, l'ultima si
 // porta in vista da sola. Solo quando CRESCE: altrimenti a ogni ridisegno
 // strapperebbe via la pagina da sotto le dita.
+//
+// Da quando si gioca una serie alla volta, la gara nuova si scrive SOPRA la
+// vecchia, sotto il tabellone: chi guarda dall'alto non deve scorrere. Si
+// scorre solo se il tabellone e finito fuori vista (chi ospita, che ha
+// premuto il tasto piu in basso). Quando si passa alla serie dopo, in cima.
 let gareViste = null;
+let serieVista = null;
 
 function seguiLaPartita() {
-  if (state.phase !== 'playoffs') { gareViste = null; return; }
+  if (state.phase !== 'playoffs') { gareViste = null; serieVista = null; return; }
   const tot = (state.po?.turni || []).flat().reduce((s, m) => s + (m.gamesPlayed || 0), 0)
     + (state.po?.third?.gamesPlayed || 0);
-  const prima = gareViste;
-  gareViste = tot;
-  if (prima === null || tot <= prima) return;
-  // La serie ancora aperta e quella da leggere. Se sono tutte chiuse, l'ultima
-  // in ordine di tabellone: e li che e appena successo qualcosa.
-  const tutte = root.querySelectorAll('[data-ultima-gara]');
-  const el = root.querySelector('[data-ultima-gara="viva"]') || tutte[tutte.length - 1];
-  if (el?.scrollIntoView) {
-    try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch { el.scrollIntoView(); }
+  const el = root.querySelector('[data-serie-attiva]');
+  const ora = el?.dataset?.serieAttiva ?? null;
+  const primaSerie = serieVista, primeGare = gareViste;
+  serieVista = ora; gareViste = tot;
+
+  if (primaSerie !== null && ora !== primaSerie) {
+    if (typeof window.scrollTo === 'function') {
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch { /* pazienza */ }
+    }
+    return;
   }
-  // Solo i punteggi della gara appena scoperta, e il tabellone della SUA
-  // serie: sono gli unici dove qualcosa e cambiato. Con due semifinali
-  // aperte, far ripartire anche l'altra sarebbe un tabellone impazzito.
-  el?.querySelectorAll?.('[data-pt]').forEach(contaPunteggio);
-  el?.closest?.('.card.serie')?.querySelectorAll('.serie-jumbo [data-pt]')
-    .forEach(contaPunteggio);
+  if (primeGare === null || tot <= primeGare || !el) return;
+  // Solo i punteggi del tabellone della serie in corso: sono gli unici dove
+  // qualcosa e cambiato.
+  el.querySelectorAll('.serie-jumbo [data-pt]').forEach(contaPunteggio);
+  const r = el.getBoundingClientRect?.();
+  if (r && (r.top < 0 || r.top > (window.innerHeight || 800) * 0.6) && el.scrollIntoView) {
+    try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch { el.scrollIntoView(); }
+  }
 }
 
 // L'albo si scrive da se quando le Finals si chiudono. Il risultato non sta
@@ -404,7 +414,7 @@ function startClock() {
 
 const memoriaBot = {};   // per bot: il lotto gia valutato e quando si sveglia
 let botOccupato = false; // una scrittura alla volta, o si accavallano
-const serieViste = { firma: null, T: null, lista: [] }; // per i pronostici dei bot
+const serieViste = { firma: null, T: null, x: null }; // per i pronostici dei bot
 
 async function guidaBot() {
   if (!state || !session || state.host !== session.uid || botOccupato) return;
@@ -462,35 +472,35 @@ async function guidaBot() {
       }
     } else if (state.phase === 'playoffs' && state.po) {
       // Anche i bot pronosticano, o la classifica dei pronostici in una
-      // serata con due persone e due bot sarebbe una gara a due. Prima un
-      // controllo da niente: se tutte le serie sono partite non c'e niente
-      // da pronosticare, e non si ricalcola il tabellone a ogni tic.
+      // serata con due persone e due bot sarebbe una gara a due. Solo sulla
+      // serie in corso, e anche su quella che giocano: come tutti.
+      //
+      // La serie in corso si ricalcola solo quando qualcosa avanza: il
+      // cronometro gira quattro volte al secondo e le serie si rigiocherebbero
+      // ogni volta.
       const po = state.po;
-      const daIniziare = po.turni.some((round) => round.some((m) => !m.gamesPlayed))
-        || (po.third && !po.third.gamesPlayed);
-      if (!daIniziare) return;
-      // Il tabellone si ricalcola solo quando una serie avanza: il cronometro
-      // gira quattro volte al secondo e le serie si rigiocherebbero ogni volta.
-      const firma = `${state.seed}|${po.turni.map((r) => r.map((m) => m.gamesPlayed).join('.')).join('|')}|${po.third?.gamesPlayed ?? '-'}`;
+      const firma = `${state.seed}|${po.corrente || ''}|${po.third ? po.third.gamesPlayed : '-'}|${po.turni.map((r) => r.map((m) => m.gamesPlayed).join('.')).join('|')}`;
       if (serieViste.firma !== firma) {
         serieViste.T = teamsFromState(state);
-        serieViste.lista = serieDelTabellone(state, serieViste.T);
+        serieViste.x = serieCorrente(state, serieViste.T);
         serieViste.firma = firma;
       }
-      const T = serieViste.T;
-      for (const x of serieViste.lista) {
-        if (!aperta(x)) continue;
-        for (const k of squadreBot) {
-          if (k === x.a || k === x.b || po.pron?.[x.id]?.[k]) continue;
-          // Ognuno ci pensa un attimo, e non tutti nello stesso istante.
-          const m = memoriaBot[k] || (memoriaBot[k] = {});
-          const chiave = `pron:${state.seed}:${x.id}`;
-          if (!m[chiave]) { m[chiave] = Date.now() + 700 + Math.random() * 2300; continue; }
-          if (Date.now() < m[chiave]) continue;
-          const p = pronosticoBot(T[x.a], T[x.b]);
-          await session.apply((s) => S.pronostica(s, k, x.id, x.a, x.b, p.v, p.g));
-          return;
-        }
+      const x = serieViste.x;
+      if (!x?.a || !x?.b || !x.f || x.giocate > 0) return;
+      for (const k of squadreBot) {
+        const gia = po.pron?.[x.id]?.[k];
+        if (gia?.e && gia?.m) continue;
+        // Subito, ma non tutti nello stesso istante.
+        const m = memoriaBot[k] || (memoriaBot[k] = {});
+        const chiave = `pron:${state.seed}:${x.id}`;
+        if (!m[chiave]) { m[chiave] = Date.now() + 300 + Math.random() * 900; continue; }
+        if (Date.now() < m[chiave]) continue;
+        const p = pronosticoBot(quoteSerie(serieViste.T[x.a], serieViste.T[x.b], x.seed));
+        await session.apply((s) => {
+          const y = S.pronostica(s, k, x.id, 'e', p.e);
+          return y && S.pronostica(y, k, x.id, 'm', p.m);
+        });
+        return;
       }
     }
   } catch (err) {
@@ -615,14 +625,6 @@ document.addEventListener('click', async (ev) => {
   ui.banner = null;
   sblocca(); // iOS tiene l'audio sospeso finché non c'è un gesto dell'utente
 
-  // "avanza:2:0" = turno 2, serie 0. I turni sono variabili, quindi la serie
-  // si indirizza con la posizione invece che con un nome fisso.
-  if (act.startsWith('avanza:')) {
-    const [, r, i] = act.split(':').map(Number);
-    await session.apply((s) => S.advanceSeries(s, r, i, S.PASSO_GARA));
-    return;
-  }
-
   try {
     switch (act) {
       /* --- landing --- */
@@ -662,25 +664,6 @@ document.addEventListener('click', async (ev) => {
         paint();
         return;
 
-      // Una serie finita si apre e si richiude. Lo stato sta in `ui`, non
-      // nello stato condiviso: e una cosa mia, e deve sopravvivere ai
-      // ridisegni — se un'altra serie avanza, quella che stavo leggendo non
-      // deve richiudersi da sola.
-      case 'apri-serie': {
-        const id = el.dataset.serie;
-        if (ui.serieAperte.has(id)) ui.serieAperte.delete(id); else ui.serieAperte.add(id);
-        paint();
-        document.getElementById(`serie-${id}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
-        return;
-      }
-
-      // Dal tabellone alla serie: un tocco su una casella ci scorre sopra.
-      case 'vai-serie': {
-        const id = el.dataset.serie;
-        document.getElementById(`serie-${id}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
-        return;
-      }
-
       case 'chiudi-rivela':
         chiudiRivela();
         return;
@@ -693,8 +676,51 @@ document.addEventListener('click', async (ev) => {
       // Si cambia idea quante volte si vuole, finche la serie non parte.
       case 'pronostico': {
         const d = el.dataset;
-        const ok = await session.apply((s) => S.pronostica(s, s.seats[session.uid], d.serie, d.a, d.b, d.v, Number(d.g)));
+        const ok = await session.apply((s) => S.pronostica(s, s.seats[session.uid], d.serie, d.campo, d.valore));
         if (!ok) flash('La serie è già iniziata: pronostici chiusi.', true);
+        return;
+      }
+
+      // Una gara alla volta, o tutta la serie in un colpo (con tante squadre
+      // i primi turni sarebbero lunghissimi). Prima di gara 1, se qualcuno non
+      // ha pronosticato, chi ospita lo sa e decide: chi non ha scelto salta
+      // questa serie, nessuno resta bloccato da un telefono in tasca.
+      case 'simula-gara':
+      case 'simula-serie': {
+        const d = el.dataset;
+        if (d.mancano && !confirm(`Mancano i pronostici di ${d.mancano}: chi non ha scelto salta questa serie.\n\nSi parte lo stesso?`)) return;
+        const T = teamsFromState(state);
+        const x = ordineSerie(state, T).find((y) => y.id === d.serie);
+        if (!x?.f || x.f.done) return;
+        const passo = act === 'simula-gara' ? 1
+          : simSeriesUpTo(T[x.a], T[x.b], x.seed, 7).games.length - x.f.games.length;
+        await session.apply((s) => {
+          const y = x.id === 'third' ? S.advanceThird(s, passo) : S.advanceSeries(s, x.r, x.i, passo);
+          return S.vaiASerie(y, x.id) || y;
+        });
+        return;
+      }
+
+      // Serie chiusa, riepilogo letto: si passa alla prossima. La finalina
+      // nasce qui, se chi ospita la sceglie: si gioca prima della finale.
+      case 'avanti-serie': {
+        const d = el.dataset;
+        await session.apply((s) => {
+          if (d.next !== 'third') return S.vaiASerie(s, d.next);
+          const y = S.openThird(s, d.a, d.b);
+          return y ? S.vaiASerie(y, 'third') : undefined;
+        });
+        return;
+      }
+
+      // Toccando un pallino si rivede quella gara; e una cosa mia, non del
+      // tavolo. Vale finche non arriva una gara nuova: allora si torna da soli
+      // all'ultima, che e quella che interessa.
+      case 'vedi-gara': {
+        const x = serieCorrente(state, teamsFromState(state));
+        const g = el.dataset.g;
+        ui.garaVista = g === '' || !x?.f ? null : { serie: x.id, g: Number(g), n: x.f.games.length };
+        paint();
         return;
       }
 
@@ -903,21 +929,6 @@ document.addEventListener('click', async (ev) => {
           ? tabelloneDaStagione(teamsFromState(state), st.cls, state.seed)
           : componiTabellone(teamsFromState(state), state.seed);
         await session.apply((s) => S.toPlayoffs(s, tab));
-        break;
-      }
-
-      case 'avanza-third':
-        await session.apply((s) => S.advanceThird(s, S.PASSO_GARA));
-        break;
-
-      // Il tabellone ha un numero variabile di turni: la serie si identifica
-      // con turno e posizione, non con un nome fisso.
-      case 'open-third': {
-        const turni = costruisciBracket(state.po, teamsFromState(state));
-        const semi = turni[turni.length - 2];
-        if (!semi || semi.length !== 2) break;
-        const perdenti = semi.map((m) => (m.res.winner === m.a ? m.b : m.a));
-        await session.apply((s) => S.openThird(s, perdenti[0], perdenti[1]));
         break;
       }
 

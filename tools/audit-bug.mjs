@@ -486,87 +486,141 @@ console.log('\nLE RIVALITA FRA SERATE\n');
 }
 
 /* ==========================================================
-   I pronostici
+   I pronostici a quote, e una serie alla volta
    ==========================================================
 
    Si sa gia come finisce ogni serie — il motore e deterministico — quindi
    si gioca la serata una volta per leggere i risultati, poi la si rigioca
-   uguale con i pronostici piazzati prima: uno esatto, uno col vincente
-   giusto e le gare sbagliate, uno sbagliato del tutto. */
-console.log('\nI PRONOSTICI\n');
+   uguale con i pronostici piazzati prima: uno che prende esito e marcatore,
+   uno che prende solo il marcatore, uno che sbaglia tutto. */
+console.log('\nI PRONOSTICI A QUOTE\n');
 {
   const P = await import('../js/pronostici.js');
+  const SR = await import('../js/serie.js');
   const { s: fine, T } = partitaFinoA(4, 'fine', 'pron');
-  const turniFine = costruisciBracket(fine.po, T);
-  const [s0, s1] = turniFine[0];
-  const fin = turniFine[1][0];
+  const s0 = costruisciBracket(fine.po, T)[0][0];
+  const quote = P.quoteSerie(T[s0.a], T[s0.b], s0.seed);
+  const esito = P.esitoDi(s0.res);
+  const sbagliato = P.ESITI.find((e) => e !== esito);
+  const { top } = P.marcatoriDi(s0.res);
+  const nonTop = quote.marcatori.find((m) => !top.includes(m.id)).id;
 
   let { s } = partitaFinoA(4, 'playoff-inizio', 'pron');
-  const fuori0 = [s1.a, s1.b]; // chi non gioca la semifinale 0
-  const [c, d] = fuori0;
-  const vince0 = s0.res.winner, perde0 = vince0 === s0.a ? s0.b : s0.a;
-  const gare0 = s0.res.games.length;
+  const [k1, k2, k3] = S.attive(s);
+  ok(s.po.corrente === '0-0', 'i playoff partono dalla semifinale 1');
 
-  // Chi puo e chi no.
-  ok(S.pronostica(s, s0.a, '0-0', s0.a, s0.b, s0.a, 4) === undefined, 'chi gioca la serie non la pronostica');
-  ok(S.pronostica(s, c, '0-0', s0.a, s0.b, d, 4) === undefined, 'non si pronostica una squadra che non la gioca');
-  ok(S.pronostica(s, c, '0-0', s0.a, s0.b, s0.a, 3) === undefined
-    && S.pronostica(s, c, '0-0', s0.a, s0.b, s0.a, 8) === undefined, 'le gare vanno da 4 a 7');
-  ok(S.pronostica(s, 't9', '0-0', s0.a, s0.b, s0.a, 4) === undefined, 'chi non e al tavolo non pronostica');
+  // Il riduttore.
+  ok(S.pronostica(s, k1, '0-0', 'e', '4-5') === undefined && S.pronostica(s, k1, '0-0', 'e', '2-3') === undefined,
+    'un esito impossibile non si accetta');
+  ok(S.pronostica(s, k1, '0-0', 'x', '4-1') === undefined, 'un mercato che non esiste nemmeno');
+  ok(S.pronostica(s, 't9', '0-0', 'e', '4-1') === undefined, 'chi non e al tavolo non pronostica');
+  ok(S.pronostica(s, s0.a, '0-0', 'e', '0-4') !== undefined, 'chi gioca la serie pronostica, anche contro se stesso');
+  s = S.pronostica(s, k1, '0-0', 'e', sbagliato);
+  s = S.pronostica(s, k1, '0-0', 'e', esito);       // cambia idea
+  s = S.pronostica(s, k1, '0-0', 'm', top[0]);
+  s = S.pronostica(s, k2, '0-0', 'e', sbagliato);
+  s = S.pronostica(s, k2, '0-0', 'm', top[0]);
+  s = S.pronostica(s, k3, '0-0', 'e', sbagliato);
+  s = S.pronostica(s, k3, '0-0', 'm', nonTop);
+  ok(s.po.pron['0-0'][k1].e === esito, 'si cambia idea, vale l\'ultima scelta');
+  // Un pronostico del formato di prima (vincente e gare) non si conta e non rompe.
+  s = { ...s, po: { ...s.po, pron: { ...s.po.pron, '0-1': { [k1]: { v: 't1', g: 5 } } } } };
+  const dopoDb = giroFirebase(s);
+  ok(dopoDb.po.pron?.['0-0']?.[k1]?.m === top[0] && dopoDb.po.corrente === '0-0', 'pronostici e serie in corso sopravvivono al database');
 
-  // Si cambia idea: vale l'ultima.
-  s = S.pronostica(s, c, '0-0', s0.a, s0.b, perde0, 4);
-  s = S.pronostica(s, c, '0-0', s0.a, s0.b, vince0, gare0);
-  ok(s.po.pron['0-0'][c].v === vince0 && s.po.pron['0-0'][c].g === gare0, 'si cambia idea, vale l\'ultima scelta');
-  s = S.pronostica(s, d, '0-0', s0.a, s0.b, vince0, gare0 === 4 ? 5 : 4); // vincente giusto, gare no
-  // Sulla semifinale 1 un pronostico sbagliato del tutto.
-  const perde1 = s1.res.winner === s1.a ? s1.b : s1.a;
-  s = S.pronostica(s, s0.a, '0-1', s1.a, s1.b, perde1, s1.res.games.length);
-  ok(Object.keys(s.po.pron['0-0']).length === 2 && s.po.pron['0-1'][s0.a], 'pronostici piazzati');
+  // Da gara 1 si chiude.
+  s = S.advanceSeries(s, 0, 0, 1);
+  ok(S.pronostica(s, k2, '0-0', 'e', esito) === undefined, 'dopo gara 1 non si pronostica piu');
+  ok(S.pronostica(s, k2, '0-1', 'e', '4-1') !== undefined, 'la serie dopo resta aperta');
+  for (let i = 0; i < 7; i++) s = S.advanceSeries(s, 0, 0, 1);
 
-  // Il giro dal database non li perde.
-  ok(giroFirebase(s).po.pron?.['0-0']?.[c]?.g === gare0, 'i pronostici sopravvivono al database');
-
-  // Da gara 1 in poi si chiude.
-  s = S.advanceSeries(s, 0, 0, S.PASSO_GARA);
-  ok(S.pronostica(s, d, '0-0', s0.a, s0.b, vince0, gare0) === undefined, 'dopo gara 1 non si pronostica piu');
-  ok(S.pronostica(s, s0.a, '0-1', s1.a, s1.b, s1.res.winner, 4) !== undefined, 'la serie non ancora iniziata resta aperta');
-
-  // La finale: la pronostica chi e uscito in semifinale, non chi la gioca.
-  for (let i = 0; i < 2; i++) for (let k = 0; k < 10; k++) {
-    if (costruisciBracket(s.po, T)[0][i].res?.done) break;
-    s = S.advanceSeries(s, 0, i, S.PASSO_GARA);
-  }
-  const fuoriFin = S.attive(s).filter((k) => k !== fin.a && k !== fin.b);
-  ok(S.pronostica(s, fin.a, '1-0', fin.a, fin.b, fin.a, 4) === undefined, 'chi gioca la finale non la pronostica');
-  ok(fuoriFin.every((k) => S.pronostica(s, k, '1-0', fin.a, fin.b, fin.a, 4)), 'chi e uscito in semifinale pronostica la finale');
-  ok(P.serieDelTabellone(s, T).filter(P.aperta).map((x) => x.id).join() === '1-0', 'aperta al pronostico resta solo la finale');
-
-  // I punti.
+  // I punti: la quota di quello che si e preso.
   const cl = P.classificaPronostici(s, T);
   const di = (k) => cl.find((r) => r.key === k);
-  ok(di(c)?.punti === 3 && di(c).esatti === 1, 'vincente e gare esatti: 3 punti', JSON.stringify(di(c)));
-  ok(di(d)?.punti === 1 && di(d).esatti === 0, 'solo il vincente: 1 punto', JSON.stringify(di(d)));
-  ok(di(s0.a)?.punti === 0 && di(s0.a).chiusi === 1, 'sbagliato: 0 punti', JSON.stringify(di(s0.a)));
-  ok(cl[0].key === c, 'in testa chi ha preso il risultato esatto');
-  ok(P.puntiDi({ v: vince0, g: gare0 }, { done: false, winner: vince0, games: [] }) === 0, 'una serie in corso non da punti');
+  const qE = quote.esiti[esito].q, qM = quote.marcatori.find((m) => m.id === top[0]).q;
+  ok(Math.abs(di(k1).punti - Math.round((qE + qM) * 100) / 100) < 1e-9 && di(k1).presi === 2,
+    'esito e marcatore presi: la somma delle due quote', `${di(k1).punti} = ${qE} + ${qM}`);
+  ok(Math.abs(di(k2).punti - qM) < 1e-9 && di(k2).presi === 1, 'solo il marcatore: la sua quota', `${di(k2).punti}`);
+  ok(di(k3).punti === 0 && di(k3).chiusi === 1, 'tutto sbagliato: zero');
+  ok(cl[0].key === k1, 'in testa chi ha preso di piu');
+  ok(!cl.some((r) => r.key === k1 && r.fatti > 1), 'il pronostico del formato vecchio non si conta');
+  ok(P.reDeiPronostici(cl)?.key === k1, 'e il re dei pronostici e lui');
+  ok(P.reDeiPronostici([{ key: 'a', punti: 3, presi: 1 }, { key: 'b', punti: 3, presi: 1 }]) === null,
+    'a pari punti e pari presi non si incorona nessuno');
 
-  // Il bot: segue l'overall senza saperne il risultato.
-  const forte = T[s0.a], debole = T[s0.b];
-  const ovr = (X) => X.five.reduce((a, p) => a + D.byId[p.id].ovr, 0) / X.five.length;
-  const [Fo, De] = ovr(forte) >= ovr(debole) ? [forte, debole] : [debole, forte];
-  const finto = { ...De, five: De.five.map((p) => ({ ...p, id: D.players.slice().sort((a, b) => a.ovr - b.ovr)[0].id })) };
-  const rnd = makeRng('pron-bot');
-  let suFavorita = 0, sorpresaIn4 = 0, validi = 0;
-  for (let i = 0; i < 1000; i++) {
-    const p = P.pronosticoBot(Fo, finto, rnd);
-    if (p.v === Fo.key) suFavorita++;
-    if (p.v === finto.key && p.g === 4) sorpresaIn4++;
-    if ((p.v === Fo.key || p.v === finto.key) && p.g >= 4 && p.g <= 7) validi++;
+  // A pari punti fra marcatori, vince chi ha scelto l'uno o l'altro.
+  const finta = { done: true, wins: { a: 4, b: 1 }, games: [{ boxA: [{ id: 'x', pts: 30 }, { id: 'y', pts: 30 }], boxB: [{ id: 'z', pts: 20 }] }] };
+  const qf = { esiti: { '4-1': { q: 4 } }, marcatori: [{ id: 'x', q: 2 }, { id: 'y', q: 3 }, { id: 'z', q: 9 }] };
+  ok(P.puntiDi({ m: 'x' }, finta, qf).m === 2 && P.puntiDi({ m: 'y' }, finta, qf).m === 3 && P.puntiDi({ m: 'z' }, finta, qf).m === 0,
+    'due marcatori a pari punti: vince chi ha scelto l\'uno e chi ha scelto l\'altro');
+
+  // Le quote: oneste, ferme, e non guardano il risultato.
+  ok(JSON.stringify(P.quoteSerie(T[s0.a], T[s0.b], s0.seed)) === JSON.stringify(quote), 'le quote non cambiano dopo aver giocato');
+  ok(Math.abs(quote.marcatori.reduce((a, m) => a + m.p, 0) - 1) < 1e-9, 'le probabilita dei marcatori fanno 1');
+
+  // Il bot pesca in proporzione: spesso la favorita, mai l'impossibile.
+  const rnd = makeRng('bot-quote');
+  const fav = P.ESITI.slice().sort((a, b) => quote.esiti[b].p - quote.esiti[a].p)[0];
+  let suFav = 0, impossibili = 0;
+  for (let i = 0; i < 2000; i++) {
+    const p = P.pronosticoBot(quote, rnd);
+    if (p.e === fav) suFav++;
+    if (quote.esiti[p.e].p === 0 || quote.marcatori.find((m) => m.id === p.m).p === 0) impossibili++;
   }
-  ok(validi === 1000, 'il bot fa sempre un pronostico valido');
-  ok(suFavorita > 850, 'contro una squadra molto piu debole il bot sta con la favorita', `${suFavorita}/1000`);
-  ok(sorpresaIn4 === 0, 'nessun bot pronostica la sorpresa in quattro gare');
+  ok(Math.abs(suFav / 2000 - quote.esiti[fav].p) < 0.04, 'il bot sceglie l\'esito favorito quanto e probabile',
+    `${(suFav / 20).toFixed(1)}% contro ${(quote.esiti[fav].p * 100).toFixed(1)}%`);
+  ok(impossibili === 0, 'e non sceglie mai quello che non e uscito in nessuna simulazione');
+
+  // UNA SERIE ALLA VOLTA: l'ordine, la serie in corso, dove si va dopo.
+  let t = partitaFinoA(4, 'playoff-inizio', 'ordine').s;
+  const ord = () => SR.ordineSerie(t, T);
+  ok(ord().map((x) => x.id).join() === '0-0,0-1,1-0', 'l\'ordine: semifinale 1, semifinale 2, finale');
+  ok(SR.serieCorrente(t, T).id === '0-0', 'si parte dalla prima');
+  for (let i = 0; i < 7; i++) t = S.advanceSeries(t, 0, 0, 1);
+  ok(SR.serieCorrente(t, T).id === '0-0', 'a serie chiusa si resta li, finche chi ospita non va avanti');
+  ok(SR.dopo(t, T, SR.serieCorrente(t, T)).map((x) => x.id).join() === '0-1', 'e dopo c\'e la semifinale 2');
+  t = S.vaiASerie(t, '0-1');
+  for (let i = 0; i < 7; i++) t = S.advanceSeries(t, 0, 1, 1);
+  const strade = SR.dopo(t, T, SR.serieCorrente(t, T));
+  ok(strade.map((x) => x.id).join() === 'third,1-0', 'dopo l\'ultima semifinale: finalina o finale', strade.map((x) => x.id).join());
+  t = S.vaiASerie(S.openThird(t, strade[0].a, strade[0].b), 'third');
+  ok(ord().map((x) => x.id).join() === '0-0,0-1,third,1-0', 'la finalina si gioca prima della finale');
+  for (let i = 0; i < 7; i++) t = S.advanceThird(t, 1);
+  ok(SR.dopo(t, T, SR.serieCorrente(t, T)).map((x) => x.id).join() === '1-0', 'chiusa la finalina, la finale');
+  t = S.vaiASerie(t, '1-0');
+  for (let i = 0; i < 7; i++) t = S.advanceSeries(t, 1, 0, 1);
+  ok(SR.dopo(t, T, SR.serieCorrente(t, T)).length === 0, 'dopo la finale non c\'e niente');
+
+  // Una stanza aperta prima del cambio non ha la serie in corso: si prende la
+  // prima non chiusa, e niente si rompe.
+  let vecchia = partitaFinoA(4, 'playoff-inizio', 'vecchia').s;
+  for (let i = 0; i < 7; i++) vecchia = S.advanceSeries(vecchia, 0, 0, 1);
+  const { corrente, ...poSenza } = vecchia.po;
+  vecchia = giroFirebase({ ...vecchia, po: poSenza });
+  ok(SR.serieCorrente(vecchia, T).id === '0-1', 'una stanza di prima riprende dalla prima serie non chiusa');
+
+  // Ogni formato, da cima a fondo seguendo solo "Avanti": tutte le serie
+  // giocate una volta, e alla fine un campione. Con e senza finalina.
+  for (const n of NUMERI_SQUADRE) for (const conFinalina of [false, true]) {
+    let { s: x, T: Tn } = partitaFinoA(n, 'playoff-inizio', `avanti${n}`);
+    const viste = [];
+    for (let passi = 0; passi < 40; passi++) {
+      const c = SR.serieCorrente(x, Tn);
+      if (!c.f.done) {
+        viste.push(c.id);
+        for (let k = 0; k < 7; k++) x = c.id === 'third' ? S.advanceThird(x, 1) : S.advanceSeries(x, c.r, c.i, 1);
+        continue;
+      }
+      const strade = SR.dopo(x, Tn, c);
+      if (!strade.length) break;
+      const st = conFinalina ? strade[0] : strade[strade.length - 1];
+      x = st.id === 'third' ? S.vaiASerie(S.openThird(x, st.a, st.b), 'third') : S.vaiASerie(x, st.id);
+    }
+    const tot = x.po.turni.reduce((a, r) => a + r.length, 0) + (x.po.third ? 1 : 0);
+    const fin = costruisciBracket(x.po, Tn).at(-1)[0];
+    ok(viste.length === tot && new Set(viste).size === tot && fin.res?.done,
+      `${n} squadre${conFinalina ? ' con finalina' : ''}: una serie alla volta fino al campione`, viste.join(' '));
+  }
 }
 
 /* ==========================================================
