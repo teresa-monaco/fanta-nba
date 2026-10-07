@@ -2,7 +2,7 @@
 // delegato sui click. Lo stato transitorio della UI (nickname in digitazione,
 // slot selezionato per lo scambio) vive qui, fuori dallo stato condiviso.
 
-import { db, SLOTS, SLOT_LABEL, TEAM_KEYS, TEAM_NAMES, STRATEGIES, ROSTER_SIZE, START_CREDITS } from './core.js';
+import { db, SLOTS, SLOT_LABEL, TEAM_KEYS, TEAM_NAMES, NOMI_SQUADRA, AMICI, STRATEGIES, ROSTER_SIZE, START_CREDITS } from './core.js';
 import { buildTeam, simSeriesUpTo, costruisciBracket, nomeTurno,
   simStagione, giriStagione, potenzaSotto, RITMI, refertoTattico } from './engine.js';
 import { narrateGame, teamIdentity, verdettoReferto } from './narrator.js';
@@ -28,6 +28,11 @@ export const ui = {
   scheda: null,       // id del giocatore di cui e aperta la scheda: cosa mia, non condivisa
   garaVista: null,    // { serie, g, n }: la gara toccata su un pallino, finche non ne arriva una nuova
 };
+
+// Il soprannome della squadra accanto al nome di chi gioca. Dove non c'e
+// nessuno seduto il nome E il soprannome, e ripeterlo sarebbe un doppione.
+const soprannome = (k) => (NOMI_SQUADRA[k] && NOMI_SQUADRA[k] !== TEAM_NAMES[k]
+  ? ` <span class="soprannome">${esc(NOMI_SQUADRA[k])}</span>` : '');
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ATTR_LABELS = { sco: 'Realizzazione', tre: 'Tiro da 3', pla: 'Playmaking', reb: 'Rimbalzi', dif: 'Protezione ferro', dpe: 'Difesa perimetro', atl: 'Atletismo', usg: 'Palla richiesta' };
@@ -144,12 +149,14 @@ function viewLobby({ state: s, session }) {
   const dentro = TEAM_KEYS.filter((k) => S.seatTaken(s, k)).map((k) => {
     const mine = s.seats[session.uid] === k;
     const bot = s.bots?.[k];
+    // Prima chi gioca, poi il soprannome della sua squadra: e cosi che vi
+    // chiamate al tavolo.
     return `<div class="strip t-${k}">
       <span class="dot"></span>
-      <span class="nm" data-nome-team="${k}">${esc(TEAM_NAMES[k])}</span>
+      <span class="nm">${esc(TEAM_NAMES[k])}</span>${mine ? ' <span class="tiny muted">(tu)</span>' : ''}
+      ${bot ? `<span class="tag bot">bot</span>` : ''}
       <span class="grow"></span>
-      <span class="small">${esc(S.nameOfSeat(s, k))}${mine ? ' <span class="tiny muted">(tu)</span>' : ''}
-        ${bot ? `<span class="tag bot">bot</span>` : ''}</span>
+      <span class="small muted" data-nome-team="${k}">${esc(NOMI_SQUADRA[k])}</span>
       ${bot && isHost ? `<button class="sm ghost" data-act="togli-bot" data-team="${k}">Togli</button>` : ''}
     </div>`;
   }).join('');
@@ -198,12 +205,16 @@ function viewLobby({ state: s, session }) {
       <p class="tiny muted center" style="letter-spacing:1.6px;margin-bottom:6px">
         ${pieno ? 'Tutte le squadre sono assegnate' : 'Entra e ti viene assegnata una squadra'}</p>
       ${pieno ? '<p class="small muted center">Puoi guardare.</p>' : `
+        <div class="amici">${AMICI.map((a) => {
+          const preso = Object.values(s.names || {}).includes(a);
+          return `<button class="sm ${preso ? 'ghost' : ''}" data-act="join-amico" data-nome="${esc(a)}" ${preso ? 'disabled' : ''}>${esc(a)}</button>`;
+        }).join('')}</div>
         <div class="row" style="max-width:420px;margin:0 auto">
-          <input id="nick" class="grow" value="${esc(ui.nickname)}" placeholder="il tuo nome" maxlength="14" autocomplete="off">
+          <input id="nick" class="grow" value="${esc(ui.nickname)}" placeholder="ospite? scrivi il tuo nome" maxlength="14" autocomplete="off">
           <button class="primary" data-act="join">Entra</button>
         </div>`}` : `
-      <p class="tiny muted center" style="letter-spacing:1.6px;margin-bottom:6px">La tua squadra</p>
-      <div class="flap" data-nome-team="${mia}">${flapHTML(TEAM_NAMES[mia])}</div>
+      <p class="tiny muted center" style="letter-spacing:1.6px;margin-bottom:6px">${esc(TEAM_NAMES[mia])}, la tua squadra</p>
+      <div class="flap" data-nome-team="${mia}">${flapHTML(NOMI_SQUADRA[mia])}</div>
       <div class="row center" style="justify-content:center;margin-top:9px">
         <button class="sm" data-act="cambia-nome" title="Te ne dà un'altra: il nome non si scrive, si pesca">Cambia</button>
         <button class="sm ghost" data-act="leave">Esci</button>
@@ -481,7 +492,7 @@ function myTeamCard(s, k, bid) {
 
   return `<div class="card mine t-${k}">
     <div class="row spread">
-      <h3><span class="dot" style="display:inline-block;margin-right:7px"></span>${TEAM_NAMES[k]} <span class="tiny muted">(tu)</span></h3>
+      <h3><span class="dot" style="display:inline-block;margin-right:7px"></span>${esc(TEAM_NAMES[k])} <span class="tiny muted">(tu)</span>${soprannome(k)}</h3>
       ${leader ? '<span class="tag lead">sei in testa</span>' : ''}
     </div>
     <div class="mine-nums">
@@ -661,7 +672,7 @@ function viewSquadra({ state: s, session }) {
 
     return `<div class="card t-${k} ${mia ? 'mine' : ''} ${confermata ? 'pronta' : ''}">
       <div class="row spread">
-        <h3><span class="dot" style="display:inline-block;margin-right:7px"></span>${TEAM_NAMES[k]}${mia ? ' <span class="tiny muted">(tu)</span>' : ''}</h3>
+        <h3><span class="dot" style="display:inline-block;margin-right:7px"></span>${esc(TEAM_NAMES[k])}${mia ? ' <span class="tiny muted">(tu)</span>' : ''}${soprannome(k)}</h3>
         ${confermata ? '<span class="tag ok">pronta</span>' : ''}
         ${canEdit ? `<button class="sm ghost" data-act="toggle-lineup" data-team="${k}">${editLineup ? 'Fatto' : 'Modifica'}</button>` : ''}
       </div>
@@ -1283,7 +1294,7 @@ function bannerCampione(m, T) {
   return `<div class="champ t-${W.key}">
     ${trofeo(56)}
     <div class="t">Campione</div>
-    <div class="n">${esc(W.name)}</div>
+    <div class="n">${esc(W.name)}</div>${soprannome(W.key) ? `<div class="sopr">${esc(NOMI_SQUADRA[W.key])}</div>` : ''}
     <div class="small">${wv}-${wp} su ${esc(L.name)}${m.res.mvp ? ` · MVP delle Finals ${esc(m.res.mvp.n)}` : ''}</div>
     <div class="rosa">${(W.five || []).map((p) => esc(p.n)).join(' · ')}</div>
   </div>`;
@@ -1317,7 +1328,7 @@ export function rivelaCampione(s) {
     <div class="rivela-box">
       ${trofeo(96)}
       <div class="t">Campione</div>
-      <div class="n">${esc(W.name)}</div>
+      <div class="n">${esc(W.name)}</div>${soprannome(W.key) ? `<div class="sopr">${esc(NOMI_SQUADRA[W.key])}</div>` : ''}
       <div class="small">${wv}-${wp} su ${esc(L.name)}</div>
       ${m.res.mvp ? `<div class="mvp-r">MVP delle Finals<b>${esc(m.res.mvp.n)}</b></div>` : ''}
       <div class="rosa">${(W.five || []).map((p) => esc(p.n)).join(' · ')}</div>
@@ -1417,19 +1428,25 @@ export function alboCard(s) {
   if (!albo.length) return '';
   const cl = S.classifica(s).filter((t) => t.titoli || t.finali);
 
-  // I nomi girano a ogni partita, la sedia no: senza il nome di chi ci sta
-  // seduto la classifica fra le serate non direbbe piu a chi appartiene.
-  const righe = cl.map((t) => `<div class="albo-riga t-${t.key}">
+  // Per persona: i soprannomi cambiano a ogni partita, e le sedie possono
+  // cambiare padrone. Il colore e quello della sedia su cui siede stasera,
+  // se e al tavolo.
+  const sediaDi = (nome) => TEAM_KEYS.find((k) => S.nameOfSeat(s, k) === nome);
+  const righe = cl.map((t) => `<div class="albo-riga ${sediaDi(t.nome) ? `t-${sediaDi(t.nome)}` : ''}">
       <span class="dot"></span>
-      <span class="nm">${esc(S.nameOfSeat(s, t.key) || t.nome)}</span>
-      ${S.nameOfSeat(s, t.key) ? `<span class="tiny muted">oggi ${esc(t.nome)}</span>` : ''}
+      <span class="nm">${esc(t.nome)}</span>
       <span class="grow"></span>
       <b>${t.titoli}</b><span class="tiny muted">${t.titoli === 1 ? 'titolo' : 'titoli'}</span>
       <span class="tiny muted">· ${t.finali} final${t.finali === 1 ? 'e' : 'i'}</span>
     </div>`).join('');
 
+  // Ogni serata: chi ha vinto, col soprannome che aveva quella sera.
+  const chi = (persona, sedia, squadra) => {
+    const n = persona || S.nameOfSeat(s, sedia);
+    return n ? `${esc(n)}${squadra && squadra !== n ? ` <span class="tiny muted">(${esc(squadra)})</span>` : ''}` : esc(squadra);
+  };
   const storia = albo.slice(0, 8).map((e) => `<div>
-      <span>${esc(e.championName)} <span class="muted">b. ${esc(e.runnerUpName)} ${e.wins}</span></span>
+      <span>${chi(e.championChi, e.champion, e.championName)} <span class="muted">b. ${esc(e.runnerUpChi || S.nameOfSeat(s, e.runnerUp) || e.runnerUpName)} ${e.wins}</span></span>
       <span class="muted tiny">${esc(e.mvp || '')}</span>
     </div>`).join('');
 

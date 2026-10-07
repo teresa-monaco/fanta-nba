@@ -966,6 +966,14 @@ details summary {
 
 .condividi { margin: 10px 0 14px; }
 
+/* I nomi del gruppo, all'ingresso: si entra con un tocco. */
+.amici { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 0 auto 9px; max-width: 420px; position: relative; z-index: 2; }
+.amici button { min-width: 64px; }
+.amici button:disabled { opacity: .35; }
+/* Il soprannome della squadra accanto al nome di chi gioca. */
+.soprannome { font: 700 11px var(--cond); letter-spacing: 1px; text-transform: uppercase; color: var(--tc, var(--muted)); opacity: .85; margin-left: 4px; }
+.champ .sopr, .rivela .sopr { font: 700 13px var(--cond); letter-spacing: 2px; text-transform: uppercase; color: var(--tc); margin-top: 2px; }
+
 /* ---- i pronostici ---- */
 .pron { margin: 4px 0 12px; padding: 9px 10px; background: rgba(255, 255, 255, .03); border-left: 3px solid var(--gold); }
 .pron-tit { font: 800 10px var(--cond); letter-spacing: 1.8px; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }

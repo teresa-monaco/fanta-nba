@@ -657,6 +657,38 @@ console.log('\nI PRONOSTICI A QUOTE\n');
 }
 
 /* ==========================================================
+   I nomi: la persona davanti, il soprannome accanto
+   ==========================================================
+
+   Il nome che si vede e quello di chi siede; l'albo conta per persona, anche
+   quando qualcuno una sera si siede su un'altra sedia. */
+console.log('\nI NOMI E L\'ALBO PER PERSONA\n');
+{
+  const core = await import('../js/core.js');
+  core.applicaNomi('nomi', {}, { t1: 'Agre' });
+  ok(core.TEAM_NAMES.t1 === 'Agre' && core.NOMI_SQUADRE.includes(core.NOMI_SQUADRA.t1), 'chi siede da il nome alla squadra, il soprannome resta a parte',
+    `${core.TEAM_NAMES.t1} · ${core.NOMI_SQUADRA.t1}`);
+  ok(core.TEAM_NAMES.t2 === core.NOMI_SQUADRA.t2, 'dove non siede nessuno si vede il soprannome');
+  core.applicaNomi('fanta-nba');
+
+  let s = S.newGame('albo', 'host');
+  s = S.joinGame(s, 'u1', 'Diego');
+  s = S.joinGame(s, 'u2', 'Fabio');
+  ok(JSON.stringify(S.personeAlTavolo(s)) === JSON.stringify({ t1: 'Diego', t2: 'Fabio' }), 'chi siede dove');
+  const voce = (seed, champion, runnerUp, chi, chiR) => ({ seed, champion, runnerUp, championName: 'Bulls', runnerUpName: 'Jazz', championChi: chi, runnerUpChi: chiR, wins: '4-1' });
+  s = { ...s, albo: [
+    voce('a', 't1', 't2', 'Diego', 'Fabio'),
+    voce('b', 't2', 't1', 'Diego', 'Fabio'),   // quella sera Diego era sulla seconda sedia
+    { seed: 'c', champion: 't2', runnerUp: 't1', championName: 'Vecchia', runnerUpName: 'Altra', wins: '4-0' }, // serata di prima: niente nomi
+  ] };
+  const cl = S.classifica(s);
+  const di = (n) => cl.find((r) => r.nome === n);
+  ok(di('Diego')?.titoli === 2, 'i titoli vanno alla persona, qualunque sedia avesse', JSON.stringify(di('Diego')));
+  ok(di('Fabio')?.titoli === 1 && di('Fabio').finali === 3, 'una serata di prima va a chi siede adesso su quella sedia', JSON.stringify(di('Fabio')));
+  ok(!cl.some((r) => r.nome === 'Bulls' || r.nome === 'Vecchia'), 'e nessun soprannome finisce in classifica come se fosse una persona');
+}
+
+/* ==========================================================
    Chi ha finito la rosa mentre gli altri comprano ancora
    ==========================================================
 

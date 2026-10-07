@@ -705,15 +705,29 @@ export function recordAlbo(s, entry) {
   return { ...s, albo: [...albo, entry] };
 }
 
+// La classifica fra le serate, PER PERSONA. Contava per sedia, e le sedie
+// cambiano padrone: chi entrava per secondo una sera si prendeva i titoli di
+// chi era entrato per secondo la sera prima. Le serate registrate prima che
+// l'albo salvasse il nome di chi giocava ripiegano su chi siede adesso su
+// quella sedia, cioe su come venivano contate fino a ieri.
 export function classifica(s) {
-  const albo = s.albo || [];
   const t = {};
-  for (const k of TEAM_KEYS) t[k] = { key: k, nome: TEAM_NAMES[k], titoli: 0, finali: 0, mvp: [] };
-  for (const e of albo) {
-    if (t[e.champion]) { t[e.champion].titoli++; t[e.champion].finali++; if (e.mvp) t[e.champion].mvp.push(e.mvp); }
-    if (t[e.runnerUp]) t[e.runnerUp].finali++;
+  const riga = (n) => (t[n] ||= { nome: n, titoli: 0, finali: 0, mvp: [] });
+  for (const e of s.albo || []) {
+    const c = e.championChi || nameOfSeat(s, e.champion) || e.championName;
+    const r = e.runnerUpChi || nameOfSeat(s, e.runnerUp) || e.runnerUpName;
+    if (c) { riga(c).titoli++; riga(c).finali++; if (e.mvp) riga(c).mvp.push(e.mvp); }
+    if (r) riga(r).finali++;
   }
-  return Object.values(t).sort((a, b) => b.titoli - a.titoli || b.finali - a.finali);
+  return Object.values(t).sort((a, b) => b.titoli - a.titoli || b.finali - a.finali || a.nome.localeCompare(b.nome));
+}
+
+// Sedia -> nome di chi ci siede: e il nome che il gioco mostra (vedi
+// core.applicaNomi).
+export function personeAlTavolo(s) {
+  const out = {};
+  for (const [uid, k] of Object.entries(s.seats || {})) if (s.names?.[uid]) out[k] = s.names[uid];
+  return out;
 }
 
 /* ---------- Le rivalita fra serate ---------- */

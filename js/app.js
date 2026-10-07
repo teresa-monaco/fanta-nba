@@ -1,6 +1,6 @@
 // app.js — avvio, risoluzione della stanza, un solo handler per tutti i click.
 
-import { loadData, TEAM_KEYS, TEAM_NAMES, applicaNomi, NOMI_SQUADRE } from './core.js';
+import { loadData, TEAM_KEYS, TEAM_NAMES, NOMI_SQUADRA, applicaNomi, NOMI_SQUADRE } from './core.js';
 import { simSeriesUpTo, componiTabellone, costruisciBracket, giriStagione, tabelloneDaStagione, RITMI } from './engine.js';
 import * as S from './state.js';
 import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
@@ -129,7 +129,7 @@ function paint() {
   // I nomi girano a ogni partita e si estraggono dal seed: vanno rimessi a
   // posto prima di disegnare, perche il seed cambia con "Nuova partita".
   // In coda arrivano i cambi fatti a mano in lobby, che stanno nello stato.
-  applicaNomi(state.seed, state.nomi);
+  applicaNomi(state.seed, state.nomi, S.personeAlTavolo(state));
   const ctx = { state, session };
   renderTopbar(topbar, ctx);
   render(root, ctx);
@@ -315,9 +315,10 @@ async function registraAlbo() {
       seed: f.seed,
       quando: Date.now(),
       champion: r.winner,
-      championName: TEAM_NAMES[r.winner],
+      // Il soprannome della squadra di quella sera; chi giocava sta in *Chi.
+      championName: NOMI_SQUADRA[r.winner],
       runnerUp: perdente,
-      runnerUpName: TEAM_NAMES[perdente],
+      runnerUpName: NOMI_SQUADRA[perdente],
       wins: `${Math.max(r.wins.a, r.wins.b)}-${Math.min(r.wins.a, r.wins.b)}`,
       mvp: r.mvp?.n || null,
       roster: T[r.winner].five.map((p) => p.n),
@@ -519,7 +520,8 @@ let nomiVisti = null;
 
 function effettiNomi() {
   const ora = {};
-  for (const k of TEAM_KEYS) ora[k] = TEAM_NAMES[k];
+  // Lo zapping cambia il soprannome della squadra, non il nome di chi gioca.
+  for (const k of TEAM_KEYS) ora[k] = NOMI_SQUADRA[k];
   // Al primo disegno non e cambiato niente: si prende nota e basta, o
   // all'ingresso in stanza partirebbero tutte insieme.
   if (nomiVisti) {
@@ -738,8 +740,12 @@ document.addEventListener('click', async (ev) => {
 
       /* --- lobby --- */
       // Non si sceglie la squadra: si entra e te ne viene data una.
-      case 'join': {
-        const nick = (document.getElementById('nick')?.value || '').trim();
+      // Si entra toccando il proprio nome (vedi AMICI in core.js), o
+      // scrivendolo a mano se si e ospiti.
+      case 'join':
+      case 'join-amico': {
+        const nick = act === 'join-amico' ? el.dataset.nome
+          : (document.getElementById('nick')?.value || '').trim();
         if (!nick) return flash('Scrivi il tuo nome per entrare.', true);
         ui.nickname = nick;
         localStorage.setItem('nbaf:nick', nick);

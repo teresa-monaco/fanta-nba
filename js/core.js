@@ -245,7 +245,22 @@ export const NOMI_SQUADRE = [
 // I nomi si estraggono dal SEED della partita, non si salvano nel database:
 // ogni client rimescola con lo stesso seme e arriva alla stessa assegnazione.
 // La sedia resta la stessa (t3 e sempre la stessa persona), cambia l'etichetta.
+//
+// DUE NOMI PER SEDIA. Il gioco e fatto per un gruppo di amici, e "Agre ha
+// rilanciato" si capisce al volo, "Il Dolph ha rilanciato" no: bisognava
+// ricordarsi chi era il Dolph quella sera. Quindi il nome che si vede
+// dappertutto (TEAM_NAMES) e quello della PERSONA seduta; il soprannome della
+// squadra (NOMI_SQUADRA) resta, si sceglie in lobby, e compare accanto come
+// etichetta. Dove non c'e nessuno seduto — la modalita locale — si vede il
+// soprannome, come prima.
 export const TEAM_NAMES = {};
+export const NOMI_SQUADRA = {};
+
+// Il gruppo per cui e fatto il gioco: in lobby si entra toccando il proprio
+// nome. Non e solo comodita: albo d'oro e rivalita sommano PER NOME, e
+// "Agre" e "agre " sarebbero due persone diverse. Chi viene ospite il nome lo
+// scrive a mano, come sempre.
+export const AMICI = ['Diego', 'Fabio', 'Steve', 'Agre', 'Nick'];
 
 // L'assegnazione di partenza, in indici invece che in stringhe: serve poter
 // dire "il prossimo" senza cercare una stringa dentro un elenco.
@@ -259,13 +274,16 @@ export function indiciBase(seed) {
 // `scelte` sono i cambi fatti in lobby, una mappa sedia -> indice. Quelli si
 // salvano davvero nel database, ma sono numeri: una partita intera sta in una
 // manciata di byte, come tutto il resto dello stato.
-export function applicaNomi(seed, scelte) {
+// `persone` e la mappa sedia -> nome di chi ci siede (vedi
+// state.personeAlTavolo): dove c'e, e quello il nome che si vede.
+export function applicaNomi(seed, scelte, persone) {
   const idx = { ...indiciBase(seed), ...(scelte || {}) };
   TEAM_KEYS.forEach((k) => {
     // Il ripiego resta come rete di sicurezza: se un giorno si toglie un nome
     // dalla lista, una sedia salvata con quell'indice resta battezzata invece
     // di finire "undefined".
-    TEAM_NAMES[k] = NOMI_SQUADRE[idx[k]] ?? `Squadra ${k.slice(1)}`;
+    NOMI_SQUADRA[k] = NOMI_SQUADRE[idx[k]] ?? `Squadra ${k.slice(1)}`;
+    TEAM_NAMES[k] = persone?.[k] || NOMI_SQUADRA[k];
   });
   return TEAM_NAMES;
 }

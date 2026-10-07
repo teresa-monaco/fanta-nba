@@ -9,7 +9,7 @@
 // pura: si prova senza browser. disegnaCard() la stende su un canvas e non
 // decide niente.
 
-import { db, SLOTS, TEAM_NAMES } from './core.js';
+import { db, SLOTS, TEAM_NAMES, NOMI_SQUADRA } from './core.js';
 import { costruisciBracket } from './engine.js';
 import { premiSerata } from './premi.js';
 import { classificaPronostici, reDeiPronostici } from './pronostici.js';
@@ -59,12 +59,15 @@ export function datiCard(s, T) {
       riga: `pagato ${prezzo[b.id]} crediti${diChi(b)}` });
   }
 
+  // In grande chi ha vinto, sotto il soprannome che aveva la sua squadra:
+  // il nome che si vede e gia quello della persona (vedi core.applicaNomi).
   const wv = Math.max(fin.res.wins.a, fin.res.wins.b), wp = Math.min(fin.res.wins.a, fin.res.wins.b);
+  const sopr = NOMI_SQUADRA[W.key] && NOMI_SQUADRA[W.key] !== W.name ? NOMI_SQUADRA[W.key] : '';
   return {
-    key: W.key, squadra: W.name, chi: chi(W.key),
-    finale: `${wv}-${wp} su ${L.name}${chi(L.key) ? ` (${chi(L.key)})` : ''}`,
+    key: W.key, squadra: W.name, soprannome: sopr,
+    finale: `${wv}-${wp} su ${L.name}`,
     rosa, riquadri: riquadri.slice(0, 3),
-    testo: `Fanta NBA — Campione: ${W.name}${chi(W.key) ? ` di ${chi(W.key)}` : ''}, ${wv}-${wp} su ${L.name}.`,
+    testo: `Fanta NBA — Campione: ${W.name}${sopr ? ` (${sopr})` : ''}, ${wv}-${wp} su ${L.name}.`,
   };
 }
 
@@ -121,7 +124,7 @@ export function disegnaCard(ctx, d, colori = {}) {
   ctx.fillStyle = '#ffffff'; spazio(ctx, 2);
   scriviIn(ctx, d.squadra.toUpperCase(), W / 2, 448, W - 2 * mx, 118);
   ctx.fillStyle = tc; spazio(ctx, 3);
-  if (d.chi) scriviIn(ctx, `DI ${d.chi.toUpperCase()}`, W / 2, 506, W - 2 * mx, 40, 700);
+  if (d.soprannome) scriviIn(ctx, d.soprannome.toUpperCase(), W / 2, 506, W - 2 * mx, 40, 700);
   ctx.fillStyle = C.muted2; spazio(ctx, 0);
   scriviIn(ctx, d.finale, W / 2, 560, W - 2 * mx, 34, 500, 'Barlow');
 

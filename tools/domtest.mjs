@@ -775,6 +775,19 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
   ok(has('data-act="aggiungi-bot"'), 'in una stanza c\'è il tasto per aggiungere un bot');
   ok(has('Manca qualcuno?'), 'e dice a cosa serve');
 
+  // I NOMI DEL GRUPPO. Si entra toccando il proprio, e il nome che si vede
+  // poi per tutto il gioco e quello: "Agre ha rilanciato", non "il Dolph".
+  {
+    const { AMICI, NOMI_SQUADRA } = await import('../js/core.js');
+    const sedia = F.state.seats.io;
+    ok(AMICI.every((a) => html().includes(`data-nome="${a}"`)), 'all\'ingresso ci sono i nomi del gruppo', AMICI.join(', '));
+    ok(/data-nome="Diego" disabled/.test(html()), 'e quello di chi e gia seduto non si puo riprendere');
+    ok(html().includes('<span class="nm">Diego</span>'), 'in lobby si vede Diego, non il soprannome della squadra');
+    ok(html().includes(`data-nome-team="${sedia}">${esc(NOMI_SQUADRA[sedia])}`), 'col soprannome accanto, che resta quello da zappare',
+      NOMI_SQUADRA[sedia]);
+    ok(TEAM_NAMES[sedia] === 'Diego' && NOMI_SQUADRA[sedia] !== 'Diego', 'per il resto del gioco la sua squadra si chiama Diego');
+  }
+
   await F.session.apply((s) => S.aggiungiBot(s));
   render(els.app, { state: F.state, session: stanza });
   const primi = S.botDi(F.state);
@@ -811,6 +824,17 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
   await F.session.apply((s) => S.startAuction(s, now(), S.attive(s)));
   ok(S.aggiungiBot(F.state) === undefined, 'a partita avviata non si aggiungono bot');
   ok(S.togliBot(F.state, S.botDi(F.state)[0]) === undefined, 'e non si tolgono');
+
+  // All'asta l'offerta e di una persona.
+  {
+    const sedia = F.state.seats.io;
+    await F.session.apply((s) => (S.canBid(s, sedia, 1) ? S.placeBid(s, sedia, 1, now()) : undefined));
+    render(els.app, { state: F.state, session: { ...F.session, mode: 'room', uid: 'io' } });
+    ok(F.state.auction.bid?.team !== sedia || html().includes('offerta di <b>Diego</b>'), 'all\'asta si legge "offerta di Diego"',
+      F.state.auction.bid?.team === sedia ? '' : 'un bot ha gia rilanciato');
+    ok(S.botDi(F.state).every((k) => TEAM_NAMES[k] === S.nameOfSeat(F.state, k)), 'e anche i bot si chiamano col loro nome',
+      S.botDi(F.state).map((k) => TEAM_NAMES[k]).join(', '));
+  }
 
   // Offrono davvero, e restano dentro le regole.
   {
