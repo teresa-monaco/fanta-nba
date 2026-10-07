@@ -687,6 +687,29 @@ console.log('\nI PREMI PER MEDIA\n');
 }
 
 /* ==========================================================
+   Il bonus dei pronostici
+   ========================================================== */
+console.log('\nIL BONUS DEI PRONOSTICI\n');
+{
+  let s = S.newGame('bonus', 'host');
+  for (let i = 0; i < 4; i++) s = S.joinGame(s, 'u' + i, 'P' + i);
+  ok(S.daiBonus(s, 't9') === undefined, 'non si da a una sedia vuota');
+  s = S.daiBonus(s, 't2');
+  ok(s.bonus === 't2', 'si da a una squadra');
+  s = S.daiBonus(s, 't3');
+  ok(s.bonus === 't3', 'uno solo: dandolo a un altro si sposta');
+  ok(S.daiBonus(s, 't3').bonus === null, 'toccandolo di nuovo si toglie');
+  ok(giroFirebase(s).bonus === 't3', 'sopravvive al database');
+  ok(S.resetGame(s, 'altra').bonus === null, 'con "Nuova partita" scade');
+  ok(S.leaveSeat(s, 'u2').bonus === null, 'se chi lo aveva se ne va, se ne va anche il bonus');
+  const a = S.startAuction(s, tick());
+  ok(a.teams.t3.credits === 55 && a.teams.t2.credits === 50, 'all\'asta chi lo ha parte con 55, gli altri con 50');
+  ok(a.bonus === null, 'e si consuma: vale per quell\'asta sola');
+  ok(S.maxBid(a, 't3') === 51, 'e i 5 crediti si possono spendere davvero', `rilancio massimo ${S.maxBid(a, 't3')}`);
+  ok(S.daiBonus(a, 't1') === undefined, 'ad asta partita non si da piu');
+}
+
+/* ==========================================================
    I nomi: la persona davanti, il soprannome accanto
    ==========================================================
 

@@ -7,7 +7,7 @@ import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
 import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc, flapHTML, rivelaCampione } from './ui.js';
 import { sblocca, commutaAudio, tic, martelletto, nuovoLotto } from './suono.js';
 import * as BotAI from './bot.js';
-import { quoteSerie, pronosticoBot } from './pronostici.js';
+import { quoteSerie, pronosticoBot, classificaPronostici, reDeiPronostici } from './pronostici.js';
 import { ordineSerie, serieCorrente } from './serie.js';
 import { datiCard, disegnaCard, LARGHEZZA, ALTEZZA } from './card.js';
 
@@ -327,6 +327,10 @@ async function registraAlbo() {
       runnerUpChi: chi(perdente),
       serie,
     };
+    // Il re dei pronostici della serata: la lobby dopo lo ricorda a chi
+    // ospita, che decide a chi dare il bonus per l'asta.
+    const re = reDeiPronostici(classificaPronostici(state, T));
+    if (re) voce.rePronostici = chi(re.key);
     await session.apply((s) => S.recordAlbo(s, voce));
   } catch (err) {
     console.error('albo:', err);
@@ -762,6 +766,11 @@ document.addEventListener('click', async (ev) => {
 
       case 'togli-bot':
         await session.apply((s) => S.togliBot(s, team));
+        break;
+
+      // Il bonus dei pronostici: lo da chi ospita, a mano.
+      case 'bonus':
+        await session.apply((s) => (s.host === session.uid ? S.daiBonus(s, team) : undefined));
         break;
 
       case 'leave':

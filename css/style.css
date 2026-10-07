@@ -966,6 +966,15 @@ details summary {
 
 .condividi { margin: 10px 0 14px; }
 
+/* Nella lista del tavolo il nome di chi gioca non si taglia mai: se manca
+   spazio cede il soprannome, che si accorcia coi puntini. */
+.strip .nm { flex-shrink: 0; }
+.strip [data-nome-team] { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Il bonus dei pronostici in lobby. */
+.bonus-btn { padding: 5px 9px; margin-left: 6px; font: 800 13px var(--cond); }
+.bonus-nota b { color: var(--gold); }
+
 /* I nomi del gruppo, all'ingresso: si entra con un tocco. */
 .amici { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 0 auto 9px; max-width: 420px; position: relative; z-index: 2; }
 .amici button { min-width: 64px; }

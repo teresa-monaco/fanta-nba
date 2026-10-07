@@ -43,6 +43,7 @@ export function newGame(seed, hostUid) {
     pronti: {},         // teamKey -> ha confermato quintetto e tattica
     conStagione: false, // si sceglie in lobby: solo playoff, o stagione + playoff
     stagione: null,     // fotografia di quintetti e tattiche con cui si e giocata
+    bonus: null,        // teamKey col bonus dei pronostici per questa asta (vedi daiBonus)
     auction: { order: null, idx: 0, bid: null, deadline: null, running: false, log: [], unsold: [],
       skipVoti: {}, skipUsati: 0 },
     po: null,
@@ -77,6 +78,7 @@ export function hydrate(raw) {
   };
   s.albo = s.albo || [];
   s.bots = s.bots || {};
+  s.bonus = s.bonus || null; // il database toglie i null: va rimesso
   s.conStagione = !!s.conStagione;
   if (s.stagione) {
     // Anche qui il database toglie i null: lo scheletro va ricostruito o
@@ -140,7 +142,8 @@ export function leaveSeat(s, uid) {
   delete seats[uid];
   delete names[uid];
   if (k) delete bots[k];
-  return { ...s, seats, names, bots };
+  // Il bonus era per chi stava su quella sedia: se se ne va, se ne va anche lui.
+  return { ...s, seats, names, bots, bonus: s.bonus === k ? null : (s.bonus ?? null) };
 }
 
 /* ---------- Bot ---------- */
@@ -249,10 +252,29 @@ export function startAuction(s, now, squadre) {
   if (nessunoDentro && !squadre?.length) return undefined;
   const inGioco = squadre?.length ? squadre : attive(s);
   if (!numeroValido(inGioco.length)) return undefined;
+  // Il bonus dei pronostici si incassa qui, e si consuma: vale per questa asta.
+  let teams = s.teams;
+  if (s.bonus && inGioco.includes(s.bonus)) {
+    teams = { ...s.teams, [s.bonus]: { ...s.teams[s.bonus], credits: s.teams[s.bonus].credits + BONUS_PRONOSTICI } };
+  }
   return openLot({
-    ...s, phase: 'auction', attive: inGioco,
+    ...s, phase: 'auction', attive: inGioco, teams, bonus: null,
     auction: { ...s.auction, order, idx: -1 },
   }, now);
+}
+
+/* ---------- Il bonus dei pronostici ---------- */
+
+// Chi vince i pronostici di una serata parte all'asta dopo con 5 crediti in
+// piu. Lo da chi ospita, in lobby, a mano: la lobby gli ricorda chi era il
+// re dei pronostici dell'ultima serata, ma la decisione e sua. Uno solo per
+// volta: toccarlo su un'altra squadra lo sposta, sulla stessa lo toglie. Non
+// si accumula e non si porta dietro: con "Nuova partita" riparte da zero.
+export const BONUS_PRONOSTICI = 5;
+
+export function daiBonus(s, teamKey) {
+  if (s.phase !== 'lobby' || !teamKey || !seatTaken(s, teamKey)) return undefined;
+  return { ...s, bonus: s.bonus === teamKey ? null : teamKey };
 }
 
 // Passa al lotto successivo. Salta chi e gia stato comprato e, se il mazzo

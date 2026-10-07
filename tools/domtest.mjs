@@ -812,6 +812,21 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
     ok(TEAM_NAMES[sedia] === 'Diego' && NOMI_SQUADRA[sedia] !== 'Diego', 'per il resto del gioco la sua squadra si chiama Diego');
   }
 
+  // IL BONUS DEI PRONOSTICI: chi ospita lo da a mano, la lobby gli ricorda
+  // chi aveva vinto i pronostici l'ultima serata.
+  {
+    const sedia = F.state.seats.io;
+    ok(has('data-act="bonus"'), 'chi ospita ha il "+5" accanto alle squadre');
+    const conAlbo = { ...F.state, albo: [...(F.state.albo || []), { seed: 'ieri', champion: sedia, runnerUp: sedia, rePronostici: 'Diego', wins: '4-0' }] };
+    render(els.app, { state: conAlbo, session: stanza });
+    ok(has('Re dei pronostici dell\'ultima serata: <b>Diego</b>'), 'e la lobby gli ricorda chi era il re dei pronostici');
+    await F.session.apply((s) => S.daiBonus(s, sedia));
+    render(els.app, { state: F.state, session: stanza });
+    ok(has('<b>Diego</b> parte all\'asta con 55 crediti'), 'dato il bonus, la lobby dice chi parte con 55');
+    render(els.app, { state: F.state, session: { ...F.session, mode: 'room', uid: 'io' } });
+    ok(has('+5 crediti') && !has('data-act="bonus"'), 'chi non ospita lo vede, ma non lo puo dare');
+  }
+
   await F.session.apply((s) => S.aggiungiBot(s));
   render(els.app, { state: F.state, session: stanza });
   const primi = S.botDi(F.state);
@@ -852,6 +867,8 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
   // All'asta l'offerta e di una persona.
   {
     const sedia = F.state.seats.io;
+    ok(F.state.teams[sedia].credits === 55 && !F.state.bonus, 'all\'asta chi ha il bonus parte davvero con 55 crediti',
+      `${F.state.teams[sedia].credits}`);
     await F.session.apply((s) => (S.canBid(s, sedia, 1) ? S.placeBid(s, sedia, 1, now()) : undefined));
     render(els.app, { state: F.state, session: { ...F.session, mode: 'room', uid: 'io' } });
     ok(F.state.auction.bid?.team !== sedia || html().includes('offerta di <b>Diego</b>'), 'all\'asta si legge "offerta di Diego"',
@@ -1024,6 +1041,19 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
       `${P.esitoDi(f)}, marcatore ${P.marcatoriDi(f).top.map((id) => db().byId[id].n).join('/')}: ${riga?.punti} punti`);
     ok(has('class="card pronostici"'), 'e compare la classifica dei pronostici');
     ok(clean() && !html().includes('undefined') && !html().includes('NaN'), 'la schermata coi pronostici non ha buchi');
+
+    // A fine serata l'albo si ricorda il re dei pronostici: e il promemoria
+    // che la lobby dopo mostra a chi ospita per il bonus.
+    for (let g = 0; g < 7; g++) await F.session.apply((s) => S.advanceSeries(s, 0, 1, 1));
+    await F.session.apply((s) => S.vaiASerie(s, '1-0'));
+    for (let g = 0; g < 7; g++) await F.session.apply((s) => S.advanceSeries(s, 1, 0, 1));
+    for (let i = 0; i < 20 && !(F.state.albo || []).some((e) => e.seed === costruisciBracket(F.state.po, Tq)[1][0].seed); i++) {
+      await new Promise((r) => setTimeout(r, 30));
+    }
+    const voce = (F.state.albo || []).at(-1);
+    const re = P.reDeiPronostici(P.classificaPronostici(F.state, Tq));
+    ok(voce && voce.rePronostici === (re ? S.nameOfSeat(F.state, re.key) : undefined),
+      'a fine serata l\'albo si ricorda il re dei pronostici', `${voce?.rePronostici ?? 'nessuno (pari merito o zero punti)'}`);
   }
 
   // L'azzeramento li lascia seduti: sono parte del tavolo, non della partita.

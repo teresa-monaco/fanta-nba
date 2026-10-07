@@ -151,12 +151,20 @@ function viewLobby({ state: s, session }) {
     const bot = s.bots?.[k];
     // Prima chi gioca, poi il soprannome della sua squadra: e cosi che vi
     // chiamate al tavolo.
+    // Il bonus dei pronostici: chi ospita lo da toccando "+5", gli altri
+    // vedono a chi e andato.
+    const conBonus = s.bonus === k;
+    const bonus = isHost && !local
+      ? `<button class="sm ${conBonus ? 'primary' : 'ghost'} bonus-btn" data-act="bonus" data-team="${k}"
+          title="${conBonus ? 'Togli' : 'Dai'} il bonus dei pronostici">+${S.BONUS_PRONOSTICI}</button>`
+      : (conBonus ? `<span class="tag ok">+${S.BONUS_PRONOSTICI} crediti</span>` : '');
     return `<div class="strip t-${k}">
       <span class="dot"></span>
       <span class="nm">${esc(TEAM_NAMES[k])}</span>${mine ? ' <span class="tiny muted">(tu)</span>' : ''}
       ${bot ? `<span class="tag bot">bot</span>` : ''}
       <span class="grow"></span>
       <span class="small muted" data-nome-team="${k}">${esc(NOMI_SQUADRA[k])}</span>
+      ${bonus}
       ${bot && isHost ? `<button class="sm ghost" data-act="togli-bot" data-team="${k}">Togli</button>` : ''}
     </div>`;
   }).join('');
@@ -240,6 +248,7 @@ function viewLobby({ state: s, session }) {
 
       ${dentro ? `<div class="card tight">
         <p class="tiny muted mb">Al tavolo (${n})</p>${dentro}
+        ${notaBonus(s, isHost)}
         ${isHost ? botCard(s, n) : ''}
       </div>` : `<div class="card tight">
         <p class="small muted center">Ancora nessuno dentro.</p>
@@ -260,6 +269,20 @@ function viewLobby({ state: s, session }) {
       ` : `<p class="small muted center">In attesa che ${esc(s.names[s.host] || 'chi ospita')} avvii l'asta...</p>`}
     </div>
   `;
+}
+
+// Sotto la lista: chi era il re dei pronostici dell'ultima serata, e a chi e
+// andato il bonus. E un promemoria per chi ospita, non una regola: decide lui.
+function notaBonus(s, isHost) {
+  const ultima = (s.albo || [])[(s.albo || []).length - 1];
+  const re = ultima?.rePronostici;
+  const a = s.bonus ? TEAM_NAMES[s.bonus] : null;
+  if (!re && !a) return '';
+  const righe = [];
+  if (re) righe.push(`Re dei pronostici dell'ultima serata: <b>${esc(re)}</b>.`);
+  if (a) righe.push(`<b>${esc(a)}</b> parte all'asta con ${START_CREDITS + S.BONUS_PRONOSTICI} crediti.`);
+  else if (isHost) righe.push(`Tocca "+${S.BONUS_PRONOSTICI}" per dargli i crediti in più.`);
+  return `<p class="small muted mt bonus-nota">${righe.join(' ')}</p>`;
 }
 
 // Il tasto che serve quando siete in tre e volete giocare in quattro. Dice
