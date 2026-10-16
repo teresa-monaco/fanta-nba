@@ -315,7 +315,13 @@ console.log('\n3. Plausibilita delle statistiche individuali');
       if (line) starSample.push(line.pts);
     }
   }
-  ok(maxPts <= 62, 'nessun punteggio individuale assurdo', `massimo ${maxPts} punti`);
+  // 66 e non 62: la soglia era stata fissata prima che la serata dei
+  // giocatori oscillasse come nella realta (SERATA_SIGMA), e passava al
+  // limite. Misurato poi: record fra 61 e 67 su decine di migliaia di gare,
+  // con una stella da 34 di media in una partita normale. Sopra i 66 e un
+  // segnale vero, come il 78 di un quintetto di cinque guardie che ha
+  // portato a ritoccare la penalita del fuori ruolo.
+  ok(maxPts <= 66, 'nessun punteggio individuale assurdo', `massimo ${maxPts} punti`);
   // Qui si gioca senza panchina: i cinque stanno in campo 48 minuti invece di
   // 34, quindi ogni voce di tabellino sta circa il 40% sopra i numeri veri.
   // Una partita da 22 rimbalzi reali corrisponde a una da 31 qui.

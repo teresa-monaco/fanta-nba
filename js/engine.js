@@ -27,6 +27,22 @@ const W_SCORING = [0.25, 0.22, 0.20, 0.17, 0.16];
    1. PROFILO SQUADRA
    ========================================================== */
 
+// Quanti ruoli separano una casella dal ruolo piu vicino che il giocatore sa
+// fare, naturale o alternativo: 0 al suo posto, 4 da un capo all'altro.
+const ORDINE_RUOLI = { PG: 1, SG: 2, SF: 3, PF: 4, C: 5 };
+export function passiFuoriRuolo(p, slot) {
+  return Math.min(...[p.pos, ...(p.alt || [])].map((r) => Math.abs(ORDINE_RUOLI[r] - ORDINE_RUOLI[slot])));
+}
+
+// La penalita per passi, su attacco e su difesa. Due passi valgono quanto
+// valeva prima qualunque fuori ruolo (2,6); un passo solo costa un terzo.
+// In cima la scala sale poco di proposito: un centro da guardia ha gia la sua
+// penalita di stazza (quintetto sottodimensionato), e con 3,9 e 5,2 un
+// quintetto di cinque guardie finiva con difesa 8 e il miglior uomo
+// avversario a 78 punti. Il resto del disastro lo fanno difesa perimetrale e
+// lunghi, che la casella sbagliata peggiora gia da soli.
+export const PENALITA_PASSI = [0, 0.9, 2.6, 3.0, 3.2];
+
 export function buildTeam(key, lineup, tactics) {
   const D = db();
   let five = SLOTS.map((slot) => {
@@ -66,7 +82,13 @@ export function buildTeam(key, lineup, tactics) {
   const size = five.reduce((s, p) => s + D.positionSize[p.pos], 0); // sulla posizione NATURALE
   const usageTotal = five.reduce((s, p) => s + a(p).usg, 0);
   const avgSco = five.reduce((s, p) => s + a(p).sco, 0) / 5;
-  const bigs = five.filter((p) => ['PF', 'C'].includes(p.slot));
+  // I lunghi sono chi gioca PF o C ED E un lungo di ruolo. Contava solo la
+  // casella: un playmaker schierato da centro diventava un "centro che
+  // smista palloni" col suo playmaking da 96. Se nessuno dei due lo e, si
+  // ripiega sulle caselle, o non ci sarebbe nessuno a cui chiederlo.
+  const lungoDiRuolo = (p) => [p.pos, ...(p.alt || [])].some((r) => r === 'PF' || r === 'C');
+  const inCasella = five.filter((p) => ['PF', 'C'].includes(p.slot));
+  const bigs = inCasella.filter(lungoDiRuolo).length ? inCasella.filter(lungoDiRuolo) : inCasella;
   const bigScoring = Math.max(...bigs.map((p) => a(p).sco));
   const bigPlay = Math.max(...bigs.map((p) => a(p).pla));
 
@@ -80,12 +102,17 @@ export function buildTeam(key, lineup, tactics) {
 
   // --- penalita di fit (le stesse cose che guarderebbe un allenatore) ---
 
-  const misfits = five.filter((p) => p.slot !== p.pos && !(p.alt || []).includes(p.slot));
+  // FUORI RUOLO, IN PASSI. Era un si o no da 2,6 fisso: Marc Gasol da ala
+  // grande costava come Marc Gasol da playmaker. Adesso conta quanti ruoli
+  // separano la casella dal ruolo piu vicino che il giocatore sa fare
+  // (PG-SG-SF-PF-C in fila): un passo e un adattamento, quattro sono un
+  // disastro. Lo schieramento automatico ragionava gia cosi; il motore no.
+  const misfits = five.map((p) => ({ p, passi: passiFuoriRuolo(p, p.slot) })).filter((x) => x.passi > 0);
   if (misfits.length) {
-    const d = -2.6 * misfits.length;
+    const d = -misfits.reduce((t, x) => t + PENALITA_PASSI[Math.min(x.passi, 4)], 0);
     off += d; def += d;
     factors.push({ key: 'fuori-ruolo', side: key, delta: d * 2, label: tr('Giocatori fuori ruolo', 'Players out of position'),
-      data: { names: misfits.map((p) => `${p.n} ${tr('da', 'at')} ${p.slot}`) } });
+      data: { names: misfits.map(({ p, passi }) => `${p.n} ${tr('da', 'at')} ${p.slot}${passi === 1 ? tr(' (adattato)', ' (adapted)') : ''}`) } });
   }
 
   if (shooters < 2) {
