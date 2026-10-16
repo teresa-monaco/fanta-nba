@@ -76,7 +76,19 @@ export function buildTeam(key, lineup, tactics) {
 
   const treSorted = five.map(a).map((x) => x.tre).sort((x, y) => y - x);
   const spacing = (treSorted[0] * 0.32 + treSorted[1] * 0.28 + treSorted[2] * 0.22 + treSorted[3] * 0.18);
-  const shooters = five.filter((p) => a(p).tre >= 75).length;
+  const shooters = five.filter((p) => a(p).tre >= 75).length; // per il racconto
+  // SPAZIO IN CAMPO, graduale. Era un conteggio secco di chi tira da 75 in
+  // su: Melo a 74 valeva zero, e un playmaker che attacca il ferro (Isiah,
+  // Rose, Parker) lasciava la squadra "senza spacing" come un centro. Adesso
+  // il tiro conta a rampa fra 50 e 75, e una guardia o un'ala che penetra
+  // apre il campo per gli scarichi anche senza tiro: fino a 0,7 di tiratore.
+  const spazioDi = (p) => {
+    const tiro = clamp((a(p).tre - 50) / 25, 0, 1);
+    const piccolo = ['PG', 'SG', 'SF'].includes(p.pos);
+    const pressione = piccolo ? clamp(((a(p).atl + a(p).sco) / 2 - 72) / 18, 0, 1) * 0.7 : 0;
+    return Math.max(tiro, pressione);
+  };
+  const spazio = five.reduce((s, p) => s + spazioDi(p), 0);
 
   const plaSorted = five.map(a).map((x) => x.pla).sort((x, y) => y - x);
   const playmaking = plaSorted[0] * 0.55 + plaSorted[1] * 0.30 + (plaSorted[2] + plaSorted[3] + plaSorted[4]) / 3 * 0.15;
@@ -126,14 +138,27 @@ export function buildTeam(key, lineup, tactics) {
       data: { names: misfits.map(({ p, passi }) => `${p.n} ${tr('da', 'at')} ${p.slot}${passi === 1 ? tr(' (adattato)', ' (adapted)') : ''}`) } });
   }
 
-  if (shooters < 2) {
-    const d = -(2 - shooters) * 5.0;
+  if (spazio < 2) {
+    const d = -(2 - spazio) * 5.0;
     off += d;
-    factors.push({ key: 'no-spacing', side: key, delta: d, label: tr('Spacing assente', 'No spacing'), data: { shooters } });
-  } else if (shooters >= 4) {
-    const d = 3.2;
+    if (d < -0.5) factors.push({ key: 'no-spacing', side: key, delta: d, label: tr('Spacing assente', 'No spacing'), data: { shooters: Math.round(spazio) } });
+  } else if (spazio > 3) {
+    const d = 3.2 * Math.min(1, spazio - 3);
     off += d;
-    factors.push({ key: 'spacing-totale', side: key, delta: d, label: tr('Spacing totale', 'Full spacing'), data: { shooters } });
+    factors.push({ key: 'spacing-totale', side: key, delta: d, label: tr('Spacing totale', 'Full spacing'), data: { shooters: Math.max(shooters, Math.round(spazio)) } });
+  }
+
+  // PRESSIONE SUL FERRO. L'attacco guardava solo chi segna, chi tira e chi
+  // passa: l'atletismo non contava mai, e Rose MVP valeva quanto un
+  // playmaker qualunque che segna come lui. Chi arriva al ferro quando vuole
+  // costringe la difesa a collassare: tiri liberi, scarichi, falli. Conta il
+  // migliore fra guardie e ali, e solo in positivo.
+  const penetratore = five.filter((p) => ['PG', 'SG', 'SF'].includes(p.pos))
+    .map((p) => ({ p, v: (a(p).atl + a(p).sco) / 2 })).sort((x, y) => y.v - x.v)[0];
+  if (penetratore && penetratore.v > 80) {
+    const d = (penetratore.v - 80) * 0.16;
+    off += d;
+    if (d >= 1) factors.push({ key: 'pressione-ferro', side: key, delta: d, label: tr('Pressione sul ferro', 'Rim pressure'), data: { name: penetratore.p.n } });
   }
 
   if (plaSorted[0] < 72) {
@@ -198,7 +223,7 @@ export function buildTeam(key, lineup, tactics) {
   return {
     key, name: TEAM_NAMES[key], five, tactics,
     off, def, usageClashDelta,
-    spacing, shooters, playmaking, rebounding, rimProtect, perimD,
+    spacing, shooters, spazio, playmaking, rebounding, rimProtect, perimD,
     athleticism, size, usageTotal, avgSco, teamScoring, bigScoring, bigPlay,
     // Ritmo: quanti possessi VUOLE e quanto e capace di imporlo. Il secondo
     // conta quanto il primo — correre senza rimbalzo difensivo e playmaking
@@ -303,7 +328,7 @@ const STRAT = {
     f.push({ key: 'post-peso', delta: (t.bigScoring - 80) * 0.40, label: tr('Peso offensivo nel pitturato', 'Offensive weight in the paint'), data: {} });
     const wall = -Math.max(0, o.rimProtect - 72) * 0.42;
     if (wall < -0.6) f.push({ key: 'post-muro', delta: wall, label: tr('Il ferro avversario e protetto', 'The opposing rim is protected'), data: { oppRim: Math.round(o.rimProtect) } });
-    f.push({ key: 'post-scarichi', delta: (t.shooters - 2) * 1.8, label: tr('Scarichi sui tiratori dopo il raddoppio', 'Kick-outs to the shooters after the double team'), data: { shooters: t.shooters } });
+    f.push({ key: 'post-scarichi', delta: (t.spazio - 2) * 1.8, label: tr('Scarichi sui tiratori dopo il raddoppio', 'Kick-outs to the shooters after the double team'), data: { shooters: t.shooters } });
     return f;
   }},
   'attacco-ferro': { pace: 3, variance: 1.02, fx(t, o) {
@@ -341,7 +366,7 @@ const STRAT = {
     const f = [];
     f.push({ key: 'df-lungo', delta: 1.4 + (t.bigScoring - 78) * 0.26, label: tr('Il lungo attira la difesa', 'The big man draws the defense'), data: {} });
     f.push({ key: 'df-tiro', delta: (t.spacing - 76) * 0.20, label: tr('Tiratori pronti sugli scarichi', 'Shooters ready on the kick-outs'), data: {} });
-    if (t.shooters < 2 || t.bigScoring < 80) f.push({ key: 'df-incompleto', delta: -3.0, label: tr('Manca meta del meccanismo dentro-fuori', 'Half of the inside-out mechanism is missing'), data: {} });
+    if (t.spazio < 2 || t.bigScoring < 80) f.push({ key: 'df-incompleto', delta: -3.0, label: tr('Manca meta del meccanismo dentro-fuori', 'Half of the inside-out mechanism is missing'), data: {} });
     return f;
   }},
   'handoff': { pace: 2, variance: 1.00, fx(t, o) {
@@ -418,14 +443,14 @@ export function matchup(A, B) {
     const p = T.possVoluti ?? 0;
     if (p >= 6) {
       // Correre: servono gambe e tiratori, la stazza e un peso morto.
-      const d = (T.athleticism - 67) * 0.24 + (T.shooters - 2) * 1.9 - Math.max(0, T.size - 15) * 1.4;
+      const d = (T.athleticism - 67) * 0.24 + (T.spazio - 2) * 1.9 - Math.max(0, T.size - 15) * 1.4;
       ritmoFx.push({ key: 'ritmo-corsa', side: T.key, delta: d,
         label: d >= 0 ? tr('Il quintetto regge il ritmo alto', 'The lineup can handle a high pace') : tr('Quintetto sbagliato per correre', 'Wrong lineup for running'),
         data: { atl: Math.round(T.athleticism), size: T.size } });
     } else if (p <= -6) {
       // Rallentare: serve qualcuno che se la crei da solo a meta campo.
       const iso = Math.max(...T.five.map((x) => x.attrs.sco));
-      const d = (iso - 86) * 0.22 + (T.rimProtect - 70) * 0.10 - Math.max(0, 3 - T.shooters) * 1.2;
+      const d = (iso - 86) * 0.22 + (T.rimProtect - 70) * 0.10 - Math.max(0, 3 - T.spazio) * 1.2;
       ritmoFx.push({ key: 'ritmo-lento', side: T.key, delta: d,
         label: d >= 0 ? tr('Attacco da meta campo affidabile', 'Reliable half-court offense') : tr('A ritmo basso l\'attacco si inceppa', 'At a slow pace the offense stalls'),
         data: { iso: Math.round(iso) } });
