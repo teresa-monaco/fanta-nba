@@ -124,7 +124,7 @@
    "tm": "Nuggets",
    "attrs": {
     "sco": 94,
-    "tre": 65,
+    "tre": 70,
     "pla": 95,
     "reb": 99,
     "dif": 77,
@@ -1178,7 +1178,7 @@
    "tm": "Jazz",
    "attrs": {
     "sco": 67,
-    "tre": 66,
+    "tre": 70,
     "pla": 99,
     "reb": 28,
     "dif": 21,
@@ -1566,7 +1566,7 @@
    "tm": "Jazz",
    "attrs": {
     "sco": 62,
-    "tre": 63,
+    "tre": 70,
     "pla": 95,
     "reb": 32,
     "dif": 20,
@@ -1610,7 +1610,7 @@
    "tm": "Spurs",
    "attrs": {
     "sco": 81,
-    "tre": 64,
+    "tre": 70,
     "pla": 67,
     "reb": 37,
     "dif": 25,
@@ -1696,7 +1696,7 @@
    "tm": "Celtics",
    "attrs": {
     "sco": 76,
-    "tre": 69,
+    "tre": 72,
     "pla": 57,
     "reb": 48,
     "dif": 32,
@@ -1738,7 +1738,7 @@
    "tm": "Knicks",
    "attrs": {
     "sco": 94,
-    "tre": 67,
+    "tre": 76,
     "pla": 60,
     "reb": 37,
     "dif": 20,
@@ -1760,7 +1760,7 @@
    "tm": "Pacers",
    "attrs": {
     "sco": 62,
-    "tre": 59,
+    "tre": 82,
     "pla": 98,
     "reb": 26,
     "dif": 20,
@@ -2105,7 +2105,7 @@
    "tm": "Bucks",
    "attrs": {
     "sco": 71,
-    "tre": 68,
+    "tre": 78,
     "pla": 55,
     "reb": 47,
     "dif": 32,
@@ -2343,7 +2343,7 @@
    "tm": "Pistons",
    "attrs": {
     "sco": 61,
-    "tre": 61,
+    "tre": 79,
     "pla": 96,
     "reb": 25,
     "dif": 20,
@@ -2383,7 +2383,7 @@
    "tm": "Pistons",
    "attrs": {
     "sco": 66,
-    "tre": 52,
+    "tre": 64,
     "pla": 65,
     "reb": 31,
     "dif": 24,
@@ -2487,7 +2487,7 @@
    "tm": "Raptors",
    "attrs": {
     "sco": 60,
-    "tre": 48,
+    "tre": 74,
     "pla": 63,
     "reb": 32,
     "dif": 20,
@@ -2509,7 +2509,7 @@
    "tm": "Pelicans",
    "attrs": {
     "sco": 62,
-    "tre": 49,
+    "tre": 70,
     "pla": 62,
     "reb": 35,
     "dif": 21,
@@ -2571,7 +2571,7 @@
    "tm": "Hornets",
    "attrs": {
     "sco": 60,
-    "tre": 57,
+    "tre": 75,
     "pla": 94,
     "reb": 27,
     "dif": 20,
@@ -2615,7 +2615,7 @@
    "tm": "Bulls",
    "attrs": {
     "sco": 84,
-    "tre": 68,
+    "tre": 76,
     "pla": 54,
     "reb": 31,
     "dif": 20,
@@ -2833,7 +2833,7 @@
    "tm": "Hawks",
    "attrs": {
     "sco": 66,
-    "tre": 61,
+    "tre": 68,
     "pla": 70,
     "reb": 74,
     "dif": 56,
@@ -3069,7 +3069,7 @@
    "tm": "Hawks",
    "attrs": {
     "sco": 94,
-    "tre": 63,
+    "tre": 77,
     "pla": 53,
     "reb": 34,
     "dif": 21,
@@ -3133,7 +3133,7 @@
    "tm": "Cavaliers",
    "attrs": {
     "sco": 58,
-    "tre": 57,
+    "tre": 82,
     "pla": 93,
     "reb": 28,
     "dif": 20,
@@ -3175,7 +3175,7 @@
    "tm": "Grizzlies",
    "attrs": {
     "sco": 55,
-    "tre": 58,
+    "tre": 77,
     "pla": 96,
     "reb": 24,
     "dif": 20,
@@ -3237,7 +3237,7 @@
    "tm": "Cavaliers",
    "attrs": {
     "sco": 57,
-    "tre": 54,
+    "tre": 77,
     "pla": 92,
     "reb": 26,
     "dif": 20,
@@ -3323,7 +3323,7 @@
    "tm": "Pacers",
    "attrs": {
     "sco": 57,
-    "tre": 47,
+    "tre": 62,
     "pla": 64,
     "reb": 33,
     "dif": 20,
@@ -3345,7 +3345,7 @@
    "tm": "Blazers",
    "attrs": {
     "sco": 85,
-    "tre": 63,
+    "tre": 80,
     "pla": 53,
     "reb": 27,
     "dif": 20,
@@ -3409,7 +3409,7 @@
    "tm": "Warriors",
    "attrs": {
     "sco": 68,
-    "tre": 62,
+    "tre": 70,
     "pla": 43,
     "reb": 44,
     "dif": 27,
@@ -3451,7 +3451,7 @@
    "tm": "Mavericks",
    "attrs": {
     "sco": 65,
-    "tre": 46,
+    "tre": 70,
     "pla": 42,
     "reb": 45,
     "dif": 26,
@@ -3561,7 +3561,7 @@
    "tm": "Jazz",
    "attrs": {
     "sco": 70,
-    "tre": 58,
+    "tre": 70,
     "pla": 50,
     "reb": 42,
     "dif": 31,
@@ -3923,7 +3923,7 @@
    "tm": "Bucks",
    "attrs": {
     "sco": 70,
-    "tre": 68,
+    "tre": 75,
     "pla": 46,
     "reb": 64,
     "dif": 71,
@@ -4093,7 +4093,7 @@
    "tm": "Blazers",
    "attrs": {
     "sco": 55,
-    "tre": 53,
+    "tre": 74,
     "pla": 91,
     "reb": 25,
     "dif": 20,
@@ -4573,7 +4573,7 @@
    "tm": "Sixers",
    "attrs": {
     "sco": 66,
-    "tre": 53,
+    "tre": 68,
     "pla": 47,
     "reb": 41,
     "dif": 27,
