@@ -1,6 +1,8 @@
 // core.js — caricamento dati, RNG deterministico, derivazione attributi.
 // Tutto qui dentro e puro e riproducibile: stesso seed => stessa partita.
 
+import { EN, tr } from './lingua.js';
+
 /* ---------- RNG deterministico (mulberry32) ---------- */
 
 export function hashStr(s) {
@@ -80,8 +82,22 @@ export async function loadData() {
     fetch('./data/archetypes.json'),
     fetch('./data/coaches.json'),
   ]);
-  if (!pRes.ok || !aRes.ok || !cRes.ok) throw new Error('Impossibile caricare i dati dei giocatori.');
-  return installData(await pRes.json(), await aRes.json(), await cRes.json());
+  if (!pRes.ok || !aRes.ok || !cRes.ok) throw new Error(tr('Impossibile caricare i dati dei giocatori.', 'Could not load the player data.'));
+  const [p, a, c] = [await pRes.json(), await aRes.json(), await cRes.json()];
+  // In inglese le etichette dei dati arrivano da un file a parte: i numeri
+  // restano quelli dei file originali, cambiano solo label e desc.
+  if (EN) {
+    try {
+      const enRes = await fetch('./data/en.json');
+      if (enRes.ok) traduciDati(a, c, await enRes.json());
+    } catch { /* in italiano, piuttosto che niente */ }
+  }
+  return installData(p, a, c);
+}
+
+export function traduciDati(a, c, en) {
+  for (const [k, v] of Object.entries(en.archetypes || {})) if (a.archetypes?.[k]) Object.assign(a.archetypes[k], v);
+  for (const [k, v] of Object.entries(en.coachArch || {})) if (c.archetipi?.[k]) Object.assign(c.archetipi[k], v);
 }
 
 // Gli allenatori che una rosa sblocca: uno per giocatore, quello della sua
@@ -217,6 +233,8 @@ export const TEAM_KEYS = ['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 
 // Devono essere piu dei posti a sedere, e di parecchio: in lobby si cambia
 // nome finche non piace, e con dodici nomi in dodici si resterebbe fermi sul
 // primo. Ventidue lasciano da zappare anche col tavolo pieno.
+// In inglese si traducono solo quelli in italiano, nello STESSO ORDINE: nello
+// stato c'e l'indice, e lo stesso indice deve dare la stessa squadra.
 export const NOMI_SQUADRE = [
   'Pornland',
   'Volta Reno FC',
@@ -230,16 +248,16 @@ export const NOMI_SQUADRE = [
   'Dimash',
   'Climberz',
   'Appennino',
-  'Penetrazione Centrale',
-  'Doppio Palleggio',
+  tr('Penetrazione Centrale', 'Central Penetration'),
+  tr('Doppio Palleggio', 'Double Dribble'),
   'Sam Bowie Fan Club',
   'Darko Academy',
-  'Estrema Unzione',
-  'Reparto Cardiologia',
+  tr('Estrema Unzione', 'Last Rites'),
+  tr('Reparto Cardiologia', 'Cardiology Ward'),
   'Qué Mirás Bobo',
-  'Fallo Antisportivo',
+  tr('Fallo Antisportivo', 'Flagrant Foul'),
   'Tony Montana',
-  'Terzo Tempo',
+  tr('Terzo Tempo', 'Third Half'),
 ];
 
 // I nomi si estraggono dal SEED della partita, non si salvano nel database:
@@ -282,7 +300,7 @@ export function applicaNomi(seed, scelte, persone) {
     // Il ripiego resta come rete di sicurezza: se un giorno si toglie un nome
     // dalla lista, una sedia salvata con quell'indice resta battezzata invece
     // di finire "undefined".
-    NOMI_SQUADRA[k] = NOMI_SQUADRE[idx[k]] ?? `Squadra ${k.slice(1)}`;
+    NOMI_SQUADRA[k] = NOMI_SQUADRE[idx[k]] ?? `${tr('Squadra', 'Team')} ${k.slice(1)}`;
     TEAM_NAMES[k] = persone?.[k] || NOMI_SQUADRA[k];
   });
   return TEAM_NAMES;
@@ -323,25 +341,25 @@ applicaNomi('fanta-nba');
 export const NUMERI_SQUADRE = [2, 3, 4, 6, 8, 10, 12];
 export const SLOTS = ['PG', 'SG', 'SF', 'PF', 'C'];
 export const SLOT_LABEL = {
-  PG: 'Playmaker',
-  SG: 'Guardia',
-  SF: 'Ala piccola',
-  PF: 'Ala grande',
-  C: 'Centro',
+  PG: tr('Playmaker', 'Point guard'),
+  SG: tr('Guardia', 'Shooting guard'),
+  SF: tr('Ala piccola', 'Small forward'),
+  PF: tr('Ala grande', 'Power forward'),
+  C: tr('Centro', 'Center'),
 };
 export const START_CREDITS = 50;
 export const ROSTER_SIZE = 5;
 
 export const STRATEGIES = {
-  'palla-star': { label: 'Palla alla star', desc: 'Tutto passa dalla prima opzione: più isolamenti, più tiri, attacco più prevedibile.' },
-  'pick-roll': { label: 'Pick and roll', desc: 'Playmaker e lungo insieme: crea mismatch, vive del talento della coppia.' },
-  'post-up': { label: 'Post-up', desc: 'Si gioca spalle a canestro, si cercano i raddoppi e gli scarichi sui tiratori.' },
-  'attacco-ferro': { label: 'Attacco al ferro', desc: 'Penetrazioni e falli subiti. Devasta chi non protegge il canestro.' },
-  'tiro-3': { label: 'Tiro da 3', desc: 'Volume massimo da fuori. Alza il tetto e il pavimento: serate da 130 e serate da 88.' },
-  'transizione': { label: 'Transizione', desc: 'Ritmo altissimo, si punisce chi è lento o troppo grosso.' },
-  'motion': { label: 'Motion offense', desc: 'Palla che gira, tagli, nessuno monopolizza. Perdona i quintetti con troppe bocche da sfamare.' },
-  'isolamento': { label: 'Isolamento', desc: 'Uno contro uno sistematico per i due violini. Efficace col talento, fragile contro difese fisiche.' },
-  'dentro-fuori': { label: 'Gioco dentro-fuori', desc: 'Il lungo attira la difesa, i tiratori puniscono. Serve entrambe le cose.' },
-  'handoff': { label: 'Handoff', desc: 'Consegne e blocchi continui per liberare i tiratori in movimento.' },
-  'equilibrato': { label: 'Sistema equilibrato', desc: 'Nessun estremo: niente bonus grossi, nessuna debolezza sfruttabile.' },
+  'palla-star': { label: tr('Palla alla star', 'Feed the star'), desc: tr('Tutto passa dalla prima opzione: più isolamenti, più tiri, attacco più prevedibile.', 'Everything goes through the first option: more isolations, more shots, a more predictable offense.') },
+  'pick-roll': { label: 'Pick and roll', desc: tr('Playmaker e lungo insieme: crea mismatch, vive del talento della coppia.', 'Point guard and big man together: creates mismatches, lives on the talent of the pair.') },
+  'post-up': { label: 'Post-up', desc: tr('Si gioca spalle a canestro, si cercano i raddoppi e gli scarichi sui tiratori.', 'Back to the basket, drawing double teams and kicking out to the shooters.') },
+  'attacco-ferro': { label: tr('Attacco al ferro', 'Attack the rim'), desc: tr('Penetrazioni e falli subiti. Devasta chi non protegge il canestro.', 'Drives and drawn fouls. Destroys teams that don\'t protect the rim.') },
+  'tiro-3': { label: tr('Tiro da 3', 'Three-point shooting'), desc: tr('Volume massimo da fuori. Alza il tetto e il pavimento: serate da 130 e serate da 88.', 'Maximum volume from deep. Raises the ceiling and the floor: 130-point nights and 88-point nights.') },
+  'transizione': { label: tr('Transizione', 'Transition'), desc: tr('Ritmo altissimo, si punisce chi è lento o troppo grosso.', 'A very high pace that punishes slow or oversized teams.') },
+  'motion': { label: 'Motion offense', desc: tr('Palla che gira, tagli, nessuno monopolizza. Perdona i quintetti con troppe bocche da sfamare.', 'Ball movement, cuts, nobody hogs the ball. Forgives lineups with too many mouths to feed.') },
+  'isolamento': { label: tr('Isolamento', 'Isolation'), desc: tr('Uno contro uno sistematico per i due violini. Efficace col talento, fragile contro difese fisiche.', 'Systematic one-on-one for the two first options. Works with talent, fragile against physical defenses.') },
+  'dentro-fuori': { label: tr('Gioco dentro-fuori', 'Inside-out game'), desc: tr('Il lungo attira la difesa, i tiratori puniscono. Serve entrambe le cose.', 'The big man draws the defense, the shooters punish. You need both.') },
+  'handoff': { label: 'Handoff', desc: tr('Consegne e blocchi continui per liberare i tiratori in movimento.', 'Constant handoffs and screens to free the shooters on the move.') },
+  'equilibrato': { label: tr('Sistema equilibrato', 'Balanced system'), desc: tr('Nessun estremo: niente bonus grossi, nessuna debolezza sfruttabile.', 'No extremes: no big bonuses, no weakness to exploit.') },
 };

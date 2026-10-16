@@ -15,6 +15,7 @@ import { premiSerata } from './premi.js';
 import { quoteSerie, classificaPronostici, puntiDi, reDeiPronostici, marcatoriDi } from './pronostici.js';
 import { ordineSerie, serieCorrente, dopo } from './serie.js';
 import { analisiSerie } from './analisi.js';
+import { EN, tr, pl } from './lingua.js';
 
 export const ui = {
   nickname: localStorage.getItem('nbaf:nick') || '',
@@ -35,7 +36,9 @@ const soprannome = (k) => (NOMI_SQUADRA[k] && NOMI_SQUADRA[k] !== TEAM_NAMES[k]
   ? ` <span class="soprannome">${esc(NOMI_SQUADRA[k])}</span>` : '');
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const ATTR_LABELS = { sco: 'Realizzazione', tre: 'Tiro da 3', pla: 'Playmaking', reb: 'Rimbalzi', dif: 'Protezione ferro', dpe: 'Difesa perimetro', atl: 'Atletismo', usg: 'Palla richiesta' };
+const ATTR_LABELS = EN
+  ? { sco: 'Scoring', tre: 'Three-point', pla: 'Playmaking', reb: 'Rebounding', dif: 'Rim protection', dpe: 'Perimeter defense', atl: 'Athleticism', usg: 'Usage' }
+  : { sco: 'Realizzazione', tre: 'Tiro da 3', pla: 'Playmaking', reb: 'Rimbalzi', dif: 'Protezione ferro', dpe: 'Difesa perimetro', atl: 'Atletismo', usg: 'Palla richiesta' };
 
 /* ==========================================================
    Entry point
@@ -50,10 +53,10 @@ export function render(root, ctx) {
       case 'auction': body = viewAuction(ctx); break;
       case 'squadra': body = viewSquadra(ctx); break;
       case 'playoffs': body = viewPlayoffs(ctx); break;
-      default: body = `<div class="card">Fase sconosciuta: ${esc(s.phase)}</div>`;
+      default: body = `<div class="card">${tr('Fase sconosciuta', 'Unknown phase')}: ${esc(s.phase)}</div>`;
     }
   } catch (err) {
-    body = `<div class="banner err"><b>Errore di rendering.</b><br>${esc(err.message)}</div>`;
+    body = `<div class="banner err"><b>${tr('Errore di rendering.', 'Rendering error.')}</b><br>${esc(err.message)}</div>`;
     console.error(err);
   }
   root.innerHTML =
@@ -81,7 +84,7 @@ function schedaGiocatore() {
       <div class="bar"><i style="width:${p.attrs[kk]}%"></i></div></div>`).join('');
 
   return `<div class="velo" data-act="chiudi-scheda">
-    <div class="scheda-pop" role="dialog" aria-label="Statistiche di ${esc(p.n)}">
+    <div class="scheda-pop" role="dialog" aria-label="${tr('Statistiche di', 'Stats for')} ${esc(p.n)}">
       <div class="jumbo">
         <div class="tabellina">
           <span>${p.pos}${p.alt?.length ? ' / ' + p.alt.join('/') : ''} · ${esc(p.tm)} ${p.era}</span>
@@ -91,7 +94,7 @@ function schedaGiocatore() {
         <div class="pop-arc">${esc(arc?.label || p.arc)}</div>
         <div class="attrs">${tess}</div>
       </div>
-      <button class="primary wide mt" data-act="chiudi-scheda">Chiudi</button>
+      <button class="primary wide mt" data-act="chiudi-scheda">${tr('Chiudi', 'Close')}</button>
     </div>
   </div>`;
 }
@@ -105,10 +108,10 @@ function resetZone({ state: s, session }) {
   const finita = (ultimo?.gamesPlayed ?? 0) >= 4;
   return `<div class="reset-zone">
     <button class="${finita ? 'primary' : 'ghost'} wide" data-act="new-game">
-      ${finita ? 'Nuova partita' : 'Ricomincia da capo'}
+      ${finita ? tr('Nuova partita', 'New game') : tr('Ricomincia da capo', 'Start over')}
     </button>
     <p class="tiny muted center" style="margin-top:8px">
-      Cancella asta, quintetti e playoff${session.mode === 'local' ? '' : '. Le squadre assegnate restano'}.
+      ${tr('Cancella asta, quintetti e playoff', 'Deletes auction, lineups and playoffs')}${session.mode === 'local' ? '' : tr('. Le squadre assegnate restano', '. Assigned teams stay')}.
     </p>
   </div>`;
 }
@@ -120,11 +123,11 @@ export function renderTopbar(el, ctx) {
   el.innerHTML = `
     <div class="brand">FANTA<span>NBA</span></div>
     <div class="row">
-      ${session.mode === 'local' ? '<span class="tag">modalità locale</span>' : ''}
-      <button class="sm ghost" data-act="toggle-audio" aria-label="${audioAcceso() ? 'Disattiva' : 'Attiva'} i suoni"
-              title="${audioAcceso() ? 'Suoni attivi' : 'Suoni spenti'}">${audioAcceso() ? '&#9834;' : '&#9834;&#822;'}</button>
-      ${canReset ? '<button class="sm ghost" data-act="new-game">Nuova</button>' : ''}
-      <span class="code-pill">${esc(session.code)}</span>
+      ${session.mode === 'local' ? `<span class="tag">${tr('modalità locale', 'local mode')}</span>` : ''}
+      <button class="sm ghost" data-act="toggle-audio" aria-label="${audioAcceso() ? tr('Disattiva i suoni', 'Turn sound off') : tr('Attiva i suoni', 'Turn sound on')}"
+              title="${audioAcceso() ? tr('Suoni attivi', 'Sound on') : tr('Suoni spenti', 'Sound off')}">${audioAcceso() ? '&#9834;' : '&#9834;&#822;'}</button>
+      ${canReset ? `<button class="sm ghost" data-act="new-game">${tr('Nuova', 'New')}</button>` : ''}
+      <span class="code-pill">${esc(session.mode === 'local' ? tr('LOCALE', 'LOCAL') : session.code)}</span>
     </div>`;
 }
 
@@ -156,16 +159,16 @@ function viewLobby({ state: s, session }) {
     const conBonus = s.bonus === k;
     const bonus = isHost && !local
       ? `<button class="sm ${conBonus ? 'primary' : 'ghost'} bonus-btn" data-act="bonus" data-team="${k}"
-          title="${conBonus ? 'Togli' : 'Dai'} il bonus dei pronostici">+${S.BONUS_PRONOSTICI}</button>`
-      : (conBonus ? `<span class="tag ok">+${S.BONUS_PRONOSTICI} crediti</span>` : '');
+          title="${conBonus ? tr('Togli il bonus dei pronostici', 'Remove the prediction bonus') : tr('Dai il bonus dei pronostici', 'Give the prediction bonus')}">+${S.BONUS_PRONOSTICI}</button>`
+      : (conBonus ? `<span class="tag ok">+${S.BONUS_PRONOSTICI} ${tr('crediti', 'credits')}</span>` : '');
     return `<div class="strip t-${k}">
       <span class="dot"></span>
-      <span class="nm">${esc(TEAM_NAMES[k])}</span>${mine ? ' <span class="tiny muted">(tu)</span>' : ''}
+      <span class="nm">${esc(TEAM_NAMES[k])}</span>${mine ? ` <span class="tiny muted">${tr('(tu)', '(you)')}</span>` : ''}
       ${bot ? `<span class="tag bot">bot</span>` : ''}
       <span class="grow"></span>
       <span class="small muted" data-nome-team="${k}">${esc(NOMI_SQUADRA[k])}</span>
       ${bonus}
-      ${bot && isHost ? `<button class="sm ghost" data-act="togli-bot" data-team="${k}">Togli</button>` : ''}
+      ${bot && isHost ? `<button class="sm ghost" data-act="togli-bot" data-team="${k}">${tr('Togli', 'Remove')}</button>` : ''}
     </div>`;
   }).join('');
 
@@ -175,8 +178,8 @@ function viewLobby({ state: s, session }) {
 
   const sceltaLocale = !local ? '' : `
     <div class="card">
-      <h3 class="mb">Quante squadre</h3>
-      <p class="small muted mb">Su questo schermo le gestisci tutte tu.</p>
+      <h3 class="mb">${tr('Quante squadre', 'How many teams')}</h3>
+      <p class="small muted mb">${tr('Su questo schermo le gestisci tutte tu.', 'On this screen you manage all of them.')}</p>
       <div class="row">
         ${S.NUMERI_SQUADRE.map((v) => `<button class="${n === v ? 'primary' : ''} grow" data-act="num-squadre" data-n="${v}">${v}</button>`).join('')}
       </div>
@@ -187,18 +190,22 @@ function viewLobby({ state: s, session }) {
   const giri = S.numeroValido(n) ? giriStagione(n) : 1;
   const q = S.numeroValido(n) ? potenzaSotto(n) : n;
   const sceltaFormato = !isHost ? `
-    <p class="small muted center mb">Formato: ${s.conStagione ? 'stagione regolare + playoff' : 'solo playoff'}.</p>` : `
+    <p class="small muted center mb">${tr('Formato', 'Format')}: ${s.conStagione ? tr('stagione regolare + playoff', 'regular season + playoffs') : tr('solo playoff', 'playoffs only')}.</p>` : `
     <div class="card">
-      <h3 class="mb">Formato</h3>
+      <h3 class="mb">${tr('Formato', 'Format')}</h3>
       <div class="row">
-        <button class="${s.conStagione ? '' : 'primary'} grow" data-act="formato" data-con="0">Solo playoff</button>
-        <button class="${s.conStagione ? 'primary' : ''} grow" data-act="formato" data-con="1">Stagione + playoff</button>
+        <button class="${s.conStagione ? '' : 'primary'} grow" data-act="formato" data-con="0">${tr('Solo playoff', 'Playoffs only')}</button>
+        <button class="${s.conStagione ? 'primary' : ''} grow" data-act="formato" data-con="1">${tr('Stagione + playoff', 'Season + playoffs')}</button>
       </div>
       <p class="small muted mt">${s.conStagione
-        ? `Tutti contro tutti${giri > 1 ? ` (${giri} giri)` : ''}, ${(n - 1) * giri} partite a testa, poi i playoff.
+        ? tr(`Tutti contro tutti${giri > 1 ? ` (${giri} giri)` : ''}, ${(n - 1) * giri} partite a testa, poi i playoff.
            ${q < n ? `Le prime ${q} passano, le ultime ${n - q} restano fuori.` : 'Passano tutte: la classifica decide gli accoppiamenti.'}
-           Le tattiche si possono ritoccare a stagione finita.`
-        : `Si va dritti al tabellone.${q < n ? ` In ${n}, ${n - q} squadre salteranno il primo turno per sorteggio.` : ''}`}</p>
+           Le tattiche si possono ritoccare a stagione finita.`,
+           `Round robin${giri > 1 ? ` (${giri} rounds)` : ''}, ${(n - 1) * giri} games each, then the playoffs.
+           ${q < n ? `The top ${q} advance, the bottom ${n - q} are out.` : 'Everyone advances: the standings decide the matchups.'}
+           Tactics can be adjusted after the season.`)
+        : tr(`Si va dritti al tabellone.${q < n ? ` In ${n}, ${n - q} squadre salteranno il primo turno per sorteggio.` : ''}`,
+           `Straight to the bracket.${q < n ? ` With ${n}, ${n - q} teams will skip the first round by draw.` : ''}`)}</p>
     </div>`;
 
   // IL TABELLONE DELL'ATTESA. Era l'ultima schermata rimasta a card grigie,
@@ -207,51 +214,52 @@ function viewLobby({ state: s, session }) {
   // che si sta guardando mentre si aspetta: va sulle lettere a paletta, e
   // quando lo cambi si ribaltano.
   const mia = s.seats[session.uid];
-  const insegna = local ? 'Modalità locale' : `Stanza ${esc(session.code)}`;
+  const insegna = local ? tr('Modalità locale', 'Local mode') : `${tr('Stanza', 'Room')} ${esc(session.code)}`;
 
   const dentroAlTabellone = !mia ? `
       <p class="tiny muted center" style="letter-spacing:1.6px;margin-bottom:6px">
-        ${pieno ? 'Tutte le squadre sono assegnate' : 'Entra e ti viene assegnata una squadra'}</p>
-      ${pieno ? '<p class="small muted center">Puoi guardare.</p>' : `
+        ${pieno ? tr('Tutte le squadre sono assegnate', 'All teams are taken') : tr('Entra e ti viene assegnata una squadra', 'Join and you get a team')}</p>
+      ${pieno ? `<p class="small muted center">${tr('Puoi guardare.', 'You can watch.')}</p>` : `
         <div class="amici">${AMICI.map((a) => {
           const preso = Object.values(s.names || {}).includes(a);
           return `<button class="sm ${preso ? 'ghost' : ''}" data-act="join-amico" data-nome="${esc(a)}" ${preso ? 'disabled' : ''}>${esc(a)}</button>`;
         }).join('')}</div>
         <div class="row" style="max-width:420px;margin:0 auto">
-          <input id="nick" class="grow" value="${esc(ui.nickname)}" placeholder="ospite? scrivi il tuo nome" maxlength="14" autocomplete="off">
-          <button class="primary" data-act="join">Entra</button>
+          <input id="nick" class="grow" value="${esc(ui.nickname)}" placeholder="${tr('ospite? scrivi il tuo nome', 'guest? type your name')}" maxlength="14" autocomplete="off">
+          <button class="primary" data-act="join">${tr('Entra', 'Join')}</button>
         </div>`}` : `
-      <p class="tiny muted center" style="letter-spacing:1.6px;margin-bottom:6px">${esc(TEAM_NAMES[mia])}, la tua squadra</p>
+      <p class="tiny muted center" style="letter-spacing:1.6px;margin-bottom:6px">${esc(TEAM_NAMES[mia])}, ${tr('la tua squadra', 'your team')}</p>
       <div class="flap" data-nome-team="${mia}">${flapHTML(NOMI_SQUADRA[mia])}</div>
       <div class="row center" style="justify-content:center;margin-top:9px">
-        <button class="sm" data-act="cambia-nome" title="Te ne dà un'altra: il nome non si scrive, si pesca">Cambia</button>
-        <button class="sm ghost" data-act="leave">Esci</button>
+        <button class="sm" data-act="cambia-nome" title="${tr('Te ne dà un\'altra: il nome non si scrive, si pesca', 'Gives you another one: you don\'t type the name, you draw it')}">${tr('Cambia', 'Change')}</button>
+        <button class="sm ghost" data-act="leave">${tr('Esci', 'Leave')}</button>
       </div>`;
 
   return `
     <div class="jumbo lobby-jumbo">
       <div class="insegna">${insegna}</div>
       <div class="tabellina">
-        <span>${n} ${n === 1 ? 'squadra' : 'squadre'} dentro</span>
-        <span>50 crediti · 5 giocatori</span>
+        <span>${n} ${pl(n, 'squadra dentro', 'squadre dentro', 'team in', 'teams in')}</span>
+        <span>${tr('50 crediti · 5 giocatori', '50 credits · 5 players')}</span>
       </div>
       ${dentroAlTabellone}
     </div>
 
     ${local ? `
-      <p class="tiny muted center mb">Firebase non è configurato: la partita gira su questo solo schermo.
-      Per giocare ognuno dal proprio telefono servono 3 minuti di setup — vedi SETUP.md.</p>
+      <p class="tiny muted center mb">${tr(`Firebase non è configurato: la partita gira su questo solo schermo.
+      Per giocare ognuno dal proprio telefono servono 3 minuti di setup — vedi SETUP.md.`, `Firebase is not configured: the game runs on this screen only.
+      To play each on your own phone takes 3 minutes of setup — see SETUP.md.`)}</p>
       ${sceltaLocale}` : `
       <div class="row mb" style="justify-content:center">
-        <button class="sm ghost" data-act="copy-link">Copia il link della stanza</button>
+        <button class="sm ghost" data-act="copy-link">${tr('Copia il link della stanza', 'Copy the room link')}</button>
       </div>
 
       ${dentro ? `<div class="card tight">
-        <p class="tiny muted mb">Al tavolo (${n})</p>${dentro}
+        <p class="tiny muted mb">${tr('Al tavolo', 'At the table')} (${n})</p>${dentro}
         ${notaBonus(s, isHost)}
         ${isHost ? botCard(s, n) : ''}
       </div>` : `<div class="card tight">
-        <p class="small muted center">Ancora nessuno dentro.</p>
+        <p class="small muted center">${tr('Ancora nessuno dentro.', 'Nobody in yet.')}</p>
         ${isHost ? botCard(s, n) : ''}
       </div>`}`}
 
@@ -263,10 +271,10 @@ function viewLobby({ state: s, session }) {
     <div class="azione-fissa">
       ${isHost ? `
         <button class="primary wide" data-act="start-auction" ${S.numeroValido(n) ? '' : 'disabled'}>
-          Inizia l'asta${S.numeroValido(n) ? ` con ${n} squadre` : ''}
+          ${tr('Inizia l\'asta', 'Start the auction')}${S.numeroValido(n) ? ` ${tr('con', 'with')} ${n} ${tr('squadre', 'teams')}` : ''}
         </button>
-        ${S.numeroValido(n) ? '' : `<p class="tiny muted center mt">Siete in ${n}: si gioca in 2, 3, 4, 6, 8, 10 o 12.</p>`}
-      ` : `<p class="small muted center">In attesa che ${esc(s.names[s.host] || 'chi ospita')} avvii l'asta...</p>`}
+        ${S.numeroValido(n) ? '' : `<p class="tiny muted center mt">${tr(`Siete in ${n}: si gioca in 2, 3, 4, 6, 8, 10 o 12.`, `There are ${n} of you: you can play with 2, 3, 4, 6, 8, 10 or 12.`)}</p>`}
+      ` : `<p class="small muted center">${tr(`In attesa che ${esc(s.names[s.host] || 'chi ospita')} avvii l'asta...`, `Waiting for ${esc(s.names[s.host] || 'the host')} to start the auction...`)}</p>`}
     </div>
   `;
 }
@@ -279,9 +287,9 @@ function notaBonus(s, isHost) {
   const a = s.bonus ? TEAM_NAMES[s.bonus] : null;
   if (!re && !a) return '';
   const righe = [];
-  if (re) righe.push(`Re dei pronostici dell'ultima serata: <b>${esc(re)}</b>.`);
-  if (a) righe.push(`<b>${esc(a)}</b> parte all'asta con ${START_CREDITS + S.BONUS_PRONOSTICI} crediti.`);
-  else if (isHost) righe.push(`Tocca "+${S.BONUS_PRONOSTICI}" per dargli i crediti in più.`);
+  if (re) righe.push(tr(`Re dei pronostici dell'ultima serata: <b>${esc(re)}</b>.`, `Prediction king of the last game night: <b>${esc(re)}</b>.`));
+  if (a) righe.push(tr(`<b>${esc(a)}</b> parte all'asta con ${START_CREDITS + S.BONUS_PRONOSTICI} crediti.`, `<b>${esc(a)}</b> starts the auction with ${START_CREDITS + S.BONUS_PRONOSTICI} credits.`));
+  else if (isHost) righe.push(tr(`Tocca "+${S.BONUS_PRONOSTICI}" per dargli i crediti in più.`, `Tap "+${S.BONUS_PRONOSTICI}" to give them the extra credits.`));
   return `<p class="small muted mt bonus-nota">${righe.join(' ')}</p>`;
 }
 
@@ -299,14 +307,14 @@ function botCard(s, n) {
 
   return `<div class="bot-zona">
     <div class="row spread">
-      <span class="tiny muted">${quanti ? `${quanti} bot in partita` : 'Manca qualcuno?'}</span>
-      <button class="sm" data-act="aggiungi-bot" ${pieno || finiti ? 'disabled' : ''}>Aggiungi un bot</button>
+      <span class="tiny muted">${quanti ? `${quanti} ${tr('bot in partita', quanti === 1 ? 'bot in the game' : 'bots in the game')}` : tr('Manca qualcuno?', 'Someone missing?')}</span>
+      <button class="sm" data-act="aggiungi-bot" ${pieno || finiti ? 'disabled' : ''}>${tr('Aggiungi un bot', 'Add a bot')}</button>
     </div>
     <p class="tiny muted mt">${finiti
-      ? `I bot disponibili sono ${ID_BOT.length}, e ci sono già tutti.`
+      ? tr(`I bot disponibili sono ${ID_BOT.length}, e ci sono già tutti.`, `There are ${ID_BOT.length} bots available, and they're all in.`)
       : ok
-        ? `Siete in ${n} e si può giocare. ${mancano ? `Con ${mancano} bot in più si gioca in ${prossimo}.` : ''}`
-        : `Siete in ${n}: servono ${mancano} bot per arrivare a ${prossimo} e far partire il tabellone.`}</p>
+        ? tr(`Siete in ${n} e si può giocare. ${mancano ? `Con ${mancano} bot in più si gioca in ${prossimo}.` : ''}`, `There are ${n} of you and you can play. ${mancano ? `With ${mancano} more ${mancano === 1 ? 'bot' : 'bots'} you play with ${prossimo}.` : ''}`)
+        : tr(`Siete in ${n}: servono ${mancano} bot per arrivare a ${prossimo} e far partire il tabellone.`, `There are ${n} of you: you need ${mancano} ${mancano === 1 ? 'bot' : 'bots'} to reach ${prossimo} and start the bracket.`)}</p>
   </div>`;
 }
 
@@ -322,9 +330,9 @@ function viewAuction({ state: s, session }) {
   const myTeam = s.seats[session.uid] || null;
 
   if (!p) {
-    return `<div class="card center"><h2>Asta conclusa</h2>
-      <p class="muted small">Non ci sono più lotti disponibili.</p>
-      ${isHost ? '<button class="primary wide mt" data-act="to-squadra">Vai alle squadre</button>' : ''}</div>`;
+    return `<div class="card center"><h2>${tr('Asta conclusa', 'Auction over')}</h2>
+      <p class="muted small">${tr('Non ci sono più lotti disponibili.', 'No more lots available.')}</p>
+      ${isHost ? `<button class="primary wide mt" data-act="to-squadra">${tr('Vai alle squadre', 'Go to the teams')}</button>` : ''}</div>`;
   }
 
   const arc = D.archetypes[p.arc];
@@ -344,13 +352,13 @@ function viewAuction({ state: s, session }) {
   const hostBar = !isHost ? '' : `
     <div class="host-bar">
       <button class="sm ${paused ? 'primary' : 'ghost'}" data-act="toggle-pause"
-              title="${paused ? 'Riprendi' : 'Ferma'} il cronometro">${paused ? '&#9654;' : '&#9632;'}</button>
-      ${bid ? `<button class="sm" data-act="resolve">Assegna</button>` : ''}
-      <button class="sm ghost" data-act="toggle-manual">${ui.manualOpen ? 'Annulla' : 'Assegna a mano'}</button>
+              title="${paused ? tr('Riprendi il cronometro', 'Resume the clock') : tr('Ferma il cronometro', 'Stop the clock')}">${paused ? '&#9654;' : '&#9632;'}</button>
+      ${bid ? `<button class="sm" data-act="resolve">${tr('Assegna', 'Award')}</button>` : ''}
+      <button class="sm ghost" data-act="toggle-manual">${ui.manualOpen ? tr('Annulla', 'Cancel') : tr('Assegna a mano', 'Award manually')}</button>
     </div>
     ${ui.manualOpen ? `
       <div class="manual">
-        <p class="tiny muted mb">Scavalca l'asta: ${esc(p.n)} al prezzo che decidi tu.</p>
+        <p class="tiny muted mb">${tr(`Scavalca l'asta: ${esc(p.n)} al prezzo che decidi tu.`, `Skip the bidding: ${esc(p.n)} at the price you decide.`)}</p>
         <div class="row">
           <select id="m-team" class="grow">${S.attive(s).filter((k) => S.slotsLeft(s, k) > 0)
             .map((k) => `<option value="${k}">${TEAM_NAMES[k]} — max ${S.maxBid(s, k)}</option>`).join('')}</select>
@@ -389,8 +397,8 @@ function viewAuction({ state: s, session }) {
   return `
     <div class="jumbo lotto-jumbo">
       <div class="tabellina">
-        <span>Lotto ${fatti + 1}</span>
-        <span>${S.skipRimasti(s)} skip al tavolo</span>
+        <span>${tr('Lotto', 'Lot')} ${fatti + 1}</span>
+        <span>${S.skipRimasti(s)} ${tr('skip al tavolo', 'skips left')}</span>
       </div>
       ${pallina(p, arc)}
       <div class="ovr-riga"><span>Overall</span><b>${p.ovr}</b></div>
@@ -401,8 +409,8 @@ function viewAuction({ state: s, session }) {
 
     <div class="card bidbox ${paused ? 'paused' : ''}" data-bidbox>
       <div class="bid-info">
-        <div class="bidnow">${bid ? bid.amount : 0}<small> crediti</small></div>
-        <div class="bidder">${bid ? `offerta di <b>${TEAM_NAMES[bid.team]}</b>` : '<span class="muted">nessuna offerta</span>'}</div>
+        <div class="bidnow">${bid ? bid.amount : 0}<small> ${tr('crediti', 'credits')}</small></div>
+        <div class="bidder">${bid ? `${tr('offerta di', 'bid by')} <b>${TEAM_NAMES[bid.team]}</b>` : `<span class="muted">${tr('nessuna offerta', 'no bid')}</span>`}</div>
       </div>
       <div class="clock" data-clock>--</div>
     </div>
@@ -410,7 +418,7 @@ function viewAuction({ state: s, session }) {
     ${myTeam ? myTeamCard(s, myTeam, bid) : ''}
 
     <div class="card tight">
-      ${myTeam ? '<p class="tiny muted mb">Gli avversari</p>' : ''}
+      ${myTeam ? `<p class="tiny muted mb">${tr('Gli avversari', 'Opponents')}</p>` : ''}
       ${S.attive(s).filter((k) => k !== myTeam).map(compact).join('')}
     </div>
 
@@ -515,17 +523,17 @@ function myTeamCard(s, k, bid) {
 
   return `<div class="card mine t-${k}">
     <div class="row spread">
-      <h3><span class="dot" style="display:inline-block;margin-right:7px"></span>${esc(TEAM_NAMES[k])} <span class="tiny muted">(tu)</span>${soprannome(k)}</h3>
-      ${leader ? '<span class="tag lead">sei in testa</span>' : ''}
+      <h3><span class="dot" style="display:inline-block;margin-right:7px"></span>${esc(TEAM_NAMES[k])} <span class="tiny muted">${tr('(tu)', '(you)')}</span>${soprannome(k)}</h3>
+      ${leader ? `<span class="tag lead">${tr('sei in testa', 'you lead')}</span>` : ''}
     </div>
     <div class="mine-nums">
-      <div><b>${t.credits}</b><span>crediti</span></div>
-      <div><b>${t.roster.length}/${ROSTER_SIZE}</b><span>giocatori</span></div>
-      <div><b>${max}</b><span>puoi arrivare a</span></div>
+      <div><b>${t.credits}</b><span>${tr('crediti', 'credits')}</span></div>
+      <div><b>${t.roster.length}/${ROSTER_SIZE}</b><span>${tr('giocatori', 'players')}</span></div>
+      <div><b>${max}</b><span>${tr('puoi arrivare a', 'max bid')}</span></div>
     </div>
     <div class="rslots">${chips}</div>
     ${left > 0 && max < (bid ? bid.amount + 1 : 1)
-      ? '<p class="tiny warn-txt">Qui non puoi rilanciare: devi tenere crediti per gli slot che ti restano.</p>' : ''}
+      ? `<p class="tiny warn-txt">${tr('Qui non puoi rilanciare: devi tenere crediti per gli slot che ti restano.', 'You can\'t bid here: you must keep credits for your remaining slots.')}</p>` : ''}
   </div>`;
 }
 
@@ -559,9 +567,9 @@ function bidBar(s, bidders, bid, paused) {
     const leader = bid && bid.team === k;
     const tag = bidders.length > 1 ? `<span class="who t-${k}"><span class="dot"></span>${TEAM_NAMES[k]}</span>` : '';
 
-    if (paused) return `<div class="bidrow">${tag}<div class="flatnote">Cronometro fermo</div></div>`;
-    if (leader) return `<div class="bidrow">${tag}<div class="flatnote lead">Sei in testa a ${cur}</div></div>`;
-    if (max < minBid) return `<div class="bidrow">${tag}<div class="flatnote">Budget esaurito per questo lotto</div></div>`;
+    if (paused) return `<div class="bidrow">${tag}<div class="flatnote">${tr('Cronometro fermo', 'Clock stopped')}</div></div>`;
+    if (leader) return `<div class="bidrow">${tag}<div class="flatnote lead">${tr('Sei in testa a', 'You lead at')} ${cur}</div></div>`;
+    if (max < minBid) return `<div class="bidrow">${tag}<div class="flatnote">${tr('Budget esaurito per questo lotto', 'Out of budget for this lot')}</div></div>`;
 
     // Sul tasto: di quanto rilanci. Sotto, piccolo: dove finisce l'offerta.
     const step = (n) => (cur + n <= max
@@ -574,7 +582,7 @@ function bidBar(s, bidders, bid, paused) {
     const allIn = max >= minBid
       ? `<button class="bidbtn allin ${armed ? 'armed' : ''}"
                  data-act="${armed ? 'bid' : 'arm-allin'}" data-team="${k}" data-amt="${max}">
-           ${armed ? 'Sicuro?' : 'All in'}<small>${max}</small>
+           ${armed ? tr('Sicuro?', 'Sure?') : 'All in'}<small>${max}</small>
          </button>`
       : '';
 
@@ -596,19 +604,19 @@ function skipBtn(s, bidders, k) {
   const voti = Object.keys(s.auction.skipVoti || {}).filter((x) => votanti.includes(x));
   const rimasti = S.skipRimasti(s);
   if (rimasti <= 0) {
-    return `<button class="bidbtn skip" disabled title="Skip finiti: questo giocatore va comprato">&#9197;<small>0</small></button>`;
+    return `<button class="bidbtn skip" disabled title="${tr('Skip finiti: questo giocatore va comprato', 'No skips left: this player must be bought')}">&#9197;<small>0</small></button>`;
   }
   const hoVotato = !!s.auction.skipVoti?.[k];
   return `<button class="bidbtn skip ${hoVotato ? 'on' : ''}" data-act="vota-skip" data-team="${k}"
-    title="${hoVotato ? 'Ritira il voto' : 'Vota per saltarlo'}: serve l'accordo di tutti. ${rimasti} skip rimasti">
+    title="${hoVotato ? tr('Ritira il voto', 'Withdraw your vote') : tr('Vota per saltarlo', 'Vote to skip him')}: ${tr(`serve l'accordo di tutti. ${rimasti} skip rimasti`, `everyone must agree. ${rimasti} skips left`)}">
     &#9197;<small>${voti.length}/${votanti.length}</small></button>`;
 }
 
 function auctionLog(s, D) {
   const rows = s.auction.log.slice().reverse().slice(0, 30).map((l) =>
     `<div><span>${esc(D.byId[l.playerId]?.n || l.playerId)}</span><span class="muted">${TEAM_NAMES[l.team]} · ${l.price}</span></div>`)
-    .join('') || '<div class="muted">Nessun acquisto.</div>';
-  return `<details class="card tight"><summary>Acquisti (${s.auction.log.length})</summary><div class="log mt">${rows}</div></details>`;
+    .join('') || `<div class="muted">${tr('Nessun acquisto.', 'No purchases.')}</div>`;
+  return `<details class="card tight"><summary>${tr('Acquisti', 'Purchases')} (${s.auction.log.length})</summary><div class="log mt">${rows}</div></details>`;
 }
 
 // Il cronometro vive in DUE punti: nel riquadro offerte e nella barra fissa
@@ -625,15 +633,15 @@ export function tickClock(s) {
   });
 
   if (s.auction.paused) {
-    scrivi(`fermo a ${Math.ceil((s.auction.remaining ?? 0) / 1000)}s`, false, true);
+    scrivi(`${tr('fermo a', 'paused at')} ${Math.ceil((s.auction.remaining ?? 0) / 1000)}s`, false, true);
     return null;
   }
-  if (!s.auction.running || !s.auction.deadline) { scrivi('in attesa', false, false); return null; }
+  if (!s.auction.running || !s.auction.deadline) { scrivi(tr('in attesa', 'waiting'), false, false); return null; }
   const left = Math.max(0, s.auction.deadline - now());
   // Il tempo della pallina e in piu: durante l'apertura il cronometro resta
   // fermo sul massimo invece di mostrare sedici secondi su quindici.
   const sec = Math.min(S.BID_SECONDS, Math.ceil(left / 1000));
-  scrivi(sec > 0 ? `${sec}s` : 'chiuso', sec <= 5, false);
+  scrivi(sec > 0 ? `${sec}s` : tr('chiuso', 'closed'), sec <= 5, false);
   return left;
 }
 
@@ -664,7 +672,7 @@ function viewSquadra({ state: s, session }) {
 
     const slots = SLOTS.map((sl) => {
       const p = D.byId[s.lineups[k][sl]];
-      if (!p) return `<div class="slot-riga"><div class="slot"><span class="pos">${sl}</span><span class="nm muted">vuoto</span></div></div>`;
+      if (!p) return `<div class="slot-riga"><div class="slot"><span class="pos">${sl}</span><span class="nm muted">${tr('vuoto', 'empty')}</span></div></div>`;
       const off = p.pos !== sl && !(p.alt || []).includes(sl);
       const sel = ui.selSlot && ui.selSlot.team === k && ui.selSlot.slot === sl;
       const attivo = editLineup && canEdit;
@@ -674,10 +682,10 @@ function viewSquadra({ state: s, session }) {
       return `<div class="slot-riga">
         <button class="slot ${sel ? 'sel' : ''}" ${attivo ? `data-act="pick-slot" data-team="${k}" data-slot="${sl}"` : 'disabled'}>
           <span class="pos">${sl}</span>
-          <span class="nm">${esc(p.n)}${off ? ' <span class="warn">fuori ruolo</span>' : ''}</span>
+          <span class="nm">${esc(p.n)}${off ? ` <span class="warn">${tr('fuori ruolo', 'out of position')}</span>` : ''}</span>
         </button>
         <button class="ovbtn" data-act="scheda" data-pid="${p.id}"
-                title="Le statistiche di ${esc(p.n)}">${p.ovr}</button>
+                title="${tr('Le statistiche di', 'Stats for')} ${esc(p.n)}">${p.ovr}</button>
       </div>`;
     }).join('');
 
@@ -695,26 +703,26 @@ function viewSquadra({ state: s, session }) {
 
     return `<div class="card t-${k} ${mia ? 'mine' : ''} ${confermata ? 'pronta' : ''}">
       <div class="row spread">
-        <h3><span class="dot" style="display:inline-block;margin-right:7px"></span>${esc(TEAM_NAMES[k])}${mia ? ' <span class="tiny muted">(tu)</span>' : ''}${soprannome(k)}</h3>
-        ${confermata ? '<span class="tag ok">pronta</span>' : ''}
-        ${canEdit ? `<button class="sm ghost" data-act="toggle-lineup" data-team="${k}">${editLineup ? 'Fatto' : 'Modifica'}</button>` : ''}
+        <h3><span class="dot" style="display:inline-block;margin-right:7px"></span>${esc(TEAM_NAMES[k])}${mia ? ` <span class="tiny muted">${tr('(tu)', '(you)')}</span>` : ''}${soprannome(k)}</h3>
+        ${confermata ? `<span class="tag ok">${tr('pronta', 'ready')}</span>` : ''}
+        ${canEdit ? `<button class="sm ghost" data-act="toggle-lineup" data-team="${k}">${editLineup ? tr('Fatto', 'Done') : tr('Modifica', 'Edit')}</button>` : ''}
       </div>
       ${rosaOvr.length ? `<div class="ovr-squadra">
-        <span>Overall squadra</span><b>${mediaOvr.toFixed(1)}</b>
-        <span class="tiny muted">media dei ${rosaOvr.length}</span>
+        <span>${tr('Overall squadra', 'Team overall')}</span><b>${mediaOvr.toFixed(1)}</b>
+        <span class="tiny muted">${tr('media dei', 'average of')} ${rosaOvr.length}</span>
       </div>` : ''}
       ${identity ? `<p class="identita">${esc(identity)}</p>` : ''}
       ${campo(s, k, editLineup && canEdit)}
       <div class="slots mt">${slots}</div>
-      ${editLineup ? '<p class="tiny muted mt">Tocca due pedine, o due caselle, per scambiarle.</p>' : ''}
+      ${editLineup ? `<p class="tiny muted mt">${tr('Tocca due pedine, o due caselle, per scambiarle.', 'Tap two pieces, or two boxes, to swap them.')}</p>` : ''}
       <div class="tattica">
         <div class="row">
-          <label class="field grow"><span>Primo violino</span>
+          <label class="field grow"><span>${tr('Primo violino', 'First option')}</span>
             <select data-act="set-v1" data-team="${k}" ${canEdit ? '' : 'disabled'}>${opt(t.v1, t.v2)}</select></label>
-          <label class="field grow"><span>Secondo violino</span>
+          <label class="field grow"><span>${tr('Secondo violino', 'Second option')}</span>
             <select data-act="set-v2" data-team="${k}" ${canEdit ? '' : 'disabled'}>${opt(t.v2, t.v1)}</select></label>
         </div>
-        <label class="field"><span>Strategia offensiva</span>
+        <label class="field"><span>${tr('Strategia offensiva', 'Offensive strategy')}</span>
           <select data-act="set-strat" data-team="${k}" ${canEdit ? '' : 'disabled'}>
             ${Object.entries(STRATEGIES).map(([id, v]) => `<option value="${id}" ${t.strategy === id ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}
           </select></label>
@@ -725,7 +733,7 @@ function viewSquadra({ state: s, session }) {
         ${coachPicker(s, k, t, canEdit)}
       </div>
       ${canEdit ? `<button class="conferma ${confermata ? 'fatta' : ''}" data-act="conferma-pronto" data-team="${k}"
-        title="${confermata ? 'Tocca per ripensarci' : 'Dice a chi ospita che hai finito'}">
+        title="${confermata ? tr('Tocca per ripensarci', 'Tap to change your mind') : tr('Dice a chi ospita che hai finito', 'Tells the host you are done')}">
         ${confermata ? '&#10003; Ready' : 'Ready'}
       </button>` : ''}
     </div>`;
@@ -741,22 +749,26 @@ function viewSquadra({ state: s, session }) {
   // e senza stagione del tutto.
   let testa, azione;
   if (s.conStagione && !st) {
-    testa = `<h2>Le squadre</h2>
+    testa = tr(`<h2>Le squadre</h2>
       <p class="muted small mb">Prima della stagione regolare: ${giri > 1 ? `girone di ${giri} giri` : 'tutti contro tutti'},
-      ${(n - 1) * giri} partite a testa. Dopo potrai ritoccare le tattiche prima dei playoff.</p>`;
+      ${(n - 1) * giri} partite a testa. Dopo potrai ritoccare le tattiche prima dei playoff.</p>`,
+      `<h2>The teams</h2>
+      <p class="muted small mb">Before the regular season: ${giri > 1 ? `${giri}-round league` : 'round robin'},
+      ${(n - 1) * giri} games each. Afterwards you can adjust tactics before the playoffs.</p>`);
     azione = `<button class="primary wide" data-act="gioca-stagione" ${pronte ? '' : 'disabled'}>
-      Gioca la stagione regolare</button>`;
+      ${tr('Gioca la stagione regolare', 'Play the regular season')}</button>`;
   } else if (st) {
-    testa = `<h2>Stagione regolare</h2>
+    testa = `<h2>${tr('Stagione regolare', 'Regular season')}</h2>
       ${classificaCard(s, st)}
-      <h2 class="mt">Ritocca le tattiche</h2>
-      <p class="muted small mb">La classifica è chiusa e non cambia più. Quello che scegli adesso vale per i playoff:
-      hai visto come è andata, puoi correggere violini e strategia.</p>`;
-    azione = `<button class="primary wide" data-act="to-playoffs" ${pronte ? '' : 'disabled'}>Ai playoff</button>`;
+      <h2 class="mt">${tr('Ritocca le tattiche', 'Adjust your tactics')}</h2>
+      <p class="muted small mb">${tr(`La classifica è chiusa e non cambia più. Quello che scegli adesso vale per i playoff:
+      hai visto come è andata, puoi correggere violini e strategia.`, `The standings are final and won't change. What you pick now counts for the playoffs:
+      you saw how it went, you can fix your options and strategy.`)}</p>`;
+    azione = `<button class="primary wide" data-act="to-playoffs" ${pronte ? '' : 'disabled'}>${tr('Ai playoff', 'To the playoffs')}</button>`;
   } else {
-    testa = `<h2>Le squadre</h2>
-      <p class="muted small mb">Il quintetto lo assegna l'app cercando il minor numero di adattamenti: qui serve a capire cosa hai comprato. La strategia invece la scegli tu, e pesa: cambia chi prende i tiri e quali difese ti mettono in crisi.</p>`;
-    azione = `<button class="primary wide" data-act="to-playoffs" ${pronte ? '' : 'disabled'}>Componi il tabellone</button>`;
+    testa = `<h2>${tr('Le squadre', 'The teams')}</h2>
+      <p class="muted small mb">${tr('Il quintetto lo assegna l\'app cercando il minor numero di adattamenti: qui serve a capire cosa hai comprato. La strategia invece la scegli tu, e pesa: cambia chi prende i tiri e quali difese ti mettono in crisi.', 'The app sets the lineup with as few players out of position as possible: here it shows what you bought. The strategy is up to you, and it matters: it changes who takes the shots and which defenses give you trouble.')}</p>`;
+    azione = `<button class="primary wide" data-act="to-playoffs" ${pronte ? '' : 'disabled'}>${tr('Componi il tabellone', 'Build the bracket')}</button>`;
   }
 
   // IL TASTO STA IN UNA BARRA FISSA, non in fondo alla pagina. Con quattro
@@ -771,7 +783,7 @@ function viewSquadra({ state: s, session }) {
   const mancano = S.attive(s).filter((k) => !S.haConfermato(s, k));
   const contatore = `<div class="conta-pronti ${pronti === n ? 'tutti' : ''}">
     <b>${pronti}/${n}</b>
-    <span>${pronti === n ? 'tutti pronti' : `in attesa di ${mancano.map((k) => esc(TEAM_NAMES[k])).join(', ')}`}</span>
+    <span>${pronti === n ? tr('tutti pronti', 'everyone ready') : `${tr('in attesa di', 'waiting for')} ${mancano.map((k) => esc(TEAM_NAMES[k])).join(', ')}`}</span>
   </div>`;
 
   // L'azione sta in una barra fissa, non in fondo alla pagina. Con quattro
@@ -789,8 +801,8 @@ function viewSquadra({ state: s, session }) {
     ${cards}
     <div class="azione-spacer"></div>
     <div class="azione-fissa">
-      ${isHost ? `${azione}${pronti < n && pronte ? `<p class="tiny muted center mt">${n - pronti} ${n - pronti === 1 ? 'squadra non ha' : 'squadre non hanno'} ancora confermato. Puoi andare lo stesso.</p>` : ''}`
-    : `<p class="small muted center">In attesa di chi ospita.</p>`}
+      ${isHost ? `${azione}${pronti < n && pronte ? `<p class="tiny muted center mt">${n - pronti} ${pl(n - pronti, 'squadra non ha ancora confermato. Puoi andare lo stesso.', 'squadre non hanno ancora confermato. Puoi andare lo stesso.', 'team hasn\'t confirmed yet. You can go anyway.', 'teams haven\'t confirmed yet. You can go anyway.')}</p>` : ''}`
+    : `<p class="small muted center">${tr('In attesa di chi ospita.', 'Waiting for the host.')}</p>`}
     </div>
   `;
 }
@@ -803,10 +815,10 @@ function ritmoSlider(k, t, canEdit) {
   const i = Math.max(0, ids.indexOf(t.ritmo));
   const v = RITMI[ids[i]];
   return `
-    <span class="lbl-mini">Ritmo <i class="tiny muted">— ${esc(v.label.toLowerCase())}</i></span>
+    <span class="lbl-mini">${tr('Ritmo', 'Pace')} <i class="tiny muted">— ${esc(v.label.toLowerCase())}</i></span>
     <div class="ritmo-slider">
       <input type="range" min="0" max="${ids.length - 1}" step="1" value="${i}"
-             class="rslider" aria-label="Ritmo"
+             class="rslider" aria-label="${tr('Ritmo', 'Pace')}"
              ${canEdit ? `data-act="set-ritmo" data-team="${k}"` : 'disabled'}>
       <div class="rtacche">${ids.map((id, j) => `<span class="${j === i ? 'on' : ''}">${esc(RITMI[id].label)}</span>`).join('')}</div>
     </div>
@@ -838,21 +850,21 @@ function coachPicker(s, k, t, canEdit) {
         <span class="cid">${esc(c.label)}</span>
         <p class="cdesc">${esc(c.desc)}</p>
         <p class="ceff">${esc(effettoInParole(c))}</p>
-        <p class="cvia">sbloccato da ${esc(c.da)}</p>
+        <p class="cvia">${tr('sbloccato da', 'unlocked by')} ${esc(c.da)}</p>
       </div>
       ${canEdit
         ? `<button class="csel ${scelto ? 'on' : ''}" data-act="set-coach" data-team="${k}" data-v="${c.id}">
-             ${scelto ? 'Scelto' : 'Scegli'}</button>`
-        : `<div class="csel ${scelto ? 'on' : ''}">${scelto ? 'Scelto' : ''}</div>`}
+             ${scelto ? tr('Scelto', 'Picked') : tr('Scegli', 'Pick')}</button>`
+        : `<div class="csel ${scelto ? 'on' : ''}">${scelto ? tr('Scelto', 'Picked') : ''}</div>`}
     </article>`;
   }).join('');
 
   return `
     <div class="row spread" style="align-items:baseline">
-      <span class="lbl-mini">Allenatore <i class="tiny muted">— dai tuoi giocatori</i></span>
+      <span class="lbl-mini">${tr('Allenatore', 'Coach')} <i class="tiny muted">— ${tr('dai tuoi giocatori', 'from your players')}</i></span>
       ${liberi.length > 1 ? `<span class="cfrecce">
-        <button class="cfr" data-act="coach-scorri" data-team="${k}" data-dir="-1" aria-label="Allenatore precedente">‹</button>
-        <button class="cfr" data-act="coach-scorri" data-team="${k}" data-dir="1" aria-label="Allenatore successivo">›</button>
+        <button class="cfr" data-act="coach-scorri" data-team="${k}" data-dir="-1" aria-label="${tr('Allenatore precedente', 'Previous coach')}">‹</button>
+        <button class="cfr" data-act="coach-scorri" data-team="${k}" data-dir="1" aria-label="${tr('Allenatore successivo', 'Next coach')}">›</button>
       </span>` : ''}
     </div>
     <div class="cstrip" id="coaches-${k}" data-coach-strip>${carte}</div>`;
@@ -860,17 +872,19 @@ function coachPicker(s, k, t, canEdit) {
 
 // L'effetto in chiaro. Un allenatore che non dice cosa fa e un bonus cieco.
 function effettoInParole(c) {
-  const N = { sco: 'realizzazione', tre: 'tiro da 3', pla: 'playmaking', reb: 'rimbalzi',
-    dif: 'protezione ferro', dpe: 'difesa perimetro', atl: 'atletismo', usg: 'palla richiesta' };
+  const N = EN
+    ? { sco: 'scoring', tre: 'three-point', pla: 'playmaking', reb: 'rebounding', dif: 'rim protection', dpe: 'perimeter defense', atl: 'athleticism', usg: 'usage' }
+    : { sco: 'realizzazione', tre: 'tiro da 3', pla: 'playmaking', reb: 'rimbalzi',
+      dif: 'protezione ferro', dpe: 'difesa perimetro', atl: 'atletismo', usg: 'palla richiesta' };
   const e = c.eff || {};
   const parti = [];
   const elenco = (obj, chi) => Object.entries(obj || {})
     .map(([a, v]) => `${v > 0 ? '+' : ''}${v} ${N[a] || a}${chi}`);
-  parti.push(...elenco(e.attr, ' a tutti'));
-  parti.push(...elenco(e.star, ' al primo violino'));
-  parti.push(...elenco(e.altri, ' agli altri'));
-  if (e.poss) parti.push(`${e.poss > 0 ? '+' : ''}${e.poss} possessi`);
-  if (e.var) parti.push(e.var < 0 ? 'più solida' : 'più imprevedibile');
+  parti.push(...elenco(e.attr, tr(' a tutti', ' to everyone')));
+  parti.push(...elenco(e.star, tr(' al primo violino', ' to the first option')));
+  parti.push(...elenco(e.altri, tr(' agli altri', ' to the others')));
+  if (e.poss) parti.push(`${e.poss > 0 ? '+' : ''}${e.poss} ${tr('possessi', 'possessions')}`);
+  if (e.var) parti.push(e.var < 0 ? tr('più solida', 'steadier') : tr('più imprevedibile', 'less predictable'));
   return parti.length ? `(${parti.join(', ')})` : '';
 }
 
@@ -886,18 +900,18 @@ function classificaCard(s, st) {
       <td class="sq"><span class="dot t-${r.k}"></span>${TEAM_NAMES[r.k]}</td>
       <td class="rec"><b>${r.w}</b>-${r.l}</td>
       <td class="diff">${diff}</td>
-      <td class="esito">${dentro ? '<span class="tag in">playoff</span>' : '<span class="tag fuori">fuori</span>'}</td>
+      <td class="esito">${dentro ? '<span class="tag in">playoff</span>' : `<span class="tag fuori">${tr('fuori', 'out')}</span>`}</td>
     </tr>`;
   }).join('');
 
   const pari = st.cls.filter((r) => r.appaiata).length;
   return `<div class="card tight">
     <table class="classifica">
-      <thead><tr><th></th><th>Squadra</th><th>V-S</th><th>Diff</th><th></th></tr></thead>
+      <thead><tr><th></th><th>${tr('Squadra', 'Team')}</th><th>${tr('V-S', 'W-L')}</th><th>Diff</th><th></th></tr></thead>
       <tbody>${righe}</tbody>
     </table>
-    <p class="tiny muted mt">${st.gare.length} gare, ${st.perSquadra} a testa${
-      pari ? ` · ${pari} posti a pari vittorie, decisi da scontro diretto e differenza canestri` : ''}.</p>
+    <p class="tiny muted mt">${tr(`${st.gare.length} gare, ${st.perSquadra} a testa`, `${st.gare.length} games, ${st.perSquadra} each`)}${
+      pari ? tr(` · ${pari} posti a pari vittorie, decisi da scontro diretto e differenza canestri`, ` · ${pari} spots tied on wins, decided by head-to-head and point differential`) : ''}.</p>
     ${calendarioCard(st)}
   </div>`;
 }
@@ -906,9 +920,9 @@ function calendarioCard(st) {
   const righe = st.gare.map((g) => {
     const vinceA = g.vince === g.a;
     return `<div><span>${TEAM_NAMES[g.a]} <b class="${vinceA ? 'w' : ''}">${g.sa}</b> – <b class="${vinceA ? '' : 'w'}">${g.sb}</b> ${TEAM_NAMES[g.b]}</span>
-      <span class="muted">${g.ot ? `${g.ot} ts` : ''}</span></div>`;
+      <span class="muted">${g.ot ? `${g.ot} ${tr('ts', 'OT')}` : ''}</span></div>`;
   }).join('');
-  return `<details class="mt"><summary class="tiny">Tutti i risultati (${st.gare.length})</summary>
+  return `<details class="mt"><summary class="tiny">${tr('Tutti i risultati', 'All results')} (${st.gare.length})</summary>
     <div class="log mt">${righe}</div></details>`;
 }
 
@@ -956,7 +970,7 @@ function viewPlayoffs({ state: s, session }) {
   // da mandare in chat si prende da li.
   if (finita) {
     out += bannerCampione(finale, T);
-    out += '<button class="primary wide condividi" data-act="condividi-card">Condividi la serata</button>';
+    out += `<button class="primary wide condividi" data-act="condividi-card">${tr('Condividi la serata', 'Share the game night')}</button>`;
     out += premiCard(premiSerata(s, T));
   }
 
@@ -970,8 +984,8 @@ function viewPlayoffs({ state: s, session }) {
       const p = semi[0];
       const terzo = p.res.winner === p.a ? p.b : p.a;
       out += `<div class="card tight center"><p class="small">
-        <span class="muted">Terzo posto:</span> <b>${esc(TEAM_NAMES[terzo])}</b>,
-        <span class="muted">eliminato in semifinale.</span></p></div>`;
+        <span class="muted">${tr('Terzo posto', 'Third place')}:</span> <b>${esc(TEAM_NAMES[terzo])}</b>,
+        <span class="muted">${tr('eliminato in semifinale.', 'knocked out in the semifinal.')}</span></p></div>`;
     }
     // Il tabellone completo torna a fine serata, come riassunto del torneo.
     out += tabellonePlayoff(turni, T, conTeste);
@@ -980,8 +994,8 @@ function viewPlayoffs({ state: s, session }) {
   }
 
   // Il perche degli accoppiamenti: utile la prima volta, poi ingombra.
-  out += `<details class="po-info"><summary>${po.n} squadre · ${turni.reduce((a, r) => a + r.length, 0)} serie
-    ${conTeste ? `· salta${po.teste > 1 ? 'no' : ''} il preliminare ${po.ordine.slice(0, po.teste).map((k) => esc(TEAM_NAMES[k])).join(', ')}` : ''}</summary>
+  out += `<details class="po-info"><summary>${po.n} ${tr('squadre', 'teams')} · ${turni.reduce((a, r) => a + r.length, 0)} ${tr('serie', 'series')}
+    ${conTeste ? tr(`· salta${po.teste > 1 ? 'no' : ''} il preliminare ${po.ordine.slice(0, po.teste).map((k) => esc(TEAM_NAMES[k])).join(', ')}`, `· skipping the play-in: ${po.ordine.slice(0, po.teste).map((k) => esc(TEAM_NAMES[k])).join(', ')}`) : ''}</summary>
     ${po.reasons.map((r) => `<p class="small muted" style="margin-top:6px">${esc(r)}</p>`).join('')}
   </details>`;
   return out;
@@ -996,12 +1010,12 @@ function strisciaTorneo(ordine, T, ora, finale) {
     const conto = !!(f && x.giocate);
     const riga = (k, w) => (k && T[k]
       ? `<span class="ts-sq t-${k} ${f?.done ? (f.winner === k ? 'vince' : 'perde') : ''}"><span class="dot"></span><span class="nm">${esc(T[k].name)}</span><b>${conto ? w : ''}</b></span>`
-      : '<span class="ts-sq vuota"><span class="nm">da decidere</span></span>');
+      : `<span class="ts-sq vuota"><span class="nm">${tr('da decidere', 'TBD')}</span></span>`);
     return `<div class="ts-chip ${x.id === ora ? 'ora' : ''} ${f?.done ? 'chiusa' : ''}">
       <span class="ts-tit">${esc(x.titolo)}</span>${riga(x.a, f?.wins.a)}${riga(x.b, f?.wins.b)}</div>`;
   }).join('');
   const W = finale?.res?.done ? T[finale.res.winner] : null;
-  const camp = `<div class="ts-chip ts-oro ${W ? 'chiusa' : ''}"><span class="ts-tit">Campione</span>
+  const camp = `<div class="ts-chip ts-oro ${W ? 'chiusa' : ''}"><span class="ts-tit">${tr('Campione', 'Champion')}</span>
     ${W ? `<span class="ts-sq t-${W.key} vince"><span class="dot"></span><span class="nm">${esc(W.name)}</span></span>` : '<span class="ts-sq vuota"><span class="nm">?</span></span>'}</div>`;
   return `<div class="torneo">${chip}${camp}</div>`;
 }
@@ -1030,7 +1044,7 @@ function serieInCorso(s, session, x, T, isHost, ordine) {
   out += azioniSerie(s, session, x, T, isHost, ordine);
   out += '</div>';
   if (n > 0 && !f.done) out += pronosticiSerie(s, x, A, B, f, quote);
-  if (n > 0) out += `<details class="confronto-wrap"><summary>I quintetti a confronto</summary>${confronto(A, B)}</details>`;
+  if (n > 0) out += `<details class="confronto-wrap"><summary>${tr('I quintetti a confronto', 'Lineups compared')}</summary>${confronto(A, B)}</details>`;
   return out;
 }
 
@@ -1046,15 +1060,15 @@ function serieBoard(titolo, A, B, f, idx) {
     const gi = f.games[i];
     if (!gi) return '<i class="vuoto"></i>';
     const k = gi.scoreA > gi.scoreB ? A.key : B.key;
-    return `<button class="pal t-${k} ${i === idx ? 'sel' : ''}" data-act="vedi-gara" data-g="${i}" aria-label="Gara ${i + 1}"></button>`;
+    return `<button class="pal t-${k} ${i === idx ? 'sel' : ''}" data-act="vedi-gara" data-g="${i}" aria-label="${tr('Gara', 'Game')} ${i + 1}"></button>`;
   }).join('');
   const lato = (X, pt, vinto) => `<div class="sq t-${X.key}">
       <div class="pt ${vinto ? 'vince' : ''}" ${g ? `data-pt="${pt}"` : ''}>${g ? pt : '—'}</div>
       <div class="nm">${esc(X.name)}</div></div>`;
   return `<div class="jumbo serie-jumbo ${g7 ? 'gara7' : ''}">
     <div class="tabellina"><span>${esc(titolo)}</span>
-      <span>${f.done ? 'chiusa' : (g7 ? 'GARA 7' : (n ? `gara ${n} di 7` : 'si parte'))}</span></div>
-    <div class="pallini" aria-label="${f.wins.a} a ${f.wins.b}">${dots}</div>
+      <span>${f.done ? tr('chiusa', 'final') : (g7 ? tr('GARA 7', 'GAME 7') : (n ? tr(`gara ${n} di 7`, `game ${n} of 7`) : tr('si parte', 'tip-off')))}</span></div>
+    <div class="pallini" aria-label="${f.wins.a} ${tr('a', 'to')} ${f.wins.b}">${dots}</div>
     <div class="punteggio" ${g ? `data-gara="${idx + 1}"` : ''}>
       ${lato(A, g?.scoreA, g && g.scoreA > g.scoreB)}
       <div class="serie-conto">${f.wins.a}<span>-</span>${f.wins.b}</div>
@@ -1115,15 +1129,15 @@ function lavagna(s, session, x, A, B, quote) {
   const altri = Object.keys(scelte).filter((k) => k !== mia && (scelte[k]?.e || scelte[k]?.m));
   const chi = (k) => esc(S.nameOfSeat(s, k) || TEAM_NAMES[k]);
   return `<div class="lavagna">
-    <div class="lv-testa"><span>${puo ? 'Il tuo pronostico' : 'Le quote della serie'}</span>
-      <span class="tiny muted">${puo ? 'si chiude a gara 1' : ''}</span></div>
-    <div class="lv-tit">Come finisce</div>
+    <div class="lv-testa"><span>${puo ? tr('Il tuo pronostico', 'Your prediction') : tr('Le quote della serie', 'Series odds')}</span>
+      <span class="tiny muted">${puo ? tr('si chiude a gara 1', 'closes at game 1') : ''}</span></div>
+    <div class="lv-tit">${tr('Come finisce', 'How it ends')}</div>
     ${esiti(A, ['4-0', '4-1', '4-2', '4-3'])}
     ${esiti(B, ['0-4', '1-4', '2-4', '3-4'])}
-    <div class="lv-tit">Miglior marcatore della serie</div>
+    <div class="lv-tit">${tr('Miglior marcatore della serie', 'Series top scorer')}</div>
     <div class="lv-marc">${marcatori}</div>
-    ${puo ? '<p class="tiny muted mt">Se indovini prendi la quota come punti.</p>' : ''}
-    ${altri.length ? `<p class="tiny muted mt">Hanno pronosticato: ${altri.map(chi).join(', ')} — le scelte si scoprono a gara 1.</p>` : ''}
+    ${puo ? `<p class="tiny muted mt">${tr('Se indovini prendi la quota come punti.', 'Get it right and you score the odds as points.')}</p>` : ''}
+    ${altri.length ? `<p class="tiny muted mt">${tr('Hanno pronosticato', 'Already predicted')}: ${altri.map(chi).join(', ')} — ${tr('le scelte si scoprono a gara 1.', 'picks are revealed at game 1.')}</p>` : ''}
   </div>`;
 }
 
@@ -1136,9 +1150,9 @@ function pannelloGara(A, B, g, idx, n) {
   const box = [...g.boxA.map((l) => ({ ...l, t: A })), ...g.boxB.map((l) => ({ ...l, t: B }))]
     .sort((p, q) => q.pts - p.pts);
   return `<div class="gara-pan ${vecchia ? 'vecchia' : ''}">
-    ${vecchia ? `<div class="vista-vecchia"><span>Stai guardando gara ${idx + 1}</span>
-      <button class="sm ghost" data-act="vedi-gara" data-g="">Torna a gara ${n}</button></div>` : ''}
-    <div class="gp-tit">Gara ${idx + 1}${g.ot ? ' · supplementari' : ''}</div>
+    ${vecchia ? `<div class="vista-vecchia"><span>${tr('Stai guardando gara', 'You are viewing game')} ${idx + 1}</span>
+      <button class="sm ghost" data-act="vedi-gara" data-g="">${tr('Torna a gara', 'Back to game')} ${n}</button></div>` : ''}
+    <div class="gp-tit">${tr('Gara', 'Game')} ${idx + 1}${g.ot ? tr(' · supplementari', ' · overtime') : ''}</div>
     <div class="migliori">
       <div class="t-${A.key}"><span class="dot"></span>${top(g.boxA)}</div>
       <div class="t-${B.key}"><span class="dot"></span>${top(g.boxB)}</div>
@@ -1147,7 +1161,7 @@ function pannelloGara(A, B, g, idx, n) {
     <details class="box"><summary>Box score</summary>
       <table>${box.map((l) => `<tr><td class="n"><span class="dot t-${l.t.key}"></span>${esc(l.n)}</td>
         <td class="num">${l.pts}</td><td class="num">${l.reb}</td><td class="num">${l.ast}</td></tr>`).join('')}</table>
-      <div class="tiny" style="margin-top:4px">punti · rimbalzi · assist</div>
+      <div class="tiny" style="margin-top:4px">${tr('punti · rimbalzi · assist', 'points · rebounds · assists')}</div>
     </details>
   </div>`;
 }
@@ -1170,7 +1184,7 @@ function pronosticiSerie(s, x, A, B, f, quote) {
       ${voce(p.e ? esitoDetto(p.e, A, B) : '', p.e ? quote.esiti[p.e].q : 0, pt?.e)}
       ${voce(m ? m.n : '', m ? m.q : 0, pt?.m)}</div>`;
   }).join('');
-  return `<div class="pron-serie"><div class="lv-tit">I pronostici di questa serie</div>${righe}</div>`;
+  return `<div class="pron-serie"><div class="lv-tit">${tr('I pronostici di questa serie', 'Predictions for this series')}</div>${righe}</div>`;
 }
 
 // IL RIEPILOGO, a serie chiusa: chi passa, MVP, miglior marcatore, chi ha
@@ -1183,20 +1197,20 @@ function riepilogo(s, x, A, B, f, quote, T) {
   const marc = top.map((id) => quote.marcatori.find((m) => m.id === id)).filter(Boolean);
   const e = `${f.wins.a}-${f.wins.b}`;
   return `<div class="riepilogo t-${W.key}">
-    <div class="rp-tit">${x.finale ? 'Campione' : (x.id === 'third' ? 'Terzo posto' : 'Passa il turno')}</div>
+    <div class="rp-tit">${x.finale ? tr('Campione', 'Champion') : (x.id === 'third' ? tr('Terzo posto', 'Third place') : tr('Passa il turno', 'Advances'))}</div>
     <div class="rp-n"><span class="dot"></span>${esc(W.name)} <span class="rp-c">${wv}-${wp}</span></div>
     <div class="rp-voci">
-      <div><span>MVP della serie</span><b>${esc(f.mvp.n)}</b>
-        <i>${f.mvp.ppg.toFixed(1)} punti · ${f.mvp.rpg.toFixed(1)} rimbalzi · ${f.mvp.apg.toFixed(1)} assist</i></div>
-      <div><span>Miglior marcatore</span><b>${marc.map((m) => esc(m.n)).join(' e ')}</b>
-        <i>${tot[top[0]]} punti${marc[0] ? ` · era a ${fq(marc[0].q)}` : ''}</i></div>
-      <div><span>Esito</span><b>${esc(esitoDetto(e, A, B))}</b><i>era a ${fq(quote.esiti[e].q)}</i></div>
+      <div><span>${tr('MVP della serie', 'Series MVP')}</span><b>${esc(f.mvp.n)}</b>
+        <i>${f.mvp.ppg.toFixed(1)} ${tr('punti', 'points')} · ${f.mvp.rpg.toFixed(1)} ${tr('rimbalzi', 'rebounds')} · ${f.mvp.apg.toFixed(1)} ${tr('assist', 'assists')}</i></div>
+      <div><span>${tr('Miglior marcatore', 'Top scorer')}</span><b>${marc.map((m) => esc(m.n)).join(tr(' e ', ' and '))}</b>
+        <i>${tot[top[0]]} ${tr('punti', 'points')}${marc[0] ? ` · ${tr('era a', 'was at')} ${fq(marc[0].q)}` : ''}</i></div>
+      <div><span>${tr('Esito', 'Result')}</span><b>${esc(esitoDetto(e, A, B))}</b><i>${tr('era a', 'was at')} ${fq(quote.esiti[e].q)}</i></div>
     </div>
     ${pronosticiSerie(s, x, A, B, f, quote)}
-    <details class="why"><summary>Perché ha vinto ${esc(W.name)}</summary>
+    <details class="why"><summary>${tr('Perché ha vinto', 'Why it went to')} ${esc(W.name)}</summary>
       <ul>${analisiSerie(A, B, f, ['4-0', '4-1', '4-2', '4-3'].reduce((t, k) => t + quote.esiti[k].p, 0))
         .map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
-      <p class="tiny muted">I numeri fra parentesi sono il peso sul valore d'attacco o di difesa; le squadre stanno fra 50 e 90.</p></details>
+      <p class="tiny muted">${tr('I numeri fra parentesi sono il peso sul valore d\'attacco o di difesa; le squadre stanno fra 50 e 90.', 'The numbers in brackets are the weight on the offense or defense rating; teams range from 50 to 90.')}</p></details>
     ${refertoCard(A, B, f)}
   </div>`;
 }
@@ -1215,20 +1229,20 @@ function azioniSerie(s, session, x, T, isHost, ordine) {
   if (f.done) {
     const strade = dopo(s, T, x, ordine);
     if (!strade.length) return '';
-    if (!isHost) return '<p class="small muted center mt">Si passa alla prossima quando chi ospita preme Avanti.</p>';
+    if (!isHost) return `<p class="small muted center mt">${tr('Si passa alla prossima quando chi ospita preme Avanti.', 'The next series starts when the host taps Next.')}</p>`;
     return strade.map((st) => `<button class="${st.id === 'third' ? 'ghost' : 'primary'} wide mt" data-act="avanti-serie"
         data-next="${esc(st.id)}" ${st.a ? `data-a="${st.a}" data-b="${st.b}"` : ''}>${st.id === 'third'
-        ? 'Prima la finale 3° / 4° posto' : `Avanti: ${esc(st.titolo)}`}</button>`).join('');
+        ? tr('Prima la finale 3° / 4° posto', 'Third-place series first') : `${tr('Avanti', 'Next')}: ${esc(st.titolo)}`}</button>`).join('');
   }
-  if (!isHost) return '<p class="small muted center mt">In attesa di chi ospita.</p>';
+  if (!isHost) return `<p class="small muted center mt">${tr('In attesa di chi ospita.', 'Waiting for the host.')}</p>`;
   // Prima di gara 1 il tasto dice chi non ha ancora pronosticato. Non blocca:
   // un telefono in tasca non deve fermare la serata.
   const mancano = n === 0 ? mancanoPronostici(s, session, x) : [];
-  const nota = mancano.length ? ` · ${mancano.length === 1 ? 'ne manca 1' : `ne mancano ${mancano.length}`}` : '';
+  const nota = mancano.length ? ` · ${mancano.length === 1 ? tr('ne manca 1', '1 missing') : tr(`ne mancano ${mancano.length}`, `${mancano.length} missing`)}` : '';
   const dati = `data-serie="${esc(x.id)}" data-mancano="${esc(mancano.join(', '))}"`;
-  return `<button class="primary wide mt" data-act="simula-gara" ${dati}>Simula gara ${n + 1}${nota}</button>
-    ${mancano.length ? `<p class="tiny muted mancano">Non hanno ancora pronosticato: ${mancano.map(esc).join(', ')}</p>` : ''}
-    <button class="sm ghost wide mt" data-act="simula-serie" ${dati}>Simula tutta la serie</button>`;
+  return `<button class="primary wide mt" data-act="simula-gara" ${dati}>${tr('Simula gara', 'Simulate game')} ${n + 1}${nota}</button>
+    ${mancano.length ? `<p class="tiny muted mancano">${tr('Non hanno ancora pronosticato', 'Still to predict')}: ${mancano.map(esc).join(', ')}</p>` : ''}
+    <button class="sm ghost wide mt" data-act="simula-serie" ${dati}>${tr('Simula tutta la serie', 'Simulate the whole series')}</button>`;
 }
 
 // IL TABELLONE DEI PLAYOFF. Una colonna per turno, e i vincitori che
@@ -1252,7 +1266,7 @@ function tabellonePlayoff(turni, T, conTeste) {
       const riga = (X, w, lato) => (X
         ? `<div class="br-sq t-${X.key} ${esito === lato ? 'vince' : (esito ? 'perde' : '')}">
              <span class="dot"></span><span class="nm">${esc(X.name)}</span><b>${f ? w : ''}</b></div>`
-        : '<div class="br-sq vuota"><span class="nm">da decidere</span></div>');
+        : `<div class="br-sq vuota"><span class="nm">${tr('da decidere', 'TBD')}</span></div>`);
       return `<div class="br-cella ${f?.done ? 'chiusa' : ''}">
         ${riga(A, f?.wins.a, 'a')}${riga(B, f?.wins.b, 'b')}
       </div>`;
@@ -1264,14 +1278,14 @@ function tabellonePlayoff(turni, T, conTeste) {
   // In fondo al tabellone, il campione: e la casella a cui porta tutto.
   const fin = turni[tot - 1]?.[0];
   const W = fin?.res?.done ? T[fin.res.winner] : null;
-  const ultima = `<div class="br-col br-campione"><div class="br-tit">Campione</div>
+  const ultima = `<div class="br-col br-campione"><div class="br-tit">${tr('Campione', 'Champion')}</div>
     <div class="br-celle"><div class="br-cella br-oro ${W ? 'chiusa' : ''}">
       ${W ? `<div class="br-sq t-${W.key} vince"><span class="dot"></span><span class="nm">${esc(W.name)}</span></div>`
         : '<div class="br-sq vuota"><span class="nm">?</span></div>'}
     </div></div></div>`;
 
   return `<div class="jumbo br-jumbo">
-    <div class="tabellina"><span>Tabellone playoff</span><span>${W ? 'concluso' : 'in corso'}</span></div>
+    <div class="tabellina"><span>${tr('Tabellone playoff', 'Playoff bracket')}</span><span>${W ? tr('concluso', 'complete') : tr('in corso', 'in progress')}</span></div>
     <div class="bracket">${colonne}${ultima}</div>
   </div>`;
 }
@@ -1297,7 +1311,7 @@ function premiCard(premi) {
   if (!premi.length) return '';
   const ICONA = { mvp: '&#9733;', punti: '&#9673;', rimbalzi: '&#9650;', colpo: '&#10003;', bidone: '&#10007;' };
   return `<div class="premi">
-    <div class="premi-tit">Premi della serata</div>
+    <div class="premi-tit">${tr('Premi della serata', 'Game night awards')}</div>
     ${premi.map((p) => `<div class="premio ${p.chiave === 'bidone' ? 'bidone' : ''} ${p.team ? `t-${p.team}` : ''}">
       <span class="pr-ic">${ICONA[p.chiave] || '&#9733;'}</span>
       <div class="pr-testo">
@@ -1316,9 +1330,9 @@ function bannerCampione(m, T) {
   const wv = Math.max(m.res.wins.a, m.res.wins.b), wp = Math.min(m.res.wins.a, m.res.wins.b);
   return `<div class="champ t-${W.key}">
     ${trofeo(56)}
-    <div class="t">Campione</div>
+    <div class="t">${tr('Campione', 'Champion')}</div>
     <div class="n">${esc(W.name)}</div>${soprannome(W.key) ? `<div class="sopr">${esc(NOMI_SQUADRA[W.key])}</div>` : ''}
-    <div class="small">${wv}-${wp} su ${esc(L.name)}${m.res.mvp ? ` · MVP delle Finals ${esc(m.res.mvp.n)}` : ''}</div>
+    <div class="small">${wv}-${wp} ${tr('su', 'over')} ${esc(L.name)}${m.res.mvp ? ` · ${tr('MVP delle Finals', 'Finals MVP')} ${esc(m.res.mvp.n)}` : ''}</div>
     <div class="rosa">${(W.five || []).map((p) => esc(p.n)).join(' · ')}</div>
   </div>`;
 }
@@ -1346,16 +1360,16 @@ export function rivelaCampione(s) {
     const r = Math.floor(rnd() * 360), c = COL[Math.floor(rnd() * COL.length)];
     return `<i style="left:${x}%;animation-delay:${d}s;animation-duration:${t}s;background:${c};transform:rotate(${r}deg)"></i>`;
   }).join('');
-  return `<div class="rivela t-${W.key}" data-act="chiudi-rivela" role="dialog" aria-label="Campione: ${esc(W.name)}">
+  return `<div class="rivela t-${W.key}" data-act="chiudi-rivela" role="dialog" aria-label="${tr('Campione', 'Champion')}: ${esc(W.name)}">
     <div class="coriandoli">${pezzi}</div>
     <div class="rivela-box">
       ${trofeo(96)}
-      <div class="t">Campione</div>
+      <div class="t">${tr('Campione', 'Champion')}</div>
       <div class="n">${esc(W.name)}</div>${soprannome(W.key) ? `<div class="sopr">${esc(NOMI_SQUADRA[W.key])}</div>` : ''}
-      <div class="small">${wv}-${wp} su ${esc(L.name)}</div>
-      ${m.res.mvp ? `<div class="mvp-r">MVP delle Finals<b>${esc(m.res.mvp.n)}</b></div>` : ''}
+      <div class="small">${wv}-${wp} ${tr('su', 'over')} ${esc(L.name)}</div>
+      ${m.res.mvp ? `<div class="mvp-r">${tr('MVP delle Finals', 'Finals MVP')}<b>${esc(m.res.mvp.n)}</b></div>` : ''}
       <div class="rosa">${(W.five || []).map((p) => esc(p.n)).join(' · ')}</div>
-      <p class="tiny muted mt">tocca per chiudere</p>
+      <p class="tiny muted mt">${tr('tocca per chiudere', 'tap to close')}</p>
     </div>
   </div>`;
 }
@@ -1377,10 +1391,10 @@ function refertoCard(A, B, f) {
       <td class="scelta">${esc(v.scelto)}</td>
       <td class="val ${v.ininfluente ? '' : (v.valore >= 0 ? 'su' : 'giu')}">${v.ininfluente ? '—' : pt(v.valore)}</td>
       <td class="alt">${v.ininfluente
-        ? 'qui valeva uguale qualunque cosa'
+        ? tr('qui valeva uguale qualunque cosa', 'any choice was equal here')
         : (v.eraGiusta
-          ? '<span class="ok">la migliore</span>'
-          : `meglio <b>${esc(v.migliore)}</b> <span class="muted">${pt(v.quantoMeglio)}</span>`)}</td>
+          ? `<span class="ok">${tr('la migliore', 'the best one')}</span>`
+          : `${tr('meglio', 'better')} <b>${esc(v.migliore)}</b> <span class="muted">${pt(v.quantoMeglio)}</span>`)}</td>
     </tr>`).join('');
 
     return `<div class="ref-blocco t-${T.key}">
@@ -1390,9 +1404,10 @@ function refertoCard(A, B, f) {
     </div>`;
   }).join('');
 
-  return `<details class="referto-wrap mt"><summary>Il referto — hanno pagato le tue scelte?</summary>
-    <p class="tiny muted mt">Punti a partita rispetto a scegliere a caso, contro <i>questo</i> avversario.
-    Contro un altro le risposte cambiano.</p>
+  return `<details class="referto-wrap mt"><summary>${tr('Il referto — hanno pagato le tue scelte?', 'The report — did your choices pay off?')}</summary>
+    <p class="tiny muted mt">${tr(`Punti a partita rispetto a scegliere a caso, contro <i>questo</i> avversario.
+    Contro un altro le risposte cambiano.`, `Points per game compared to random picks, against <i>this</i> opponent.
+    Against another one the answers change.`)}</p>
     ${blocchi}</details>`;
 }
 
@@ -1410,13 +1425,13 @@ function pronosticiCard(s, T, session) {
   const righe = cl.map((r, n) => `<div class="pron-cl ${r.key === mia ? 'io' : ''}">
       <span class="pos">${n + 1}</span>
       <span class="nm">${esc(S.nameOfSeat(s, r.key) || TEAM_NAMES[r.key])}</span>
-      <span class="tiny muted">${r.presi} pres${r.presi === 1 ? 'o' : 'i'} su ${r.chiusi * 2}</span>
+      <span class="tiny muted">${tr(`${r.presi} pres${r.presi === 1 ? 'o' : 'i'} su ${r.chiusi * 2}`, `${r.presi} of ${r.chiusi * 2} right`)}</span>
       <b>${r.punti.toFixed(2)}</b>
     </div>`).join('');
   return `<div class="card pronostici">
-    <h3 class="mb">${re ? `Re dei pronostici: ${esc(S.nameOfSeat(s, re.key) || TEAM_NAMES[re.key])}` : 'Classifica pronostici'}</h3>
+    <h3 class="mb">${re ? `${tr('Re dei pronostici', 'Prediction king')}: ${esc(S.nameOfSeat(s, re.key) || TEAM_NAMES[re.key])}` : tr('Classifica pronostici', 'Prediction standings')}</h3>
     ${righe}
-    <p class="tiny muted mt">Ogni pronostico indovinato vale la sua quota.</p>
+    <p class="tiny muted mt">${tr('Ogni pronostico indovinato vale la sua quota.', 'Every correct prediction is worth its odds.')}</p>
   </div>`;
 }
 
@@ -1436,11 +1451,11 @@ export function rivalitaCard(s, session) {
       <span class="riv-n destra ${c.vb > c.va ? 'vince' : ''} ${c.b === mio ? 'io' : ''}">${esc(c.b)}</span>
     </div>`).join('');
   return `<div class="card rivalita">
-    <h3 class="mb">Rivalità</h3>
-    ${io?.bestiaNera ? `<p class="bestia">La tua bestia nera: <b>${esc(io.bestiaNera.nome)}</b>
-      <span class="muted">— ${io.bestiaNera.vinte}-${io.bestiaNera.perse} nelle serie</span></p>` : ''}
+    <h3 class="mb">${tr('Rivalità', 'Rivalries')}</h3>
+    ${io?.bestiaNera ? `<p class="bestia">${tr('La tua bestia nera', 'Your nemesis')}: <b>${esc(io.bestiaNera.nome)}</b>
+      <span class="muted">— ${io.bestiaNera.vinte}-${io.bestiaNera.perse} ${tr('nelle serie', 'in series')}</span></p>` : ''}
     ${righe}
-    <p class="tiny muted mt">Serie vinte fra persone, su tutte le serate.</p>
+    <p class="tiny muted mt">${tr('Serie vinte fra persone, su tutte le serate.', 'Series won between people, across all game nights.')}</p>
   </div>`;
 }
 
@@ -1459,8 +1474,8 @@ export function alboCard(s) {
       <span class="dot"></span>
       <span class="nm">${esc(t.nome)}</span>
       <span class="grow"></span>
-      <b>${t.titoli}</b><span class="tiny muted">${t.titoli === 1 ? 'titolo' : 'titoli'}</span>
-      <span class="tiny muted">· ${t.finali} final${t.finali === 1 ? 'e' : 'i'}</span>
+      <b>${t.titoli}</b><span class="tiny muted">${pl(t.titoli, 'titolo', 'titoli', 'title', 'titles')}</span>
+      <span class="tiny muted">· ${t.finali} ${pl(t.finali, 'finale', 'finali', 'final', 'finals')}</span>
     </div>`).join('');
 
   // Ogni serata: chi ha vinto, col soprannome che aveva quella sera.
@@ -1469,14 +1484,14 @@ export function alboCard(s) {
     return n ? `${esc(n)}${squadra && squadra !== n ? ` <span class="tiny muted">(${esc(squadra)})</span>` : ''}` : esc(squadra);
   };
   const storia = albo.slice(0, 8).map((e) => `<div>
-      <span>${chi(e.championChi, e.champion, e.championName)} <span class="muted">b. ${esc(e.runnerUpChi || S.nameOfSeat(s, e.runnerUp) || e.runnerUpName)} ${e.wins}</span></span>
+      <span>${chi(e.championChi, e.champion, e.championName)} <span class="muted">${tr('b.', 'def.')} ${esc(e.runnerUpChi || S.nameOfSeat(s, e.runnerUp) || e.runnerUpName)} ${e.wins}</span></span>
       <span class="muted tiny">${esc(e.mvp || '')}</span>
     </div>`).join('');
 
   return `<div class="card">
-    <h3 class="mb">Albo d'oro</h3>
+    <h3 class="mb">${tr('Albo d\'oro', 'Hall of fame')}</h3>
     <div class="albo">${righe}</div>
-    <details class="mt"><summary>Le ${albo.length} partite giocate</summary>
+    <details class="mt"><summary>${tr(`Le ${albo.length} partite giocate`, `${albo.length} games played`)}</summary>
       <div class="log mt">${storia}</div></details>
   </div>`;
 }

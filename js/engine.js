@@ -16,6 +16,7 @@
 // mai contraddire il risultato.
 
 import { db, makeRng, gauss, clamp, SLOTS, TEAM_NAMES, STRATEGIES, allenatoriDi } from './core.js';
+import { tr } from './lingua.js';
 
 // Peso per rango di realizzazione. Piu i pesi sono piatti, piu conta il quinto
 // uomo e meno paga comprare una sola superstar circondata da gregari.
@@ -83,38 +84,38 @@ export function buildTeam(key, lineup, tactics) {
   if (misfits.length) {
     const d = -2.6 * misfits.length;
     off += d; def += d;
-    factors.push({ key: 'fuori-ruolo', side: key, delta: d * 2, label: 'Giocatori fuori ruolo',
-      data: { names: misfits.map((p) => `${p.n} da ${p.slot}`) } });
+    factors.push({ key: 'fuori-ruolo', side: key, delta: d * 2, label: tr('Giocatori fuori ruolo', 'Players out of position'),
+      data: { names: misfits.map((p) => `${p.n} ${tr('da', 'at')} ${p.slot}`) } });
   }
 
   if (shooters < 2) {
     const d = -(2 - shooters) * 5.0;
     off += d;
-    factors.push({ key: 'no-spacing', side: key, delta: d, label: 'Spacing assente', data: { shooters } });
+    factors.push({ key: 'no-spacing', side: key, delta: d, label: tr('Spacing assente', 'No spacing'), data: { shooters } });
   } else if (shooters >= 4) {
     const d = 3.2;
     off += d;
-    factors.push({ key: 'spacing-totale', side: key, delta: d, label: 'Spacing totale', data: { shooters } });
+    factors.push({ key: 'spacing-totale', side: key, delta: d, label: tr('Spacing totale', 'Full spacing'), data: { shooters } });
   }
 
   if (plaSorted[0] < 72) {
     const d = -(72 - plaSorted[0]) * 0.50;
     off += d;
-    factors.push({ key: 'no-playmaker', side: key, delta: d, label: 'Nessun vero regista', data: { best: Math.round(plaSorted[0]) } });
+    factors.push({ key: 'no-playmaker', side: key, delta: d, label: tr('Nessun vero regista', 'No real playmaker'), data: { best: Math.round(plaSorted[0]) } });
   }
 
   const usageOver = usageTotal - 372;
   let usageClashDelta = 0;
   if (usageOver > 0) {
     usageClashDelta = -usageOver * 0.105;
-    factors.push({ key: 'troppe-bocche', side: key, delta: usageClashDelta, label: 'Troppe bocche da sfamare',
+    factors.push({ key: 'troppe-bocche', side: key, delta: usageClashDelta, label: tr('Troppe bocche da sfamare', 'Too many mouths to feed'),
       data: { over: Math.round(usageOver) } });
   }
 
   if (rimProtect < 58) {
     const d = -(58 - rimProtect) * 0.55;
     def += d;
-    factors.push({ key: 'ferro-scoperto', side: key, delta: d, label: 'Ferro scoperto', data: { rim: Math.round(rimProtect) } });
+    factors.push({ key: 'ferro-scoperto', side: key, delta: d, label: tr('Ferro scoperto', 'Unprotected rim'), data: { rim: Math.round(rimProtect) } });
   }
 
   // Il quinto uomo gioca gli stessi minuti della stella. Senza questo, il
@@ -125,14 +126,14 @@ export function buildTeam(key, lineup, tactics) {
     const d = -(sottoMedia - 6) * 0.60;
     off += d * 0.55; def += d * 0.45;
     const peggiore = five.slice().sort((x, y) => x.ovr - y.ovr)[0];
-    factors.push({ key: 'anello-debole', side: key, delta: d, label: 'Anello debole',
+    factors.push({ key: 'anello-debole', side: key, delta: d, label: tr('Anello debole', 'Weak link'),
       data: { worst: peggiore.n, n: five.filter((p) => p.ovr < 89).length } });
   }
 
   if (size < 13) {
     const d = -(13 - size) * 2.4;
     def += d;
-    factors.push({ key: 'quintetto-piccolo', side: key, delta: d, label: 'Quintetto sottodimensionato', data: { size } });
+    factors.push({ key: 'quintetto-piccolo', side: key, delta: d, label: tr('Quintetto sottodimensionato', 'Undersized lineup'), data: { size } });
   }
 
   // Il primo violino dovrebbe essere il miglior realizzatore: se non lo e,
@@ -141,7 +142,7 @@ export function buildTeam(key, lineup, tactics) {
   if (tactics.v1 && tactics.v1 !== topScorerId) {
     const d = -2.2;
     off += d;
-    factors.push({ key: 'violino-sbagliato', side: key, delta: d, label: 'Prima opzione non ottimale',
+    factors.push({ key: 'violino-sbagliato', side: key, delta: d, label: tr('Prima opzione non ottimale', 'Wrong first option'),
       data: { chosen: D.byId[tactics.v1]?.n, best: D.byId[topScorerId]?.n } });
   }
 
@@ -180,10 +181,10 @@ export function buildTeam(key, lineup, tactics) {
 // correre nascono dalla ROSA (in matchup) e da CHI hai davanti, non da un
 // bonus piatto uguale per tutti.
 export const RITMI = {
-  lento:    { label: 'Lento',      poss: -9,  ctrl: 0.15,  desc: 'Partita corta. Protegge chi e sfavorito e chi ha un quintetto squilibrato.' },
-  medio:    { label: 'Medio',      poss: 0,   ctrl: 0,     desc: 'Nessuna scelta di campo: si gioca al ritmo che esce.' },
-  veloce:   { label: 'Veloce',     poss: 7,   ctrl: 0,     desc: 'Piu possessi: premia atletismo e tiro, chiede gambe.' },
-  'run-gun': { label: 'Run and gun', poss: 14, ctrl: -0.15, desc: 'Nessun freno. La squadra migliore vince piu spesso, la peggiore crolla.' },
+  lento:    { label: tr('Lento', 'Slow'),      poss: -9,  ctrl: 0.15,  desc: tr('Partita corta. Protegge chi e sfavorito e chi ha un quintetto squilibrato.', 'A short game. Protects the underdog and unbalanced lineups.') },
+  medio:    { label: tr('Medio', 'Medium'),      poss: 0,   ctrl: 0,     desc: tr('Nessuna scelta di campo: si gioca al ritmo che esce.', 'No choice made: you play at whatever pace comes out.') },
+  veloce:   { label: tr('Veloce', 'Fast'),     poss: 7,   ctrl: 0,     desc: tr('Piu possessi: premia atletismo e tiro, chiede gambe.', 'More possessions: rewards athleticism and shooting, needs legs.') },
+  'run-gun': { label: 'Run and gun', poss: 14, ctrl: -0.15, desc: tr('Nessun freno. La squadra migliore vince piu spesso, la peggiore crolla.', 'No brakes. The better team wins more often, the worse one collapses.') },
 };
 
 // L'allenatore modifica gli attributi dei cinque PRIMA che se ne ricavi il
@@ -229,52 +230,52 @@ const STRAT = {
     const f = [];
     const v1 = t.byId(t.tactics.v1) || t.five[0];
     const lift = (v1.attrs.sco - t.avgSco) * 0.22;
-    f.push({ key: 'star-usage', delta: lift, label: `${v1.n} con la palla in mano`, data: { player: v1.n } });
+    f.push({ key: 'star-usage', delta: lift, label: `${v1.n} ${tr('con la palla in mano', 'with the ball in his hands')}`, data: { player: v1.n } });
     const pressure = -Math.max(0, o.perimD - 54) * 0.42;
-    if (pressure < -0.6) f.push({ key: 'star-contenuta', delta: pressure, label: 'Attacco prevedibile contro una difesa perimetrale forte', data: { oppPerimD: Math.round(o.perimD) } });
+    if (pressure < -0.6) f.push({ key: 'star-contenuta', delta: pressure, label: tr('Attacco prevedibile contro una difesa perimetrale forte', 'Predictable offense against a strong perimeter defense'), data: { oppPerimD: Math.round(o.perimD) } });
     return f;
   }},
   'isolamento': { pace: -2, variance: 1.00, fx(t, o) {
     const f = [];
     const v1 = t.byId(t.tactics.v1) || t.five[0];
     const v2 = t.byId(t.tactics.v2) || t.five[1];
-    f.push({ key: 'iso-talento', delta: ((v1.attrs.sco + v2.attrs.sco) / 2 - t.avgSco) * 0.22, label: 'Uno contro uno per i due violini', data: { player: v1.n } });
-    f.push({ key: 'iso-ritmo', delta: -Math.max(0, o.perimD - 60) * 0.30, label: 'Ritmo bloccato dalla difesa individuale avversaria', data: {} });
+    f.push({ key: 'iso-talento', delta: ((v1.attrs.sco + v2.attrs.sco) / 2 - t.avgSco) * 0.22, label: tr('Uno contro uno per i due violini', 'One-on-one for the two first options'), data: { player: v1.n } });
+    f.push({ key: 'iso-ritmo', delta: -Math.max(0, o.perimD - 60) * 0.30, label: tr('Ritmo bloccato dalla difesa individuale avversaria', 'Rhythm stopped by the opposing man-to-man defense'), data: {} });
     return f;
   }},
   'pick-roll': { pace: 2, variance: 0.98, fx(t, o) {
     const f = [];
     const quality = (Math.max(t.playmaking, 60) - 74) * 0.30 + (t.bigScoring - 78) * 0.22;
-    f.push({ key: 'pnr-coppia', delta: quality, label: 'Qualita della coppia nel pick and roll', data: {} });
+    f.push({ key: 'pnr-coppia', delta: quality, label: tr('Qualita della coppia nel pick and roll', 'Quality of the pick and roll pair'), data: {} });
     const slow = Math.max(0, 67 - o.athleticism) * 0.20;
-    if (slow > 0.5) f.push({ key: 'pnr-difesa-lenta', delta: slow, label: 'Difesa avversaria lenta nei cambi', data: {} });
+    if (slow > 0.5) f.push({ key: 'pnr-difesa-lenta', delta: slow, label: tr('Difesa avversaria lenta nei cambi', 'Opposing defense slow on switches'), data: {} });
     return f;
   }},
   'post-up': { pace: -3, variance: 0.92, fx(t, o) {
     const f = [];
-    f.push({ key: 'post-peso', delta: (t.bigScoring - 80) * 0.40, label: 'Peso offensivo nel pitturato', data: {} });
+    f.push({ key: 'post-peso', delta: (t.bigScoring - 80) * 0.40, label: tr('Peso offensivo nel pitturato', 'Offensive weight in the paint'), data: {} });
     const wall = -Math.max(0, o.rimProtect - 72) * 0.42;
-    if (wall < -0.6) f.push({ key: 'post-muro', delta: wall, label: 'Il ferro avversario e protetto', data: { oppRim: Math.round(o.rimProtect) } });
-    f.push({ key: 'post-scarichi', delta: (t.shooters - 2) * 1.8, label: 'Scarichi sui tiratori dopo il raddoppio', data: { shooters: t.shooters } });
+    if (wall < -0.6) f.push({ key: 'post-muro', delta: wall, label: tr('Il ferro avversario e protetto', 'The opposing rim is protected'), data: { oppRim: Math.round(o.rimProtect) } });
+    f.push({ key: 'post-scarichi', delta: (t.shooters - 2) * 1.8, label: tr('Scarichi sui tiratori dopo il raddoppio', 'Kick-outs to the shooters after the double team'), data: { shooters: t.shooters } });
     return f;
   }},
   'attacco-ferro': { pace: 3, variance: 1.02, fx(t, o) {
     const f = [];
-    f.push({ key: 'ferro-atletismo', delta: (t.athleticism - 67) * 0.24, label: 'Pressione atletica sul canestro', data: {} });
-    f.push({ key: 'ferro-muro', delta: -Math.max(0, o.rimProtect - 72) * 0.36, label: 'Protezione del ferro avversaria', data: { oppRim: Math.round(o.rimProtect) } });
+    f.push({ key: 'ferro-atletismo', delta: (t.athleticism - 67) * 0.24, label: tr('Pressione atletica sul canestro', 'Athletic pressure on the rim'), data: {} });
+    f.push({ key: 'ferro-muro', delta: -Math.max(0, o.rimProtect - 72) * 0.36, label: tr('Protezione del ferro avversaria', 'Opposing rim protection'), data: { oppRim: Math.round(o.rimProtect) } });
     return f;
   }},
   'tiro-3': { pace: 4, variance: 1.34, fx(t, o) {
     const f = [];
-    f.push({ key: 'tre-volume', delta: 2.6 + (t.spacing - 72) * 0.34, label: 'Volume e qualita dal perimetro', data: { spacing: Math.round(t.spacing) } });
-    f.push({ key: 'tre-varianza', delta: 0, label: 'Serata al tiro', data: {}, varianceOnly: true });
+    f.push({ key: 'tre-volume', delta: 2.6 + (t.spacing - 72) * 0.34, label: tr('Volume e qualita dal perimetro', 'Volume and quality from the perimeter'), data: { spacing: Math.round(t.spacing) } });
+    f.push({ key: 'tre-varianza', delta: 0, label: tr('Serata al tiro', 'Shooting night'), data: {}, varianceOnly: true });
     return f;
   }},
   'transizione': { pace: 7, variance: 1.12, fx(t, o) {
     const f = [];
-    f.push({ key: 'tr-atletismo', delta: (t.athleticism - 67) * 0.26, label: 'Gambe e campo aperto', data: {} });
+    f.push({ key: 'tr-atletismo', delta: (t.athleticism - 67) * 0.26, label: tr('Gambe e campo aperto', 'Legs and open floor'), data: {} });
     const heavy = Math.max(0, o.size - 15) * 1.4;
-    if (heavy > 0.5) f.push({ key: 'tr-pesantezza', delta: heavy, label: 'Quintetto avversario troppo pesante per correre', data: { oppSize: o.size } });
+    if (heavy > 0.5) f.push({ key: 'tr-pesantezza', delta: heavy, label: tr('Quintetto avversario troppo pesante per correre', 'Opposing lineup too heavy to run'), data: { oppSize: o.size } });
     return f;
   }},
   'motion': { pace: 1, variance: 0.94, fx(t, o) {
@@ -282,28 +283,28 @@ const STRAT = {
     // Il motion e l'unica strategia che RIPARA il caos da troppe stelle.
     if (t.usageClashDelta < 0) {
       const heal = -t.usageClashDelta * 0.72;
-      f.push({ key: 'motion-armonia', delta: heal, label: 'Il movimento di palla disinnesca il conflitto di usage', data: {} });
+      f.push({ key: 'motion-armonia', delta: heal, label: tr('Il movimento di palla disinnesca il conflitto di usage', 'Ball movement defuses the usage clash'), data: {} });
     }
-    f.push({ key: 'motion-lettura', delta: (t.playmaking - 74) * 0.24, label: 'Letture collettive e gioco senza palla', data: {} });
+    f.push({ key: 'motion-lettura', delta: (t.playmaking - 74) * 0.24, label: tr('Letture collettive e gioco senza palla', 'Team reads and off-ball movement'), data: {} });
     const solo = t.five.filter((p) => p.attrs.pla >= 72).length;
-    if (solo <= 1) f.push({ key: 'motion-un-creatore', delta: -3.4, label: 'Un solo creatore: il motion gira a vuoto', data: {} });
+    if (solo <= 1) f.push({ key: 'motion-un-creatore', delta: -3.4, label: tr('Un solo creatore: il motion gira a vuoto', 'Only one creator: the motion goes nowhere'), data: {} });
     return f;
   }},
   'dentro-fuori': { pace: 0, variance: 1.04, fx(t, o) {
     const f = [];
-    f.push({ key: 'df-lungo', delta: 1.4 + (t.bigScoring - 78) * 0.26, label: 'Il lungo attira la difesa', data: {} });
-    f.push({ key: 'df-tiro', delta: (t.spacing - 76) * 0.20, label: 'Tiratori pronti sugli scarichi', data: {} });
-    if (t.shooters < 2 || t.bigScoring < 80) f.push({ key: 'df-incompleto', delta: -3.0, label: 'Manca meta del meccanismo dentro-fuori', data: {} });
+    f.push({ key: 'df-lungo', delta: 1.4 + (t.bigScoring - 78) * 0.26, label: tr('Il lungo attira la difesa', 'The big man draws the defense'), data: {} });
+    f.push({ key: 'df-tiro', delta: (t.spacing - 76) * 0.20, label: tr('Tiratori pronti sugli scarichi', 'Shooters ready on the kick-outs'), data: {} });
+    if (t.shooters < 2 || t.bigScoring < 80) f.push({ key: 'df-incompleto', delta: -3.0, label: tr('Manca meta del meccanismo dentro-fuori', 'Half of the inside-out mechanism is missing'), data: {} });
     return f;
   }},
   'handoff': { pace: 2, variance: 1.00, fx(t, o) {
     const f = [];
-    f.push({ key: 'ho-tiro', delta: 1.4 + (t.spacing - 74) * 0.20, label: 'Tiratori liberati in movimento', data: {} });
-    f.push({ key: 'ho-lettura', delta: (t.playmaking - 74) * 0.16 + (t.bigPlay - 66) * 0.12, label: 'Consegne e letture dei lunghi', data: {} });
+    f.push({ key: 'ho-tiro', delta: 1.4 + (t.spacing - 74) * 0.20, label: tr('Tiratori liberati in movimento', 'Shooters freed on the move'), data: {} });
+    f.push({ key: 'ho-lettura', delta: (t.playmaking - 74) * 0.16 + (t.bigPlay - 66) * 0.12, label: tr('Consegne e letture dei lunghi', 'Handoffs and reads by the bigs'), data: {} });
     return f;
   }},
   'equilibrato': { pace: 0, variance: 1.00, fx() {
-    return [{ key: 'eq-solido', delta: 1.6, label: 'Nessuna debolezza sfruttabile', data: {} }];
+    return [{ key: 'eq-solido', delta: 1.6, label: tr('Nessuna debolezza sfruttabile', 'No weakness to exploit'), data: {} }];
   }},
 };
 
@@ -322,22 +323,22 @@ export function matchup(A, B) {
   const rebDiff = A.rebounding - B.rebounding;
   if (Math.abs(rebDiff) > 4) {
     structural.push({ key: 'rimbalzi', side: rebDiff > 0 ? A.key : B.key,
-      delta: Math.abs(rebDiff) * 0.16, label: 'Dominio a rimbalzo', data: { diff: Math.round(Math.abs(rebDiff)) } });
+      delta: Math.abs(rebDiff) * 0.16, label: tr('Dominio a rimbalzo', 'Rebounding dominance'), data: { diff: Math.round(Math.abs(rebDiff)) } });
   }
   const sizeDiff = A.size - B.size;
   if (Math.abs(sizeDiff) >= 3) {
     structural.push({ key: 'taglia', side: sizeDiff > 0 ? A.key : B.key,
-      delta: Math.abs(sizeDiff) * 0.55, label: 'Vantaggio di stazza', data: { diff: Math.abs(sizeDiff) } });
+      delta: Math.abs(sizeDiff) * 0.55, label: tr('Vantaggio di stazza', 'Size advantage'), data: { diff: Math.abs(sizeDiff) } });
   }
   const spcDiff = A.spacing - B.spacing;
   if (Math.abs(spcDiff) > 5) {
     structural.push({ key: 'spacing-diff', side: spcDiff > 0 ? A.key : B.key,
-      delta: Math.abs(spcDiff) * 0.13, label: 'Campo piu aperto', data: { diff: Math.round(Math.abs(spcDiff)) } });
+      delta: Math.abs(spcDiff) * 0.13, label: tr('Campo piu aperto', 'More open floor'), data: { diff: Math.round(Math.abs(spcDiff)) } });
   }
   const pdDiff = A.perimD - B.perimD;
   if (Math.abs(pdDiff) > 5) {
     structural.push({ key: 'difesa-perimetro', side: pdDiff > 0 ? A.key : B.key,
-      delta: Math.abs(pdDiff) * 0.14, label: 'Difesa perimetrale superiore', data: { diff: Math.round(Math.abs(pdDiff)) } });
+      delta: Math.abs(pdDiff) * 0.14, label: tr('Difesa perimetrale superiore', 'Better perimeter defense'), data: { diff: Math.round(Math.abs(pdDiff)) } });
   }
 
   // --- ritmo: uno scontro, non una scelta solitaria ---
@@ -355,7 +356,7 @@ export function matchup(A, B) {
     const vince = (scartoRitmo > 0) === (voluto > ((A.possVoluti + B.possVoluti) / 2)) ? A : B;
     const subisce = vince === A ? B : A;
     structural.push({ key: 'ritmo-imposto', side: vince.key, delta: 0, infoOnly: true,
-      label: `Ritmo imposto da ${vince.name}`,
+      label: `${tr('Ritmo imposto da', 'Pace set by')} ${vince.name}`,
       data: { vince: vince.name, subisce: subisce.name, poss: Math.round(pace) } });
   }
 
@@ -372,20 +373,20 @@ export function matchup(A, B) {
       // Correre: servono gambe e tiratori, la stazza e un peso morto.
       const d = (T.athleticism - 67) * 0.24 + (T.shooters - 2) * 1.9 - Math.max(0, T.size - 15) * 1.4;
       ritmoFx.push({ key: 'ritmo-corsa', side: T.key, delta: d,
-        label: d >= 0 ? 'Il quintetto regge il ritmo alto' : 'Quintetto sbagliato per correre',
+        label: d >= 0 ? tr('Il quintetto regge il ritmo alto', 'The lineup can handle a high pace') : tr('Quintetto sbagliato per correre', 'Wrong lineup for running'),
         data: { atl: Math.round(T.athleticism), size: T.size } });
     } else if (p <= -6) {
       // Rallentare: serve qualcuno che se la crei da solo a meta campo.
       const iso = Math.max(...T.five.map((x) => x.attrs.sco));
       const d = (iso - 86) * 0.22 + (T.rimProtect - 70) * 0.10 - Math.max(0, 3 - T.shooters) * 1.2;
       ritmoFx.push({ key: 'ritmo-lento', side: T.key, delta: d,
-        label: d >= 0 ? 'Attacco da meta campo affidabile' : 'A ritmo basso l\'attacco si inceppa',
+        label: d >= 0 ? tr('Attacco da meta campo affidabile', 'Reliable half-court offense') : tr('A ritmo basso l\'attacco si inceppa', 'At a slow pace the offense stalls'),
         data: { iso: Math.round(iso) } });
       // La parte difensiva vale solo contro chi la transizione la cerca:
       // rallentare contro un post-up gli fa un favore, non un dispetto.
       if (['transizione', 'attacco-ferro'].includes(o.tactics.strategy)) {
         ritmoFx.push({ key: 'ritmo-freno', side: T.key, delta: 2.4,
-          label: `Ritmo basso: a ${o.name} tolgono il campo aperto`, data: { opp: o.name } });
+          label: tr(`Ritmo basso: a ${o.name} tolgono il campo aperto`, `Slow pace: ${o.name} lose the open floor`), data: { opp: o.name } });
       }
     }
   }
@@ -649,14 +650,14 @@ export function playNextGame(A, B, series) {
    ========================================================== */
 
 const AXES = [
-  { key: 'pace', label: 'ritmo', get: (t) => (STRAT[t.tactics.strategy] || STRAT['equilibrato']).pace * 6 + 50 },
-  { key: 'size', label: 'stazza', get: (t) => t.size * 5 },
+  { key: 'pace', label: tr('ritmo', 'pace'), get: (t) => (STRAT[t.tactics.strategy] || STRAT['equilibrato']).pace * 6 + 50 },
+  { key: 'size', label: tr('stazza', 'size'), get: (t) => t.size * 5 },
   { key: 'spacing', label: 'spacing', get: (t) => t.spacing },
-  { key: 'star', label: 'dipendenza dalla star', get: (t) => {
+  { key: 'star', label: tr('dipendenza dalla star', 'reliance on the star'), get: (t) => {
       const sc = t.five.map((p) => p.attrs.sco).sort((a, b) => b - a);
       return 50 + (sc[0] - (sc[1] + sc[2] + sc[3] + sc[4]) / 4) * 1.6;
     } },
-  { key: 'defense', label: 'impianto difensivo', get: (t) => t.def },
+  { key: 'defense', label: tr('impianto difensivo', 'defensive setup'), get: (t) => t.def },
 ];
 
 function contrast(t1, t2) {
@@ -722,13 +723,13 @@ export function refertoTattico(T, O) {
     });
   };
 
-  dimensione('strategy', Object.keys(STRAT), 'Strategia', (v) => STRATEGIES[v]?.label || v);
-  dimensione('ritmo', Object.keys(RITMI), 'Ritmo', (v) => RITMI[v]?.label || v);
+  dimensione('strategy', Object.keys(STRAT), tr('Strategia', 'Strategy'), (v) => STRATEGIES[v]?.label || v);
+  dimensione('ritmo', Object.keys(RITMI), tr('Ritmo', 'Pace'), (v) => RITMI[v]?.label || v);
   const coachDisponibili = allenatoriDi(roster).map((c) => c.id);
-  dimensione('coach', coachDisponibili, 'Allenatore', (v) => db().coachById?.[v]?.n || '—');
+  dimensione('coach', coachDisponibili, tr('Allenatore', 'Coach'), (v) => db().coachById?.[v]?.n || '—');
 
   // Il primo violino: l'unica delle cinque scelte che finora non si misurava.
-  dimensione('v1', roster.filter((id) => id !== T.tactics.v2), 'Primo violino',
+  dimensione('v1', roster.filter((id) => id !== T.tactics.v2), tr('Primo violino', 'First option'),
     (v) => db().byId[v]?.n || '—');
 
   return { squadra: T.name, key: T.key, base, voci };
@@ -849,13 +850,13 @@ export function tabelloneDaStagione(teams, cls, _seedBase) {
   const nome = (k) => teams[k]?.name || TEAM_NAMES[k] || k;
   const reasons = [];
   const prima = cls[0];
-  reasons.push(`${nome(prima.k)} chiude la stagione regolare da prima, ${prima.w}-${prima.l}.`);
+  reasons.push(tr(`${nome(prima.k)} chiude la stagione regolare da prima, ${prima.w}-${prima.l}.`, `${nome(prima.k)} finishes the regular season first, ${prima.w}-${prima.l}.`));
   if (fuori.length) {
     reasons.push(fuori.length === 1
-      ? `${nome(fuori[0])} resta fuori dai playoff.`
-      : `Restano fuori ${fuori.map(nome).join(', ')}.`);
+      ? tr(`${nome(fuori[0])} resta fuori dai playoff.`, `${nome(fuori[0])} misses the playoffs.`)
+      : tr(`Restano fuori ${fuori.map(nome).join(', ')}.`, `Missing the playoffs: ${fuori.map(nome).join(', ')}.`));
   }
-  if (q >= 4) reasons.push('Accoppiamenti da classifica: la prima incontra l\'ultima qualificata.');
+  if (q >= 4) reasons.push(tr('Accoppiamenti da classifica: la prima incontra l\'ultima qualificata.', 'Seeded by the standings: first place meets the last qualifier.'));
 
   return { n: tutte, ordine, teste: 0, giocano: q, serie, reasons, fuori, daStagione: true };
 }
@@ -883,9 +884,9 @@ export function formaTabellone(n) {
 // "Finale", "Semifinale", "Quarti"... contati dalla fine. Il primo turno,
 // quando ci sono teste di serie, e un preliminare e si chiama cosi.
 export function nomeTurno(r, totTurni, conTeste) {
-  if (r === 0 && conTeste && totTurni > 1) return 'Turno preliminare';
+  if (r === 0 && conTeste && totTurni > 1) return tr('Turno preliminare', 'Play-in round');
   const daFondo = totTurni - 1 - r;
-  return ['Finale', 'Semifinale', 'Quarti di finale', 'Ottavi di finale'][daFondo] || `Turno ${r + 1}`;
+  return (tr(['Finale', 'Semifinale', 'Quarti di finale', 'Ottavi di finale'], ['Final', 'Semifinal', 'Quarterfinal', 'Round of 16']))[daFondo] || `${tr('Turno', 'Round')} ${r + 1}`;
 }
 
 export function componiTabellone(teams, seed = 'bye') {
@@ -900,12 +901,12 @@ export function componiTabellone(teams, seed = 'bye') {
 
   const reasons = [];
   if (k.length === 2) {
-    reasons.push(`Solo due squadre: si va dritti alle Finals, ${teams[ordine[0]].name} contro ${teams[ordine[1]].name}.`);
+    reasons.push(tr(`Solo due squadre: si va dritti alle Finals, ${teams[ordine[0]].name} contro ${teams[ordine[1]].name}.`, `Only two teams: straight to the Finals, ${teams[ordine[0]].name} against ${teams[ordine[1]].name}.`));
   } else {
     if (inTesta.length) {
       reasons.push(inTesta.length === 1
-        ? `Il sorteggio manda ${teams[inTesta[0]].name} direttamente al turno successivo: salta il preliminare.`
-        : `Il sorteggio fa saltare il preliminare a ${inTesta.map((x) => teams[x].name).join(', ')}.`);
+        ? tr(`Il sorteggio manda ${teams[inTesta[0]].name} direttamente al turno successivo: salta il preliminare.`, `The draw sends ${teams[inTesta[0]].name} straight to the next round: no play-in.`)
+        : tr(`Il sorteggio fa saltare il preliminare a ${inTesta.map((x) => teams[x].name).join(', ')}.`, `The draw lets ${inTesta.map((x) => teams[x].name).join(', ')} skip the play-in.`));
     }
     // Sul primo accoppiamento diciamo su quale asse si gioca: da qualche parte
     // bisogna pur cominciare a raccontare il torneo.
@@ -913,7 +914,7 @@ export function componiTabellone(teams, seed = 'bye') {
       const [x, y] = subito;
       const c = contrast(teams[x], teams[y]);
       const asse = AXES.slice().sort((u, v) => c.per[v.key] - c.per[u.key])[0];
-      reasons.push(`Si apre con ${teams[x].name} contro ${teams[y].name}: è sull'asse "${asse.label}" che sono più lontane.`);
+      reasons.push(tr(`Si apre con ${teams[x].name} contro ${teams[y].name}: è sull'asse "${asse.label}" che sono più lontane.`, `It opens with ${teams[x].name} against ${teams[y].name}: "${asse.label}" is where they differ the most.`));
     }
   }
 
@@ -987,7 +988,7 @@ export function pickBracket(teams) {
     const t1 = teams[pair[0]], t2 = teams[pair[1]];
     const hi = topAxis.get(t1) >= topAxis.get(t2) ? t1 : t2;
     const lo = hi === t1 ? t2 : t1;
-    return `${t1.name} contro ${t2.name}: è sull'asse "${topAxis.label}" che le due squadre sono più lontane — ${hi.name} sta molto sopra, ${lo.name} molto sotto. È il confronto che dice di più.`;
+    return tr(`${t1.name} contro ${t2.name}: è sull'asse "${topAxis.label}" che le due squadre sono più lontane — ${hi.name} sta molto sopra, ${lo.name} molto sotto. È il confronto che dice di più.`, `${t1.name} against ${t2.name}: "${topAxis.label}" is where the two teams differ the most — ${hi.name} way above, ${lo.name} way below. It's the most telling matchup.`);
   });
 
   return { semis: best.pairs, reasons };

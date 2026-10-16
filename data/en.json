@@ -1,0 +1,39 @@
+{
+  "_doc": "English texts for the data files, loaded only by the English version (/en/). Same keys as archetypes.json and coaches.json: only label and desc are replaced, numbers stay in the original files.",
+  "archetypes": {
+    "floor-general": { "label": "Pure point guard", "desc": "Runs the offense, sets the pace, few mistakes. Doesn't need to score to matter." },
+    "scoring-pg": { "label": "Scoring point guard", "desc": "A playmaker who carries the scoring load, often off the dribble." },
+    "combo-guard": { "label": "Combo guard", "desc": "Scores every way, runs the offense now and then, defense is negotiable." },
+    "two-way-guard": { "label": "Two-way guard", "desc": "Guards the other team's best guard and handles the ball. The glue of a backcourt." },
+    "sharpshooter": { "label": "Sharpshooter", "desc": "Pure spacing. Moves the defense without touching the ball." },
+    "three-and-d": { "label": "3&D", "desc": "Shoots from deep and guards the best player. Very low usage by design." },
+    "slasher": { "label": "Slasher", "desc": "Lives on drives and drawn fouls. Questionable outside shot." },
+    "iso-scorer": { "label": "Isolation scorer", "desc": "Creates his own shot against anyone. Needs the ball." },
+    "all-around-star": { "label": "All-around star", "desc": "No holes: scores, creates, defends. The engine of everything." },
+    "point-forward": { "label": "Point forward", "desc": "Runs the offense from the wing. Creates size mismatches on the perimeter." },
+    "two-way-wing": { "label": "Two-way wing", "desc": "A reliable second option and the team's best perimeter defender." },
+    "athletic-wing": { "label": "Athletic wing", "desc": "Transition, cuts, verticality. Punishes slow teams." },
+    "stretch-four": { "label": "Stretch four", "desc": "Pulls the opposing center away from the rim. Opens the lane for everyone." },
+    "power-forward": { "label": "Classic power forward", "desc": "Physicality, rebounds, points near the rim. Zero spacing." },
+    "glue-forward": { "label": "Glue forward", "desc": "Hardly ever scores but makes everything work: defense, rebounds, passing." },
+    "post-scorer": { "label": "Post scorer", "desc": "Attacks with his back to the basket, forces double teams, frees the shooters." },
+    "dominant-center": { "label": "Dominant center", "desc": "First option from the paint. Changes the opposing defense on his own." },
+    "playmaking-center": { "label": "Playmaking center", "desc": "The offense runs through his passes from the elbow. Slow but smart." },
+    "rim-runner": { "label": "Rim runner", "desc": "Screen and roll. Finishes, doesn't create. Never shoots." },
+    "defensive-anchor": { "label": "Defensive anchor", "desc": "Protects the rim and that's it. A passenger on offense." },
+    "stretch-center": { "label": "Stretch center", "desc": "Plays in the post but spaces the floor from outside: the defense can't pack the paint." },
+    "midrange-scorer": { "label": "Midrange scorer", "desc": "Lives in the in-between: pull-ups and curls off screens, very little from three." }
+  },
+  "coachArch": {
+    "stella": { "label": "Everything through the star", "desc": "Builds the team around the first option. He scores more, the other four make do." },
+    "sistema": { "label": "System first", "desc": "The ball moves and the defense helps, but the star is no longer the center of everything." },
+    "difesa": { "label": "Defense first", "desc": "Locked-down half court and a slow pace. You score little, but you give up even less." },
+    "fisico": { "label": "Muscle and rebounds", "desc": "A tough game, you own the glass. But the outside shot gets lost along the way." },
+    "corsa": { "label": "Always running", "desc": "Fast breaks on every possession. Lots of points scored, and plenty given up too." },
+    "tiro": { "label": "Spread floor, threes", "desc": "Five men outside and the basket wide open behind the arc. Nobody defends the paint." },
+    "pickroll": { "label": "Sets and repetition", "desc": "The same play over and over, drilled to boredom. Few turnovers and few off nights." },
+    "versatile": { "label": "Switch everything", "desc": "Switch on every screen and pressure the ball handler. But the offense produces less." },
+    "equilibrio": { "label": "No favorites", "desc": "Nobody gets special treatment. More consistency, fewer memorable nights." },
+    "dentro": { "label": "Inside game", "desc": "Ball to the big in the post and second-chance shots. You shoot from outside only when you must." }
+  }
+}

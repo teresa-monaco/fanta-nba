@@ -9,13 +9,15 @@
 // prestazione in campo — mai la persona.
 
 import { makeRng, hashStr } from './core.js';
+import { EN } from './lingua.js';
+import * as ENG from './narrator-en.js';
 
 const pick = (arr, rng) => arr[Math.floor(rng() * arr.length)];
 
 /* ---------- Frasi per fattore ---------- */
 // {T} = squadra, {O} = avversario, più i campi in data.
 
-const FACTOR_LINES = {
+const FACTOR_LINES = EN ? ENG.FACTOR_LINES : {
   'fuori-ruolo': [
     '{T} schiera {names}: è come chiedere al pasticcere di rifare l\'impianto elettrico. Funziona finché non tocchi niente.',
     '{names}. Qualcuno in {T} sta facendo un mestiere che non ha mai fatto, e lo si capisce a ogni singolo possesso.',
@@ -154,7 +156,7 @@ const FACTOR_LINES = {
 
 /* ---------- Aperture, per quanto è finita male ---------- */
 
-const OPEN_BLOWOUT = [
+const OPEN_BLOWOUT = EN ? ENG.OPEN_BLOWOUT : [
   'Vergognoso.',
   'Chiamatela pure partita, se vi fa dormire meglio.',
   'Finita nel riscaldamento. Il resto è stato accanimento.',
@@ -165,7 +167,7 @@ const OPEN_BLOWOUT = [
   'Uno scandalo sportivo. Nel senso che qualcuno dovrebbe indagare.',
   'Se c\'era una scommessa sul divario, ha vinto chi ha detto "tanto".',
 ];
-const OPEN_CONTROL = [
+const OPEN_CONTROL = EN ? ENG.OPEN_CONTROL : [
   'Mai in discussione. Mai nemmeno interessante.',
   'Gestita con la noia di chi sapeva già come finiva, e aveva ragione.',
   'Un controllo talmente tranquillo da risultare offensivo.',
@@ -173,14 +175,14 @@ const OPEN_CONTROL = [
   'Il classico +12 che sembra +4 e invece era +20 travestito.',
   'Partita a senso unico con l\'educazione di non dirlo troppo forte.',
 ];
-const OPEN_CLOSE = [
+const OPEN_CLOSE = EN ? ENG.OPEN_CLOSE : [
   'Equilibrio, finché qualcuno si è ricordato di saper giocare a pallacanestro.',
   'Sembrava una partita vera, poi il finale ha rimesso ognuno al suo posto.',
   'Punto a punto per tre quarti. Poi è arrivato il quarto quarto e la verità.',
   'Combattuta, tirata, e alla fine vinta da quella con i giocatori migliori. Che sorpresa.',
   'Per trenta minuti è stata una partita. Poi è tornata a essere quello che era.',
 ];
-const OPEN_THRILLER = [
+const OPEN_THRILLER = EN ? ENG.OPEN_THRILLER : [
   'Decisa all\'ultimo possesso. Qualcuno stanotte non dorme.',
   'Un finale così bello che quasi dispiace per chi ha perso. Quasi.',
   'Poteva finire in due modi. È finita nel modo peggiore, per uno solo.',
@@ -188,13 +190,13 @@ const OPEN_THRILLER = [
   'Si decide su un possesso, e il possesso lo sbaglia sempre lo stesso.',
   'Di quelle che si rivedono. O che si cancellano, dipende da come è andata.',
 ];
-const OPEN_OT = [
+const OPEN_OT = EN ? ENG.OPEN_OT : [
   'Supplementare, perché nessuno dei due era capace di chiuderla.',
   'Quaranta minuti non sono bastati a stabilire chi fosse meno scarso.',
   'Overtime: entrambe hanno fatto di tutto per perderla prima, senza riuscirci.',
   'Un supplementare regalato dall\'incapacità di vincere nei tempi normali.',
 ];
-const OPEN_2OT = [
+const OPEN_2OT = EN ? ENG.OPEN_2OT : [
   'Doppio supplementare. A un certo punto diventa accanimento reciproco.',
   'Due overtime: nessuna delle due voleva vincere, una ha dovuto arrendersi all\'evidenza.',
   'Cinquanta minuti per capire una cosa che si sapeva dall\'inizio.',
@@ -202,7 +204,7 @@ const OPEN_2OT = [
 
 /* ---------- Chiusure sul perdente ---------- */
 
-const LOSER_WITH_STAR = [
+const LOSER_WITH_STAR = EN ? ENG.LOSER_WITH_STAR : [
   'A {L} non bastano {n} punti di {p}. Gli altri quattro erano lì per il buffet.',
   '{p} ne mette {n} e {L} perde lo stesso. Complimenti a chi ha costruito quel roster.',
   '{n} punti di {p} buttati nel secchio insieme al resto di {L}.',
@@ -211,7 +213,7 @@ const LOSER_WITH_STAR = [
   '{p} da {n} punti, e {L} perde: si chiama sprecare un patrimonio.',
   'Un uomo solo al comando e quattro turisti: {p} ne fa {n}, {L} perde.',
 ];
-const LOSER_FLAT = [
+const LOSER_FLAT = EN ? ENG.LOSER_FLAT : [
   '{L} non ha mai trovato il possesso buono. Perché in rosa non ce l\'ha.',
   '{L} ha provato tutto. Tutto, in questo caso, era pochissimo.',
   'Di {L} si ricorderà soprattutto il silenzio imbarazzato in panchina.',
@@ -225,7 +227,7 @@ const LOSER_FLAT = [
 
 /* ---------- Frasi intermedie: anche queste con varianti ---------- */
 
-const PUNTI = [
+const PUNTI = EN ? ENG.PUNTI : [
   '{p} ne mette {n} per {T}',
   '{n} punti di {p} per {T}',
   '{p} chiude a quota {n} per {T}',
@@ -233,14 +235,14 @@ const PUNTI = [
   '{T} passa con i {n} punti di {p}',
   '{p} timbra {n} punti e {T} ringrazia',
 ];
-const ASSIST = [
+const ASSIST = EN ? ENG.ASSIST : [
   '{p} smista {n} assist',
   '{p} serve {n} assist a gente che non se li meritava',
   '{n} assist di {p}, con la palla che gira come si deve',
   '{p} apparecchia {n} volte',
   '{n} assist di {p}, che vede cose che gli altri non vedono',
 ];
-const RIMBALZI = [
+const RIMBALZI = EN ? ENG.RIMBALZI : [
   '{p} prende {n} rimbalzi',
   '{p} si prende {n} rimbalzi senza trovare opposizione',
   '{n} rimbalzi di {p}, praticamente da solo',
@@ -253,7 +255,7 @@ const RIMBALZI = [
 // partita: e esattamente il motivo per cui fa ridere. Non toccare la
 // condizione, altrimenti diventa una battuta come tutte le altre.
 
-const FABIO = [
+const FABIO = EN ? ENG.FABIO : [
   'A proposito di niente: Fabio è imbarazzante come GM.',
   'Comunque Fabio è ubriaco.',
   'Da segnalare che Fabio, pur non giocando, sta perdendo lo stesso.',
@@ -369,11 +371,11 @@ export function explainSeries(A, B, series) {
   const contro = scored.find((x) => !x.helpsWinner && !used.has(x.key) && FACTOR_LINES[x.key] && Math.abs(x.delta) > 1.5);
   if (contro) {
     const line = rendi(contro);
-    if (line) out.push(`${pick(['E ha vinto lo stesso:', 'Nonostante tutto questo:', 'Il bello è che non è bastato:'], rng)} ${line.charAt(0).toLowerCase()}${line.slice(1)}`);
+    if (line) out.push(`${pick(EN ? ENG.CONTRO : ['E ha vinto lo stesso:', 'Nonostante tutto questo:', 'Il bello è che non è bastato:'], rng)} ${line.charAt(0).toLowerCase()}${line.slice(1)}`);
   }
 
   if (!out.length) {
-    out.push(pick([
+    out.push(pick(EN ? ENG.NESSUN_MOTIVO(W.name) : [
       `${W.name} è più forte ovunque. Non serve una spiegazione tattica, serve rifare l'asta.`,
       `Niente da analizzare: ${W.name} ha comprato i giocatori bravi, gli altri hanno comprato il resto.`,
       `${W.name} ha vinto perché è più forte. Tutto qui. Nessuna genialata, nessun alibi.`,
@@ -394,6 +396,7 @@ export function verdettoReferto(ref, haVinto) {
   const peggiore = ref.voci.slice().sort((a, b) => b.quantoMeglio - a.quantoMeglio)[0];
 
   const pt = (x) => `${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(1)}`;
+  if (EN) return ENG.verdettoReferto(ref, haVinto, pt);
 
   // Prima i casi estremi, poi quelli specifici, e solo alla fine il grigio.
   // L'ordine conta: senza, un −1.3 finiva sotto "non ha inciso".
@@ -428,16 +431,17 @@ export function verdettoReferto(ref, haVinto) {
 /* ---------- Riga sintetica di un profilo squadra ---------- */
 
 export function teamIdentity(T) {
+  const I = EN ? ENG.IDENTITA : null;
   const tags = [];
-  if (T.shooters >= 4) tags.push('spacing totale');
-  else if (T.shooters <= 1) tags.push('campo murato');
-  if (T.size >= 18) tags.push('quintetto pesante');
-  else if (T.size <= 12) tags.push('small ball');
-  if (T.rimProtect >= 85) tags.push('ferro blindato');
-  else if (T.rimProtect < 55) tags.push('area a porte aperte');
-  if (T.perimD >= 72) tags.push('difesa perimetrale d\'élite');
-  if (T.playmaking >= 86) tags.push('regia di alto livello');
-  else if (T.playmaking < 64) tags.push('nessuno che sappia passarla');
-  if (T.usageTotal > 390) tags.push('troppe stelle e un pallone solo');
-  return tags.length ? tags.join(' · ') : 'profilo equilibrato, cioè anonimo';
+  if (T.shooters >= 4) tags.push(I ? I.spacing : 'spacing totale');
+  else if (T.shooters <= 1) tags.push(I ? I.murato : 'campo murato');
+  if (T.size >= 18) tags.push(I ? I.pesante : 'quintetto pesante');
+  else if (T.size <= 12) tags.push(I ? I.small : 'small ball');
+  if (T.rimProtect >= 85) tags.push(I ? I.blindato : 'ferro blindato');
+  else if (T.rimProtect < 55) tags.push(I ? I.aperta : 'area a porte aperte');
+  if (T.perimD >= 72) tags.push(I ? I.perimetro : 'difesa perimetrale d\'élite');
+  if (T.playmaking >= 86) tags.push(I ? I.regia : 'regia di alto livello');
+  else if (T.playmaking < 64) tags.push(I ? I.nessuno : 'nessuno che sappia passarla');
+  if (T.usageTotal > 390) tags.push(I ? I.stelle : 'troppe stelle e un pallone solo');
+  return tags.length ? tags.join(' · ') : (I ? I.anonimo : 'profilo equilibrato, cioè anonimo');
 }

@@ -11,6 +11,7 @@
 
 import { firebaseConfig } from './firebase-config.js';
 import { hydrate } from './state.js';
+import { tr } from './lingua.js';
 
 const SDK = 'https://www.gstatic.com/firebasejs/10.12.5';
 let fb = null;          // moduli Firebase caricati
@@ -68,10 +69,10 @@ export async function openRoom({ code, create, initialState, onState }) {
   const snap = await f.get(roomRef);
 
   if (create) {
-    if (snap.exists()) throw new Error(`La stanza ${code} esiste già. Riprova con un altro codice.`);
+    if (snap.exists()) throw new Error(tr(`La stanza ${code} esiste già. Riprova con un altro codice.`, `Room ${code} already exists. Try another code.`));
     await f.set(roomRef, { ...initialState, host: uid });
   } else if (!snap.exists()) {
-    throw new Error(`Nessuna partita con il codice ${code}.`);
+    throw new Error(tr(`Nessuna partita con il codice ${code}.`, `No game with code ${code}.`));
   }
 
   const unsub = f.onValue(roomRef, (s) => {

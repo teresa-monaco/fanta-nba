@@ -15,6 +15,7 @@
 
 import { db, allenatoriDi, hashStr, SLOTS, STRATEGIES, ROSTER_SIZE } from './core.js';
 import { buildTeam, matchup, RITMI } from './engine.js';
+import { EN } from './lingua.js';
 
 /* ==========================================================
    Livello di sostituzione
@@ -316,11 +317,11 @@ function creaBot(id, nome, stile, attesa) {
 }
 
 export const BOT = {
-  ada: creaBot('ada', 'Ada', 'non sbaglia un prezzo e non si affeziona a nessuno', [700, 2400]),
-  bruno: creaBot('bruno', 'Bruno', 'punta tutto su due fuoriclasse e riempie con gli avanzi', [600, 2100]),
-  cleo: creaBot('cleo', 'Cleo', 'spende poco su tanti e aspetta che finiate i crediti', [800, 2600]),
-  dino: creaBot('dino', 'Dino', 'svuota la cassa subito, prima che ci pensiate voi', [550, 2000]),
-  enzo: creaBot('enzo', 'Enzo', 'vi lascia i fuoriclasse e si prende tutti i secondi', [700, 2300]),
+  ada: creaBot('ada', 'Ada', EN ? 'never misjudges a price and never gets attached to anyone' : 'non sbaglia un prezzo e non si affeziona a nessuno', [700, 2400]),
+  bruno: creaBot('bruno', 'Bruno', EN ? 'bets everything on two superstars and fills in with the leftovers' : 'punta tutto su due fuoriclasse e riempie con gli avanzi', [600, 2100]),
+  cleo: creaBot('cleo', 'Cleo', EN ? 'spends a little on many and waits for you to run out of credits' : 'spende poco su tanti e aspetta che finiate i crediti', [800, 2600]),
+  dino: creaBot('dino', 'Dino', EN ? 'empties the wallet right away, before you do' : 'svuota la cassa subito, prima che ci pensiate voi', [550, 2000]),
+  enzo: creaBot('enzo', 'Enzo', EN ? 'lets you have the superstars and takes all the second options' : 'vi lascia i fuoriclasse e si prende tutti i secondi', [700, 2300]),
 };
 
 export const ID_BOT = Object.keys(BOT);

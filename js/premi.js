@@ -11,6 +11,7 @@
 
 import { db } from './core.js';
 import { costruisciBracket, simSeriesUpTo } from './engine.js';
+import { tr } from './lingua.js';
 
 // Minimo di gare per contare come MVP: almeno una serie intera. Senza, un
 // giocatore uscito al primo turno con quattro partite buone batterebbe chi ne
@@ -65,8 +66,8 @@ export function premiSerata(s, T) {
       - (media(a, 'pts') + media(a, 'reb') + media(a, 'ast')))[0];
   if (mvp) {
     premi.push({
-      chiave: 'mvp', titolo: 'MVP dei playoff', id: mvp.id, nome: mvp.n, team: mvp.team,
-      riga: `${media(mvp, 'pts').toFixed(1)} punti, ${media(mvp, 'reb').toFixed(1)} rimbalzi, ${media(mvp, 'ast').toFixed(1)} assist in ${mvp.g} gare`,
+      chiave: 'mvp', titolo: tr('MVP dei playoff', 'Playoff MVP'), id: mvp.id, nome: mvp.n, team: mvp.team,
+      riga: tr(`${media(mvp, 'pts').toFixed(1)} punti, ${media(mvp, 'reb').toFixed(1)} rimbalzi, ${media(mvp, 'ast').toFixed(1)} assist in ${mvp.g} gare`, `${media(mvp, 'pts').toFixed(1)} points, ${media(mvp, 'reb').toFixed(1)} rebounds, ${media(mvp, 'ast').toFixed(1)} assists in ${mvp.g} games`),
     });
   }
 
@@ -80,16 +81,16 @@ export function premiSerata(s, T) {
   const cap = perMedia('pts');
   if (cap) {
     premi.push({
-      chiave: 'punti', titolo: 'Capocannoniere', id: cap.id, nome: cap.n, team: cap.team,
-      riga: `${media(cap, 'pts').toFixed(1)} punti a partita (${cap.pts} in ${cap.g} gare)`,
+      chiave: 'punti', titolo: tr('Capocannoniere', 'Scoring leader'), id: cap.id, nome: cap.n, team: cap.team,
+      riga: tr(`${media(cap, 'pts').toFixed(1)} punti a partita (${cap.pts} in ${cap.g} gare)`, `${media(cap, 'pts').toFixed(1)} points per game (${cap.pts} in ${cap.g} games)`),
     });
   }
 
   const rimb = perMedia('reb');
   if (rimb) {
     premi.push({
-      chiave: 'rimbalzi', titolo: 'Re dei rimbalzi', id: rimb.id, nome: rimb.n, team: rimb.team,
-      riga: `${media(rimb, 'reb').toFixed(1)} rimbalzi a partita (${rimb.reb} in ${rimb.g} gare)`,
+      chiave: 'rimbalzi', titolo: tr('Re dei rimbalzi', 'Rebounding king'), id: rimb.id, nome: rimb.n, team: rimb.team,
+      riga: tr(`${media(rimb, 'reb').toFixed(1)} rimbalzi a partita (${rimb.reb} in ${rimb.g} gare)`, `${media(rimb, 'reb').toFixed(1)} rebounds per game (${rimb.reb} in ${rimb.g} games)`),
     });
   }
 
@@ -104,8 +105,8 @@ export function premiSerata(s, T) {
   if (colpo) {
     const chi = Object.keys(s.teams || {}).find((k) => s.teams[k].roster?.includes(colpo.id));
     premi.push({
-      chiave: 'colpo', titolo: 'Il colpo dell\'asta', id: colpo.id, nome: colpo.pl.n, team: chi,
-      riga: `overall ${colpo.pl.ovr}, pagato ${colpo.p} ${colpo.p === 1 ? 'credito' : 'crediti'}`,
+      chiave: 'colpo', titolo: tr('Il colpo dell\'asta', 'Steal of the auction'), id: colpo.id, nome: colpo.pl.n, team: chi,
+      riga: tr(`overall ${colpo.pl.ovr}, pagato ${colpo.p} ${colpo.p === 1 ? 'credito' : 'crediti'}`, `overall ${colpo.pl.ovr}, paid ${colpo.p} ${colpo.p === 1 ? 'credit' : 'credits'}`),
     });
   }
 
@@ -117,8 +118,8 @@ export function premiSerata(s, T) {
   const bidone = cari.slice().sort((a, b) => (b.p / (b.resa + 1)) - (a.p / (a.resa + 1)))[0];
   if (bidone && bidone.c.id !== mvp?.id) {
     premi.push({
-      chiave: 'bidone', titolo: 'Il bidone', id: bidone.c.id, nome: bidone.c.n, team: bidone.c.team,
-      riga: `pagato ${bidone.p} crediti, ${media(bidone.c, 'pts').toFixed(1)} punti a partita`,
+      chiave: 'bidone', titolo: tr('Il bidone', 'The bust'), id: bidone.c.id, nome: bidone.c.n, team: bidone.c.team,
+      riga: tr(`pagato ${bidone.p} crediti, ${media(bidone.c, 'pts').toFixed(1)} punti a partita`, `paid ${bidone.p} credits, ${media(bidone.c, 'pts').toFixed(1)} points per game`),
     });
   }
 

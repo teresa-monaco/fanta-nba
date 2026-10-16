@@ -11,6 +11,7 @@
 // riepilogo resta a schermo finche il tavolo non ha finito di commentarlo.
 
 import { costruisciBracket, simSeriesUpTo, nomeTurno } from './engine.js';
+import { tr } from './lingua.js';
 
 // Tutte le serie nell'ordine in cui si giocano. La finalina, se chi ospita
 // l'ha voluta, va PRIMA della finale: la serata si chiude sul campione, non
@@ -34,7 +35,7 @@ export function ordineSerie(s, T) {
   if (t && T[t.a] && T[t.b]) {
     const x = {
       id: 'third', a: t.a, b: t.b, seed: t.seed, giocate: t.gamesPlayed || 0,
-      f: simSeriesUpTo(T[t.a], T[t.b], t.seed, t.gamesPlayed), titolo: 'Finale 3° / 4° posto', finale: false,
+      f: simSeriesUpTo(T[t.a], T[t.b], t.seed, t.gamesPlayed), titolo: tr('Finale 3° / 4° posto', 'Third-place series'), finale: false,
     };
     out.splice(out.length - 1, 0, x);
   }
@@ -63,7 +64,7 @@ export function dopo(s, T, x, ordine = ordineSerie(s, T)) {
     const semi = ordine.filter((y) => y.r === prossima.r - 1);
     if (semi.length === 2 && semi.every((y) => y.f?.done)) {
       const [p, q] = semi.map((y) => (y.f.winner === y.a ? y.b : y.a));
-      strade.unshift({ id: 'third', titolo: 'Finale 3° / 4° posto', a: p, b: q });
+      strade.unshift({ id: 'third', titolo: tr('Finale 3° / 4° posto', 'Third-place series'), a: p, b: q });
     }
   }
   return strade;

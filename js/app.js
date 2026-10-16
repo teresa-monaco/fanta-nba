@@ -10,6 +10,7 @@ import * as BotAI from './bot.js';
 import { quoteSerie, pronosticoBot, classificaPronostici, reDeiPronostici } from './pronostici.js';
 import { ordineSerie, serieCorrente } from './serie.js';
 import { datiCard, disegnaCard, LARGHEZZA, ALTEZZA } from './card.js';
+import { tr } from './lingua.js';
 
 const root = document.getElementById('app');
 const topbar = document.getElementById('topbar');
@@ -89,24 +90,25 @@ function landing(errMsg) {
       <div class="insegna">Fanta NBA</div>
       <div class="pannelli">
         <div class="pan casa">
-          <div class="lab">Casa</div>
+          <div class="lab">${tr('Casa', 'Home')}</div>
           <div class="flap mini" id="flap-casa">${flapHTML(sfida.casa)}</div>
         </div>
         <div class="clock24"><div class="n" id="clock24">24</div><div class="lab">sec</div></div>
         <div class="pan ospiti">
-          <div class="lab">Ospiti</div>
+          <div class="lab">${tr('Ospiti', 'Away')}</div>
           <div class="flap mini" id="flap-ospiti">${flapHTML(sfida.ospiti)}</div>
         </div>
       </div>
     </div>
-    <p class="small muted center mt">Asta a crediti, quintetti, playoff simulati.
-      Da 2 a 12 squadre, 50 crediti e 5 giocatori a testa.</p>
-    <button class="primary wide mt" data-act="create-room">Crea la stanza</button>
-    <div class="oppure">oppure</div>
+    <p class="small muted center mt">${tr(`Asta a crediti, quintetti, playoff simulati.
+      Da 2 a 12 squadre, 50 crediti e 5 giocatori a testa.`, `Credit auction, lineups, simulated playoffs.
+      2 to 12 teams, 50 credits and 5 players each.`)}</p>
+    <button class="primary wide mt" data-act="create-room">${tr('Crea la stanza', 'Create a room')}</button>
+    <div class="oppure">${tr('oppure', 'or')}</div>
     <div class="row">
-      <input id="join-code" placeholder="CODICE" maxlength="4" class="grow"
+      <input id="join-code" placeholder="${tr('CODICE', 'CODE')}" maxlength="4" class="grow"
              style="text-transform:uppercase;letter-spacing:4px;font-weight:800" autocomplete="off">
-      <button data-act="join-room">Entra</button>
+      <button data-act="join-room">${tr('Entra', 'Join')}</button>
     </div>`;
   topbar.innerHTML = '<div class="brand">FANTA<span>NBA</span></div>';
   avviaVetrina();
@@ -119,7 +121,10 @@ async function start({ code, create }) {
     initialState: S.newGame(`${code}-${Date.now()}`, null),
     onState: (s) => { state = s; paint(); },
   });
-  if (create && cloudAvailable()) history.replaceState({}, '', `?r=${code}`);
+  // Con il percorso intero: la pagina inglese ha un <base href="../">, e un
+  // "?r=..." relativo si risolverebbe sulla base, cioe sull'indirizzo
+  // italiano — la stanza creata in inglese tornava in italiano al ricarico.
+  if (create && cloudAvailable()) history.replaceState({}, '', `${location.pathname}?r=${code}`);
   paint(); // il primo onState puo arrivare prima che session sia assegnata
   startClock();
 }
@@ -182,7 +187,7 @@ async function condividiSerata() {
   for (const k of TEAM_KEYS) { const c = st.getPropertyValue(`--${k}`).trim(); if (c) colori[k] = c; }
   disegnaCard(cv.getContext('2d'), d, colori);
   const blob = await new Promise((r) => cv.toBlob(r, 'image/png'));
-  if (!blob) return flash('Non sono riuscito a creare l\'immagine.', true);
+  if (!blob) return flash(tr('Non sono riuscito a creare l\'immagine.', 'Could not create the image.'), true);
   const nome = `fanta-nba-${d.squadra.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`;
   const file = new File([blob], nome, { type: 'image/png' });
   if (navigator.canShare?.({ files: [file] })) {
@@ -194,7 +199,7 @@ async function condividiSerata() {
   a.href = url; a.download = nome;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
-  flash('Immagine salvata.');
+  flash(tr('Immagine salvata.', 'Image saved.'));
 }
 
 function momentoCampione() {
@@ -339,7 +344,7 @@ async function registraAlbo() {
 
 function fatal(err) {
   console.error(err);
-  root.innerHTML = `<div class="banner err"><b>Qualcosa non va.</b><br>${esc(err.message)}</div>`;
+  root.innerHTML = `<div class="banner err"><b>${tr('Qualcosa non va.', 'Something went wrong.')}</b><br>${esc(err.message)}</div>`;
 }
 
 /* ==========================================================
@@ -641,7 +646,7 @@ document.addEventListener('click', async (ev) => {
 
       case 'join-room': {
         const c = (document.getElementById('join-code')?.value || '').toUpperCase().trim();
-        if (c.length !== 4) return flash('Il codice è di 4 caratteri.', true);
+        if (c.length !== 4) return flash(tr('Il codice è di 4 caratteri.', 'The code has 4 characters.'), true);
         el.disabled = true;
         try { await start({ code: c, create: false }); }
         catch (e) { el.disabled = false; landing(e.message); }
@@ -683,7 +688,7 @@ document.addEventListener('click', async (ev) => {
       case 'pronostico': {
         const d = el.dataset;
         const ok = await session.apply((s) => S.pronostica(s, s.seats[session.uid], d.serie, d.campo, d.valore));
-        if (!ok) flash('La serie è già iniziata: pronostici chiusi.', true);
+        if (!ok) flash(tr('La serie è già iniziata: pronostici chiusi.', 'The series has already started: predictions are closed.'), true);
         return;
       }
 
@@ -694,7 +699,7 @@ document.addEventListener('click', async (ev) => {
       case 'simula-gara':
       case 'simula-serie': {
         const d = el.dataset;
-        if (d.mancano && !confirm(`Mancano i pronostici di ${d.mancano}: chi non ha scelto salta questa serie.\n\nSi parte lo stesso?`)) return;
+        if (d.mancano && !confirm(tr(`Mancano i pronostici di ${d.mancano}: chi non ha scelto salta questa serie.\n\nSi parte lo stesso?`, `Still missing predictions from ${d.mancano}: whoever hasn't picked skips this series.\n\nStart anyway?`))) return;
         const T = teamsFromState(state);
         const x = ordineSerie(state, T).find((y) => y.id === d.serie);
         if (!x?.f || x.f.done) return;
@@ -739,7 +744,7 @@ document.addEventListener('click', async (ev) => {
 
       case 'copy-link':
         await navigator.clipboard.writeText(`${location.origin}${location.pathname}?r=${session.code}`);
-        flash('Link copiato.');
+        flash(tr('Link copiato.', 'Link copied.'));
         break;
 
       /* --- lobby --- */
@@ -750,18 +755,18 @@ document.addEventListener('click', async (ev) => {
       case 'join-amico': {
         const nick = act === 'join-amico' ? el.dataset.nome
           : (document.getElementById('nick')?.value || '').trim();
-        if (!nick) return flash('Scrivi il tuo nome per entrare.', true);
+        if (!nick) return flash(tr('Scrivi il tuo nome per entrare.', 'Type your name to join.'), true);
         ui.nickname = nick;
         localStorage.setItem('nbaf:nick', nick);
         const ok = await session.apply((s) => S.joinGame(s, session.uid, nick));
-        if (!ok) flash('Tutte le squadre sono gia assegnate.', true);
+        if (!ok) flash(tr('Tutte le squadre sono gia assegnate.', 'All teams are already taken.'), true);
         break;
       }
 
       // Serve davvero: se entrate in cinque nessuno puo iniziare, e senza
       // questo tasto uno dovrebbe chiudere la scheda per liberare il posto.
       case 'aggiungi-bot':
-        if (!await session.apply((s) => S.aggiungiBot(s))) flash('Non si possono aggiungere altri bot.', true);
+        if (!await session.apply((s) => S.aggiungiBot(s))) flash(tr('Non si possono aggiungere altri bot.', 'No more bots can be added.'), true);
         break;
 
       case 'togli-bot':
@@ -788,7 +793,7 @@ document.addEventListener('click', async (ev) => {
           ? TEAM_KEYS.slice(0, ui.numSquadre || 4)
           : null;
         const ok = await session.apply((s) => (s.phase === 'lobby' ? S.startAuction(s, now(), inGioco) : undefined));
-        if (!ok) flash('Numero di squadre non ammesso: si gioca in 2, 3, 4, 6, 8, 10 o 12.', true);
+        if (!ok) flash(tr('Numero di squadre non ammesso: si gioca in 2, 3, 4, 6, 8, 10 o 12.', 'Number of teams not allowed: you can play with 2, 3, 4, 6, 8, 10 or 12.'), true);
         break;
       }
 
@@ -800,7 +805,7 @@ document.addEventListener('click', async (ev) => {
           if (!S.canBid(s, team, amt)) return undefined;
           return S.placeBid(s, team, amt, now());
         });
-        if (!ok) flash('Rilancio non valido: qualcuno ti ha preceduto.', true);
+        if (!ok) flash(tr('Rilancio non valido: qualcuno ti ha preceduto.', 'Invalid bid: someone got there first.'), true);
         break;
       }
 
@@ -837,7 +842,7 @@ document.addEventListener('click', async (ev) => {
       // ancora ricaricato potrebbe mandarlo.
       case 'pass': {
         const b = state.auction.bid;
-        if (b && !confirm(`Saltare? L'offerta di ${b.amount} di ${S.TEAM_NAMES[b.team]} viene annullata e il giocatore non va a nessuno.`)) break;
+        if (b && !confirm(tr(`Saltare? L'offerta di ${b.amount} di ${S.TEAM_NAMES[b.team]} viene annullata e il giocatore non va a nessuno.`, `Skip? ${S.TEAM_NAMES[b.team]}'s bid of ${b.amount} is cancelled and the player goes to nobody.`))) break;
         await session.apply((s) => (s.phase === 'auction' ? S.passLot(s, now()) : undefined));
         break;
       }
@@ -850,14 +855,14 @@ document.addEventListener('click', async (ev) => {
       case 'manual-award': {
         const t = document.getElementById('m-team')?.value;
         const price = Number(document.getElementById('m-price')?.value);
-        if (!t || !Number.isFinite(price) || price < 0) return flash('Prezzo non valido.', true);
+        if (!t || !Number.isFinite(price) || price < 0) return flash(tr('Prezzo non valido.', 'Invalid price.'), true);
         const pid = S.currentPlayerId(state);
         const ok = await session.apply((s) => {
           if (price > s.teams[t].credits) return undefined;
           return S.award(s, pid, t, price, now());
         });
         ui.manualOpen = false;
-        if (!ok) flash('Assegnazione rifiutata: budget insufficiente o rosa piena.', true);
+        if (!ok) flash(tr('Assegnazione rifiutata: budget insufficiente o rosa piena.', 'Assignment refused: not enough budget or roster full.'), true);
         else paint();
         break;
       }
@@ -927,16 +932,16 @@ document.addEventListener('click', async (ev) => {
         break;
 
       case 'gioca-stagione': {
-        if (!S.squadraReady(state)) return flash('Servono primo violino, secondo violino e strategia per ogni squadra.', true);
+        if (!S.squadraReady(state)) return flash(tr('Servono primo violino, secondo violino e strategia per ogni squadra.', 'Every team needs a first option, a second option and a strategy.'), true);
         const giri = giriStagione(S.attive(state).length);
         const ok = await session.apply((s) => S.giocaStagione(s, giri));
-        if (!ok) flash('La stagione regolare è già stata giocata.', true);
+        if (!ok) flash(tr('La stagione regolare è già stata giocata.', 'The regular season has already been played.'), true);
         break;
       }
 
       /* --- playoff --- */
       case 'to-playoffs': {
-        if (!S.squadraReady(state)) return flash('Servono primo violino, secondo violino e strategia per ogni squadra.', true);
+        if (!S.squadraReady(state)) return flash(tr('Servono primo violino, secondo violino e strategia per ogni squadra.', 'Every team needs a first option, a second option and a strategy.'), true);
         // Con la stagione regolare il tabellone si semina dalla classifica e
         // nessuno salta un turno; senza, le teste di serie si sorteggiano.
         const st = stagioneFromState(state);
@@ -948,7 +953,7 @@ document.addEventListener('click', async (ev) => {
       }
 
       case 'new-game': {
-        if (!confirm('Ricominciare da capo?\n\nLa partita in corso viene cancellata: asta, quintetti e playoff.')) break;
+        if (!confirm(tr('Ricominciare da capo?\n\nLa partita in corso viene cancellata: asta, quintetti e playoff.', 'Start over?\n\nThe current game is deleted: auction, lineups and playoffs.'))) break;
         if (session.mode === 'local') {
           // In locale lo stato vive in localStorage: si cancella e si ricarica.
           session.reset();

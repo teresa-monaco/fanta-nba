@@ -14,6 +14,7 @@ import { costruisciBracket } from './engine.js';
 import { premiSerata } from './premi.js';
 import { classificaPronostici, reDeiPronostici } from './pronostici.js';
 import { nameOfSeat } from './state.js';
+import { tr } from './lingua.js';
 
 export const LARGHEZZA = 1080;
 export const ALTEZZA = 1350;
@@ -42,21 +43,21 @@ export function datiCard(s, T) {
   // Tre riquadri in fondo. Il terzo e il re dei pronostici se c'e, se no il
   // bidone: in chat fa ridere quanto il campione.
   const riquadri = [];
-  if (fin.res.mvp) riquadri.push({ tit: 'MVP delle Finals', nome: fin.res.mvp.n, riga: `${fin.res.mvp.ppg.toFixed(1)} punti a partita` });
+  if (fin.res.mvp) riquadri.push({ tit: tr('MVP delle Finals', 'Finals MVP'), nome: fin.res.mvp.n, riga: tr(`${fin.res.mvp.ppg.toFixed(1)} punti a partita`, `${fin.res.mvp.ppg.toFixed(1)} points per game`) });
   // Colpo e bidone possono essere di chiunque, non del campione: la riga dice
   // di chi, o in chat non si capisce con chi prendersela.
   const diChi = (p) => (p.team && chi(p.team) ? ` · ${chi(p.team)}` : '');
   const colpo = premio('colpo');
   if (colpo) {
     const pz = prezzo[colpo.id];
-    riquadri.push({ tit: 'Il colpo dell\'asta', nome: colpo.nome, team: colpo.team,
-      riga: `ovr ${D.byId[colpo.id]?.ovr} per ${pz} ${pz === 1 ? 'credito' : 'crediti'}${diChi(colpo)}` });
+    riquadri.push({ tit: tr('Il colpo dell\'asta', 'Steal of the auction'), nome: colpo.nome, team: colpo.team,
+      riga: tr(`ovr ${D.byId[colpo.id]?.ovr} per ${pz} ${pz === 1 ? 'credito' : 'crediti'}${diChi(colpo)}`, `ovr ${D.byId[colpo.id]?.ovr} for ${pz} ${pz === 1 ? 'credit' : 'credits'}${diChi(colpo)}`) });
   }
-  if (re) riquadri.push({ tit: 'Re dei pronostici', nome: chi(re.key) || TEAM_NAMES[re.key], riga: `${re.punti.toFixed(2)} punti, ${re.presi} ${re.presi === 1 ? 'pronostico preso' : 'pronostici presi'}` });
+  if (re) riquadri.push({ tit: tr('Re dei pronostici', 'Prediction king'), nome: chi(re.key) || TEAM_NAMES[re.key], riga: tr(`${re.punti.toFixed(2)} punti, ${re.presi} ${re.presi === 1 ? 'pronostico preso' : 'pronostici presi'}`, `${re.punti.toFixed(2)} points, ${re.presi} ${re.presi === 1 ? 'correct prediction' : 'correct predictions'}`) });
   else if (premio('bidone')) {
     const b = premio('bidone');
-    riquadri.push({ tit: 'Il bidone', nome: b.nome, team: b.team, brutto: true,
-      riga: `pagato ${prezzo[b.id]} crediti${diChi(b)}` });
+    riquadri.push({ tit: tr('Il bidone', 'The bust'), nome: b.nome, team: b.team, brutto: true,
+      riga: tr(`pagato ${prezzo[b.id]} crediti${diChi(b)}`, `paid ${prezzo[b.id]} credits${diChi(b)}`) });
   }
 
   // In grande chi ha vinto, sotto il soprannome che aveva la sua squadra:
@@ -65,9 +66,9 @@ export function datiCard(s, T) {
   const sopr = NOMI_SQUADRA[W.key] && NOMI_SQUADRA[W.key] !== W.name ? NOMI_SQUADRA[W.key] : '';
   return {
     key: W.key, squadra: W.name, soprannome: sopr,
-    finale: `${wv}-${wp} su ${L.name}`,
+    finale: `${wv}-${wp} ${tr('su', 'over')} ${L.name}`,
     rosa, riquadri: riquadri.slice(0, 3),
-    testo: `Fanta NBA — Campione: ${W.name}${sopr ? ` (${sopr})` : ''}, ${wv}-${wp} su ${L.name}.`,
+    testo: tr(`Fanta NBA — Campione: ${W.name}${sopr ? ` (${sopr})` : ''}, ${wv}-${wp} su ${L.name}.`, `Fanta NBA — Champion: ${W.name}${sopr ? ` (${sopr})` : ''}, ${wv}-${wp} over ${L.name}.`),
   };
 }
 
@@ -106,7 +107,7 @@ export function disegnaCard(ctx, d, colori = {}) {
   ctx.textAlign = 'left'; ctx.fillStyle = C.gold; spazio(ctx, 6);
   scriviIn(ctx, 'FANTA NBA', mx, 74, 400, 30);
   ctx.textAlign = 'right'; ctx.fillStyle = C.muted; spazio(ctx, 3);
-  scriviIn(ctx, 'SERATA FINITA', W - mx, 74, 400, 24, 700);
+  scriviIn(ctx, tr('SERATA FINITA', 'GAME NIGHT OVER'), W - mx, 74, 400, 24, 700);
 
   // Il trofeo, scalato dal disegno 64x64.
   ctx.save();
@@ -120,7 +121,7 @@ export function disegnaCard(ctx, d, colori = {}) {
 
   ctx.textAlign = 'center';
   ctx.fillStyle = C.gold; spazio(ctx, 12);
-  scriviIn(ctx, 'CAMPIONE', W / 2, 330, W - 2 * mx, 38);
+  scriviIn(ctx, tr('CAMPIONE', 'CHAMPION'), W / 2, 330, W - 2 * mx, 38);
   ctx.fillStyle = '#ffffff'; spazio(ctx, 2);
   scriviIn(ctx, d.squadra.toUpperCase(), W / 2, 448, W - 2 * mx, 118);
   ctx.fillStyle = tc; spazio(ctx, 3);
@@ -133,9 +134,9 @@ export function disegnaCard(ctx, d, colori = {}) {
   ctx.fillStyle = C.line; ctx.fillRect(mx, y, W - 2 * mx, 2);
   y += 52;
   ctx.textAlign = 'left'; ctx.fillStyle = C.muted; spazio(ctx, 5);
-  scriviIn(ctx, 'IL QUINTETTO', mx, y, 400, 24, 700);
+  scriviIn(ctx, tr('IL QUINTETTO', 'THE LINEUP'), mx, y, 400, 24, 700);
   ctx.textAlign = 'right';
-  scriviIn(ctx, 'OVR · PAGATO', W - mx, y, 400, 24, 700);
+  scriviIn(ctx, tr('OVR · PAGATO', 'OVR · PAID'), W - mx, y, 400, 24, 700);
   y += 20;
   for (const p of d.rosa) {
     y += 72;
