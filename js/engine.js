@@ -43,6 +43,16 @@ export function passiFuoriRuolo(p, slot) {
 // lunghi, che la casella sbagliata peggiora gia da soli.
 export const PENALITA_PASSI = [0, 0.9, 2.6, 3.0, 3.2];
 
+// Salire non e come scendere: un piccolo da ala grande o da centro deve
+// marcare lunghi e tenere i rimbalzi sotto canestro, un lungo da ala no.
+// Era simmetrico, e Kobe da 4 costava quanto Iguodala da guardia: solo 0,9.
+// Il di piu va sulla difesa, perche in attacco il piccolo segna lo stesso.
+export const SALITA_DIFESA = 1.2;
+export function passiInSalita(p, slot) {
+  const sotto = [p.pos, ...(p.alt || [])].every((r) => ORDINE_RUOLI[r] < ORDINE_RUOLI[slot]);
+  return sotto ? passiFuoriRuolo(p, slot) : 0;
+}
+
 export function buildTeam(key, lineup, tactics) {
   const D = db();
   let five = SLOTS.map((slot) => {
@@ -110,8 +120,9 @@ export function buildTeam(key, lineup, tactics) {
   const misfits = five.map((p) => ({ p, passi: passiFuoriRuolo(p, p.slot) })).filter((x) => x.passi > 0);
   if (misfits.length) {
     const d = -misfits.reduce((t, x) => t + PENALITA_PASSI[Math.min(x.passi, 4)], 0);
-    off += d; def += d;
-    factors.push({ key: 'fuori-ruolo', side: key, delta: d * 2, label: tr('Giocatori fuori ruolo', 'Players out of position'),
+    const salita = -misfits.reduce((t, x) => t + passiInSalita(x.p, x.p.slot) * SALITA_DIFESA, 0);
+    off += d; def += d + salita;
+    factors.push({ key: 'fuori-ruolo', side: key, delta: d * 2 + salita, label: tr('Giocatori fuori ruolo', 'Players out of position'),
       data: { names: misfits.map(({ p, passi }) => `${p.n} ${tr('da', 'at')} ${p.slot}${passi === 1 ? tr(' (adattato)', ' (adapted)') : ''}`) } });
   }
 
@@ -499,6 +510,7 @@ export function simGame(A, B, m, rng, opts = {}) {
 // la misura in audit-gioco: oscillazione del primo marcatore intorno al 20%,
 // e il favorito al premio di miglior marcatore di una serie intorno al 70%.
 export const SERATA_SIGMA = 0.25;
+export const QUOTA_MAX = 0.42;
 
 // Ripartisce il punteggio di squadra fra i cinque secondo usage e strategia.
 function boxScore(T, teamPts, rng) {
@@ -520,11 +532,21 @@ function boxScore(T, teamPts, rng) {
   // deciso, e ogni gara ha il suo generatore, quindi nessun risultato cambia.
   const raw = T.five.map((p, i) => Math.max(3, Math.pow(p.attrs.usg, 0.75) * mult[i]
     * Math.exp(SERATA_SIGMA * clamp(gauss(rng), -1.8, 1.8))));
-  const tot = raw.reduce((s, v) => s + v, 0);
+  // TETTO ALLA QUOTA. Una stella accanto a quattro gregari che non tirano
+  // mai (Maxey con Battier, Kirilenko e Bobby Jones) si prendeva il 56% dei
+  // punti: 74 contro un quintetto di guardie. Oltre il 42% l'eccesso passa
+  // ai compagni in proporzione: nella NBA vera anche loro tirerebbero.
+  const quote = raw.map((v) => v / raw.reduce((s, x) => s + x, 0));
+  for (let giro = 0; giro < 3; giro++) {
+    const eccesso = quote.reduce((s, q) => s + Math.max(0, q - QUOTA_MAX), 0);
+    if (eccesso <= 0) break;
+    const sotto = quote.reduce((s, q) => s + (q < QUOTA_MAX ? q : 0), 0);
+    for (let i = 0; i < 5; i++) quote[i] = quote[i] > QUOTA_MAX ? QUOTA_MAX : quote[i] + eccesso * (quote[i] / sotto);
+  }
 
   let lines = T.five.map((p, i) => ({
     id: p.id, n: p.n, slot: p.slot,
-    pts: Math.max(2, Math.round(teamPts * (raw[i] / tot))),
+    pts: Math.max(2, Math.round(teamPts * quote[i])),
     reb: 0, ast: 0,
   }));
 
