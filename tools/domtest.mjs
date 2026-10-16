@@ -412,7 +412,10 @@ ok(Object.values(STRATEGIES).every((v) => has(v.label)), 'tutte le strategie son
     `${T1.possVoluti} contro ${T2.possVoluti}`);
   const altro = S.attive(F.state)[1];
   const O = buildTeam(altro, F.state.lineups[altro], F.state.tactics[altro]);
-  ok(matchup(T2, O).pace - matchup(T1, O).pace > 8, 'e il ritmo scelto sposta i possessi della partita',
+  // Quanto lo sposta dipende anche da chi controlla il ritmo fra le due:
+  // misurato su 3000 coppie casuali, mai sotto 5,9 possessi (mediana 11,5).
+  // La soglia era 8 e cadeva in una partita su quaranta, a seconda del seme.
+  ok(matchup(T2, O).pace - matchup(T1, O).pace > 5, 'e il ritmo scelto sposta i possessi della partita',
     `${matchup(T1, O).pace.toFixed(0)} contro ${matchup(T2, O).pace.toFixed(0)}`);
 
   // L'allenatore cambia gli attributi dei giocatori, non un totale finale.
@@ -580,9 +583,12 @@ ok(!/data-act="avanti-serie"/.test(html()), 'e dopo la finale non c\'e nessun "A
   for (const k of ['mvp', 'punti', 'rimbalzi', 'colpo']) ok(premi.some((p) => p.chiave === k), `c'e il premio ${k}`);
   const colpo = premi.find((p) => p.chiave === 'colpo');
   const D = db();
+  // A pari rapporto vince l'overall piu alto, come nel premio: 92 pagato 2 e
+  // 88 pagato 1 valgono entrambi 4. Senza lo spareggio il test sceglieva il
+  // primo dell'elenco e cadeva in una partita su quaranta, a seconda del seme.
   const migliore = F.state.auction.log
-    .map((l) => ({ id: l.playerId, v: (D.byId[l.playerId].ovr - 84) / l.price }))
-    .sort((a, b) => b.v - a.v)[0];
+    .map((l) => ({ id: l.playerId, v: (D.byId[l.playerId].ovr - 84) / l.price, ovr: D.byId[l.playerId].ovr }))
+    .sort((a, b) => b.v - a.v || b.ovr - a.ovr)[0];
   ok(colpo && colpo.id === migliore.id, 'il colpo dell\'asta e davvero il miglior affare', colpo ? `${colpo.nome}: ${colpo.riga}` : 'nessuno');
   const bid = premi.find((p) => p.chiave === 'bidone');
   const prezzoBid = bid ? F.state.auction.log.find((l) => l.playerId === bid.id)?.price : null;
