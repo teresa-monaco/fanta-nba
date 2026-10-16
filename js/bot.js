@@ -62,7 +62,13 @@ export function installaRiserve() {
   if (riserveMesse) return;
   // Attorno alla meta della classifica per ruolo: chi prenderesti davvero se
   // non comprassi niente di meglio.
-  const PERC = [0.40, 0.50, 0.60];
+  //
+  // SETTE PER RUOLO, NON TRE. Con tre il riferimento dipendeva da chi capitava
+  // in quei tre punti dell'elenco: fra i playmaker c'era Trae Young (91 di
+  // realizzazione), fra i centri Holmgren (35). Un solo nome spostava il
+  // valore di tutto un ruolo. Con sette il valore dipende dal ruolo, non dal
+  // caso. La logica resta la stessa: quanto sei meglio di un rimpiazzo medio.
+  const PERC = [0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65];
   riserve = PERC.map((pc) => {
     const set = {};
     for (const sl of SLOTS) {

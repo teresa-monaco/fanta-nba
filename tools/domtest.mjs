@@ -883,19 +883,38 @@ ok(!html().includes('Ricomincia da capo'), 'e non ne compaiono due insieme');
       S.botDi(F.state).map((k) => TEAM_NAMES[k]).join(', '));
   }
 
-  // Offrono davvero, e restano dentro le regole.
+  // Offrono davvero, e restano dentro le regole. Si guardano TUTTI i bot e
+  // fino a cinque lotti: chiederlo a un bot solo sul primo lotto misurava se
+  // quel bot voleva quel giocatore, e quando le valutazioni sono cambiate
+  // (playmaker corretti) il test e caduto senza che niente fosse rotto. Un
+  // bot che non vuole un giocatore e un bot che ragiona.
   {
-    const k = S.botDi(F.state)[0];
-    const memoria = {};
-    let offerte = 0;
-    for (let giro = 0; giro < 30; giro++) {
-      const q = BotAI.offerta(F.state, k, S, Date.now() + giro * 700, memoria);
-      if (q == null) continue;
-      ok(S.canBid(F.state, k, q), 'ogni offerta del bot passa da canBid', `${q}`);
-      offerte++;
-      break;
+    let offerte = 0, lotti = 0, valide = true, chi = '';
+    let st = F.state;
+    // L'orologio va avanti con i lotti: ogni lotto si apre quando si chiude il
+    // precedente, e il bot deve guardarlo DOPO, o vede ancora la pallina che
+    // si apre e giustamente non offre.
+    let tempo = Date.now();
+    const tetti = [];
+    while (lotti < 5 && !offerte) {
+      lotti++;
+      for (const k of S.botDi(st)) {
+        const memoria = {};
+        for (let giro = 1; giro <= 30; giro++) {
+          const q = BotAI.offerta(st, k, S, tempo + giro * 700, memoria);
+          if (q == null) continue;
+          if (!S.canBid(st, k, q)) valide = false;
+          offerte++; chi = `${st.names[`bot:${k}`]} offre ${q} per ${db().byId[S.currentPlayerId(st)]?.n}`;
+          break;
+        }
+        tetti.push(`${db().byId[S.currentPlayerId(st)]?.n}/${st.names[`bot:${k}`]}: ${memoria[k]?.tetto}`);
+        if (offerte) break;
+      }
+      if (!offerte) { tempo += 60000; st = S.resolveLot(st, tempo); }
     }
-    ok(offerte > 0, 'il bot rilancia entro il tempo del lotto');
+    if (!offerte) console.log('     tetti dei bot:', tetti.join(' · '));
+    ok(valide, 'ogni offerta dei bot passa da canBid');
+    ok(offerte > 0, 'i bot rilanciano entro il tempo del lotto', `${chi} (lotto ${lotti})`);
   }
 
   // QUALCUNO LI DEVE MUOVERE. Il controllo sopra prova la funzione del bot;

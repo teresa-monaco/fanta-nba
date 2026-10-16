@@ -430,7 +430,7 @@
    "attrs": {
     "sco": 97,
     "tre": 82,
-    "pla": 72,
+    "pla": 94,
     "reb": 52,
     "dif": 24,
     "dpe": 58,
@@ -485,9 +485,9 @@
    "id": "sga",
    "n": "Shai Gilgeous-Alexander",
    "ovr": 96,
-   "pos": "PG",
+   "pos": "SG",
    "alt": [
-    "SG"
+    "PG"
    ],
    "arc": "iso-scorer",
    "era": "2020s",
@@ -578,7 +578,7 @@
    "era": "2010s",
    "tm": "Clippers",
    "attrs": {
-    "sco": 75,
+    "sco": 84,
     "tre": 72,
     "pla": 99,
     "reb": 42,
@@ -666,7 +666,7 @@
    "attrs": {
     "sco": 93,
     "tre": 37,
-    "pla": 79,
+    "pla": 92,
     "reb": 64,
     "dif": 23,
     "dpe": 66,
@@ -711,7 +711,7 @@
    "attrs": {
     "sco": 83,
     "tre": 49,
-    "pla": 60,
+    "pla": 82,
     "reb": 52,
     "dif": 37,
     "dpe": 97,
@@ -835,7 +835,7 @@
    "era": "2000s",
    "tm": "Suns",
    "attrs": {
-    "sco": 70,
+    "sco": 80,
     "tre": 88,
     "pla": 98,
     "reb": 33,
@@ -859,7 +859,7 @@
    "attrs": {
     "sco": 76,
     "tre": 46,
-    "pla": 77,
+    "pla": 86,
     "reb": 37,
     "dif": 26,
     "dpe": 94,
@@ -877,7 +877,7 @@
    "era": "1980s",
    "tm": "Pistons",
    "attrs": {
-    "sco": 70,
+    "sco": 84,
     "tre": 40,
     "pla": 99,
     "reb": 30,
@@ -941,7 +941,7 @@
    "attrs": {
     "sco": 88,
     "tre": 41,
-    "pla": 75,
+    "pla": 82,
     "reb": 45,
     "dif": 27,
     "dpe": 64,
@@ -963,7 +963,7 @@
    "attrs": {
     "sco": 95,
     "tre": 91,
-    "pla": 80,
+    "pla": 82,
     "reb": 31,
     "dif": 20,
     "dpe": 46,
@@ -1177,7 +1177,7 @@
    "era": "1990s",
    "tm": "Jazz",
    "attrs": {
-    "sco": 67,
+    "sco": 70,
     "tre": 70,
     "pla": 99,
     "reb": 28,
@@ -1309,7 +1309,7 @@
    "attrs": {
     "sco": 98,
     "tre": 70,
-    "pla": 59,
+    "pla": 72,
     "reb": 39,
     "dif": 21,
     "dpe": 50,
@@ -1547,7 +1547,7 @@
    "attrs": {
     "sco": 95,
     "tre": 71,
-    "pla": 62,
+    "pla": 72,
     "reb": 37,
     "dif": 21,
     "dpe": 50,
@@ -1565,7 +1565,7 @@
    "era": "2000s",
    "tm": "Jazz",
    "attrs": {
-    "sco": 62,
+    "sco": 78,
     "tre": 70,
     "pla": 95,
     "reb": 32,
@@ -1579,17 +1579,17 @@
    "id": "arenas",
    "n": "Gilbert Arenas",
    "ovr": 90,
-   "pos": "PG",
+   "pos": "SG",
    "alt": [
-    "SG"
+    "PG"
    ],
    "arc": "combo-guard",
    "era": "2000s",
    "tm": "Wizards",
    "attrs": {
-    "sco": 85,
+    "sco": 92,
     "tre": 74,
-    "pla": 58,
+    "pla": 74,
     "reb": 34,
     "dif": 20,
     "dpe": 42,
@@ -1717,7 +1717,7 @@
    "attrs": {
     "sco": 91,
     "tre": 80,
-    "pla": 72,
+    "pla": 95,
     "reb": 30,
     "dif": 20,
     "dpe": 27,
@@ -1739,7 +1739,7 @@
    "attrs": {
     "sco": 94,
     "tre": 76,
-    "pla": 60,
+    "pla": 76,
     "reb": 37,
     "dif": 20,
     "dpe": 46,
@@ -1759,7 +1759,7 @@
    "era": "2020s",
    "tm": "Pacers",
    "attrs": {
-    "sco": 62,
+    "sco": 74,
     "tre": 82,
     "pla": 98,
     "reb": 26,
@@ -1998,7 +1998,7 @@
    "attrs": {
     "sco": 73,
     "tre": 36,
-    "pla": 68,
+    "pla": 92,
     "reb": 39,
     "dif": 24,
     "dpe": 55,
@@ -2018,7 +2018,7 @@
    "attrs": {
     "sco": 74,
     "tre": 34,
-    "pla": 65,
+    "pla": 86,
     "reb": 38,
     "dif": 23,
     "dpe": 56,
@@ -2040,7 +2040,7 @@
    "attrs": {
     "sco": 76,
     "tre": 35,
-    "pla": 63,
+    "pla": 78,
     "reb": 34,
     "dif": 24,
     "dpe": 58,
@@ -2302,7 +2302,7 @@
    "attrs": {
     "sco": 87,
     "tre": 76,
-    "pla": 71,
+    "pla": 88,
     "reb": 26,
     "dif": 20,
     "dpe": 38,
@@ -2322,7 +2322,7 @@
    "attrs": {
     "sco": 76,
     "tre": 34,
-    "pla": 64,
+    "pla": 90,
     "reb": 39,
     "dif": 20,
     "dpe": 54,
@@ -2342,7 +2342,7 @@
    "era": "2000s",
    "tm": "Pistons",
    "attrs": {
-    "sco": 61,
+    "sco": 78,
     "tre": 79,
     "pla": 96,
     "reb": 25,
@@ -2364,7 +2364,7 @@
    "attrs": {
     "sco": 89,
     "tre": 76,
-    "pla": 66,
+    "pla": 84,
     "reb": 28,
     "dif": 20,
     "dpe": 39,
@@ -2488,7 +2488,7 @@
    "attrs": {
     "sco": 60,
     "tre": 74,
-    "pla": 63,
+    "pla": 84,
     "reb": 32,
     "dif": 20,
     "dpe": 88,
@@ -2510,7 +2510,7 @@
    "attrs": {
     "sco": 62,
     "tre": 70,
-    "pla": 62,
+    "pla": 80,
     "reb": 35,
     "dif": 21,
     "dpe": 90,
@@ -2550,7 +2550,7 @@
    "attrs": {
     "sco": 91,
     "tre": 78,
-    "pla": 67,
+    "pla": 76,
     "reb": 23,
     "dif": 20,
     "dpe": 38,
@@ -2570,7 +2570,7 @@
    "era": "2020s",
    "tm": "Hornets",
    "attrs": {
-    "sco": 60,
+    "sco": 80,
     "tre": 75,
     "pla": 94,
     "reb": 27,
@@ -2594,7 +2594,7 @@
    "attrs": {
     "sco": 87,
     "tre": 75,
-    "pla": 66,
+    "pla": 76,
     "reb": 26,
     "dif": 20,
     "dpe": 38,
@@ -3132,7 +3132,7 @@
    "era": "1990s",
    "tm": "Cavaliers",
    "attrs": {
-    "sco": 58,
+    "sco": 78,
     "tre": 82,
     "pla": 93,
     "reb": 28,
@@ -3174,7 +3174,7 @@
    "era": "2010s",
    "tm": "Grizzlies",
    "attrs": {
-    "sco": 55,
+    "sco": 70,
     "tre": 77,
     "pla": 96,
     "reb": 24,
@@ -3196,7 +3196,7 @@
    "attrs": {
     "sco": 87,
     "tre": 71,
-    "pla": 65,
+    "pla": 76,
     "reb": 22,
     "dif": 20,
     "dpe": 37,
@@ -3218,7 +3218,7 @@
    "attrs": {
     "sco": 83,
     "tre": 68,
-    "pla": 51,
+    "pla": 76,
     "reb": 31,
     "dif": 20,
     "dpe": 36,
@@ -3236,7 +3236,7 @@
    "era": "2020s",
    "tm": "Cavaliers",
    "attrs": {
-    "sco": 57,
+    "sco": 74,
     "tre": 77,
     "pla": 92,
     "reb": 26,
@@ -3260,7 +3260,7 @@
    "attrs": {
     "sco": 47,
     "tre": 84,
-    "pla": 39,
+    "pla": 72,
     "reb": 38,
     "dif": 26,
     "dpe": 89,
@@ -3282,7 +3282,7 @@
    "attrs": {
     "sco": 44,
     "tre": 82,
-    "pla": 43,
+    "pla": 64,
     "reb": 35,
     "dif": 22,
     "dpe": 91,
@@ -3346,7 +3346,7 @@
    "attrs": {
     "sco": 85,
     "tre": 80,
-    "pla": 53,
+    "pla": 64,
     "reb": 27,
     "dif": 20,
     "dpe": 37,
@@ -3368,7 +3368,7 @@
    "attrs": {
     "sco": 86,
     "tre": 64,
-    "pla": 49,
+    "pla": 64,
     "reb": 26,
     "dif": 20,
     "dpe": 35,
@@ -4026,7 +4026,7 @@
    "era": "1990s",
    "tm": "Wizards",
    "attrs": {
-    "sco": 54,
+    "sco": 66,
     "tre": 56,
     "pla": 95,
     "reb": 28,
@@ -4070,7 +4070,7 @@
    "era": "2000s",
    "tm": "Timberwolves",
    "attrs": {
-    "sco": 56,
+    "sco": 74,
     "tre": 56,
     "pla": 85,
     "reb": 23,
@@ -4092,7 +4092,7 @@
    "era": "1990s",
    "tm": "Blazers",
    "attrs": {
-    "sco": 55,
+    "sco": 70,
     "tre": 74,
     "pla": 91,
     "reb": 25,
@@ -4116,7 +4116,7 @@
    "attrs": {
     "sco": 57,
     "tre": 46,
-    "pla": 60,
+    "pla": 72,
     "reb": 31,
     "dif": 23,
     "dpe": 90,
@@ -4136,7 +4136,7 @@
    "era": "1980s",
    "tm": "Lakers",
    "attrs": {
-    "sco": 57,
+    "sco": 68,
     "tre": 51,
     "pla": 90,
     "reb": 23,
@@ -4160,7 +4160,7 @@
    "attrs": {
     "sco": 47,
     "tre": 60,
-    "pla": 40,
+    "pla": 66,
     "reb": 32,
     "dif": 24,
     "dpe": 90,
@@ -4182,7 +4182,7 @@
    "attrs": {
     "sco": 67,
     "tre": 30,
-    "pla": 59,
+    "pla": 68,
     "reb": 33,
     "dif": 20,
     "dpe": 49,
@@ -4202,7 +4202,7 @@
    "attrs": {
     "sco": 80,
     "tre": 28,
-    "pla": 66,
+    "pla": 80,
     "reb": 40,
     "dif": 24,
     "dpe": 54,

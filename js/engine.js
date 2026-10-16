@@ -173,6 +173,15 @@ export function buildTeam(key, lineup, tactics) {
       data: { chosen: D.byId[tactics.v1]?.n, best: D.byId[topScorerId]?.n } });
   }
 
+  // L'AMMORTIZZATORE. Le penalita di stazza, ferro e fuori ruolo si sommano,
+  // e una squadra di sole guardie scendeva a difesa 8, o sotto zero: un numero
+  // senza senso, contro cui il miglior uomo avversario ne faceva 78. Sotto 35
+  // la difesa continua a scendere, ma al 40%: resta pessima, non assurda, e
+  // l'ordine fra due squadre non cambia mai. Su rose casuali tocca circa una
+  // squadra su sedici; su quelle dell'asta, che hanno quasi sempre un lungo,
+  // molto meno.
+  if (def < 35) def = 35 - (35 - def) * 0.4;
+
   const r = RITMI[tactics.ritmo] || RITMI.medio;
 
   return {
