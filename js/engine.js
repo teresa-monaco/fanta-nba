@@ -94,6 +94,14 @@ export function buildTeam(key, lineup, tactics) {
   const playmaking = plaSorted[0] * 0.55 + plaSorted[1] * 0.30 + (plaSorted[2] + plaSorted[3] + plaSorted[4]) / 3 * 0.15;
 
   const rebounding = five.reduce((s, p) => s + a(p).reb, 0) / 5;
+  // RIMBALZI CHE PESANO. Contava solo la media dei cinque, per 0,10 in
+  // difesa: Rodman al posto di un'ala qualunque valeva mezzo punto, e il
+  // "dominio a rimbalzo" del confronto era solo racconto. Adesso pesa di piu
+  // chi rimbalza di piu (come la protezione del ferro) e il rimbalzo vale
+  // anche in attacco: ogni rimbalzo offensivo e un possesso in piu. Centrato
+  // su 62, la media pesata di quintetti a caso, per non spostare l'equilibrio.
+  const rimbalzo = five.map((p) => a(p).reb).sort((x, y) => y - x)
+    .reduce((s, v, i) => s + v * [0.35, 0.25, 0.18, 0.12, 0.10][i], 0);
   const difSorted = five.map(a).map((x) => x.dif).sort((x, y) => y - x);
   const rimProtect = difSorted[0] * 0.60 + difSorted[1] * 0.40;
 
@@ -120,7 +128,8 @@ export function buildTeam(key, lineup, tactics) {
   // attuale entrambi stanno attorno a 70-75 con una forbice di circa 20 punti.
   // Verificabile con: node tools/calibra.mjs
   let off = teamScoring * 0.62 + spacing * 0.20 + playmaking * 0.18;
-  let def = 26 + perimD * 0.30 + rimProtect * 0.22 + rebounding * 0.10 + (size / 15) * 80 * 0.06;
+  let def = 19 + perimD * 0.30 + rimProtect * 0.22 + rimbalzo * 0.20 + (size / 15) * 80 * 0.06;
+  off += (rimbalzo - 62) * 0.08;
 
   // --- penalita di fit (le stesse cose che guarderebbe un allenatore) ---
 
