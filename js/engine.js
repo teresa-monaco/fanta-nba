@@ -508,8 +508,16 @@ export function matchup(A, B) {
 // distribuzione di serie vicina a quella dei playoff veri. Alzare il
 // coefficiente rende il gioco piu prevedibile, alzare la sigma piu casuale.
 // Verificabile con: node tools/balance.mjs
-export const RATING_WEIGHT = 0.0030;
-const GAME_SIGMA = 8.5;
+//
+// RITARATE PER MENO SORPRESE (erano 0,0030 e 8,5). La sfavorita vinceva una
+// serie su quattro-cinque fra rose da asta reali, e chi costruiva la squadra
+// piu forte perdeva per sfortuna abbastanza spesso da smettere di
+// divertirsi. Solo la sigma a 6 dava lo stesso risultato ma partite troppo
+// tirate (scarto medio 8,4); cosi il favorito passa l'83% delle volte (era
+// 78%) e lo scarto medio resta 10,4, vicino agli 11 della NBA. Le quote si
+// adattano da sole. Misurato con 500 sfide fra rose dei primi 120.
+export const RATING_WEIGHT = 0.0038;
+const GAME_SIGMA = 7.5;
 
 export function simGame(A, B, m, rng, opts = {}) {
   const homeIsA = !!opts.homeIsA;
@@ -790,7 +798,10 @@ const potenza = (t) => t.off + t.def;
    migliore CONTRO QUESTO AVVERSARIO: contro un altro la risposta cambia. */
 
 // Sotto questa soglia, in punti a partita, una differenza non e un consiglio.
-const SOGLIA_REFERTO = 0.25;
+// Scala col peso del rating: era 0,25 con RATING_WEIGHT 0,0030. Alzando il
+// peso ogni differenza vale piu punti, e senza scalarla nessun referto era
+// piu "tutto giusto" (0%).
+const SOGLIA_REFERTO = 0.25 * RATING_WEIGHT / 0.0030;
 
 export function refertoTattico(T, O) {
   const lineup = Object.fromEntries(T.five.map((p) => [p.slot, p.id]));

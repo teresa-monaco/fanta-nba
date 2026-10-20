@@ -20,7 +20,8 @@ const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
 const core = await import('../js/core.js');
 const { installData, makeRng, shuffle, TEAM_KEYS, SLOTS, STRATEGIES, allenatoriDi } = core;
 const D = installData(readJson('data/players.json'), readJson('data/archetypes.json'), readJson('data/coaches.json'));
-const { buildTeam, simSeries, matchup, pickBracket, refertoTattico } = await import('../js/engine.js');
+const { buildTeam, simSeries, matchup, pickBracket, refertoTattico, RATING_WEIGHT } = await import('../js/engine.js');
+const scalaPunti = RATING_WEIGHT / 0.0030;
 const { narrateGame, explainSeries, teamIdentity, verdettoReferto } = await import('../js/narrator.js');
 const { autoLineup } = await import('../js/state.js');
 
@@ -231,8 +232,9 @@ console.log('\n1e. Il referto');
         if (!Number.isFinite(v.valore) || !Number.isFinite(v.quantoMeglio)) numeriStorti++;
         // Un consiglio deve valere qualcosa: "meglio X (+0.0)" fa sembrare
         // rotto il referto, ed e il difetto che aveva alla prima stesura.
-        if (!v.eraGiusta && !v.ininfluente && v.quantoMeglio < 0.2) consigliInutili++;
-        if (v.eraGiusta && v.quantoMeglio > 0.3) contraddizioni++;
+        // Soglie in punti, scalate col peso del rating come quella del referto.
+        if (!v.eraGiusta && !v.ininfluente && v.quantoMeglio < 0.2 * scalaPunti) consigliInutili++;
+        if (v.eraGiusta && v.quantoMeglio > 0.3 * scalaPunti) contraddizioni++;
         if (!v.eraGiusta && !v.ininfluente) conConsiglio++;
       }
       if (r.voci.every((v) => v.eraGiusta)) tutteGiuste++;
