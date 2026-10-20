@@ -197,6 +197,44 @@ console.log('='.repeat(70) + '\n');
     ok(!!chi && 50 - s.teams[chi].credits === 1, 'al prezzo minimo', chi);
   }
 
+  // O offri, o voti skip, o te lo prendi: chi non ha votato si becca il
+  // giocatore, anche se ha la rosa quasi piena e gli altri sono vuoti.
+  {
+    let s = nuova();
+    const [a, b, c, d] = S.attive(s);
+    const ids = D.players.slice(0, 4).map((p) => p.id);
+    s = { ...s, teams: { ...s.teams, [d]: { credits: 40, roster: ids } } };
+    const pid = S.currentPlayerId(s);
+    for (const k of [a, b, c]) s = S.votaSkip(s, k, tick());
+    s = S.resolveLot(s, tick());   // nessuna offerta
+    ok(s.teams[d].roster.includes(pid), 'a chi non ha votato skip va il giocatore', `a ${S.attive(s).find((k) => s.teams[k].roster.includes(pid))}`);
+    ok(s.teams[d].credits === 39, 'a 1 credito');
+  }
+  // Due indecisi: va a uno dei due, mai a chi ha votato. E tutti i telefoni
+  // fanno la stessa scelta (stesso stato, stesso risultato).
+  {
+    const prova = () => {
+      let s = nuova();
+      const [a, b] = S.attive(s);
+      const pid = S.currentPlayerId(s);
+      for (const k of [a, b]) s = S.votaSkip(s, k, 1000);
+      s = S.resolveLot(s, 2000);
+      return { chi: S.attive(s).find((k) => s.teams[k].roster.includes(pid)), votanti: [a, b] };
+    };
+    const x = prova(), y = prova();
+    ok(x.chi && !x.votanti.includes(x.chi), 'con due indecisi va a uno di loro', x.chi);
+    ok(x.chi === y.chi, 'e la scelta e la stessa su ogni telefono');
+  }
+  // Nessuno ha votato: resta la regola di prima, a chi ha piu posti vuoti.
+  {
+    let s = nuova();
+    const [a] = S.attive(s);
+    s = { ...s, teams: { ...s.teams, [a]: { credits: 40, roster: D.players.slice(0, 4).map((p) => p.id) } } };
+    const pid = S.currentPlayerId(s);
+    s = S.resolveLot(s, tick());
+    ok(!s.teams[a].roster.includes(pid), 'senza voti non va a chi ha la rosa quasi piena');
+  }
+
   // Chi ha la rosa piena non deve votare: non potrebbe comprarlo comunque.
   {
     let s = nuova();

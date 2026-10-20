@@ -608,7 +608,7 @@ function skipBtn(s, bidders, k) {
   }
   const hoVotato = !!s.auction.skipVoti?.[k];
   return `<button class="bidbtn skip ${hoVotato ? 'on' : ''}" data-act="vota-skip" data-team="${k}"
-    title="${hoVotato ? tr('Ritira il voto', 'Withdraw your vote') : tr('Vota per saltarlo', 'Vote to skip him')}: ${tr(`serve l'accordo di tutti. ${rimasti} skip rimasti`, `everyone must agree. ${rimasti} skips left`)}">
+    title="${hoVotato ? tr('Ritira il voto', 'Withdraw your vote') : tr('Vota per saltarlo', 'Vote to skip him')}: ${tr(`serve l'accordo di tutti. Se scade senza offerte va a chi non ha votato. ${rimasti} skip rimasti`, `everyone must agree. If time runs out with no bids, he goes to whoever didn't vote. ${rimasti} skips left`)}">
     &#9197;<small>${voti.length}/${votanti.length}</small></button>`;
 }
 

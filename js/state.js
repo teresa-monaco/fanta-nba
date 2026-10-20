@@ -394,6 +394,18 @@ export function assegnaDufficio(s, now) {
   if (!pid) return s;
   const candidati = puoVotare(s).filter((k) => maxBid(s, k) >= 1);
   if (!candidati.length) return passLot(s, now);
+  // O OFFRI, O VOTI SKIP, O TE LO PRENDI. Se qualcuno ha votato per saltarlo
+  // e qualcun altro no, il giocatore va a chi non ha votato, a 1, anche se ha
+  // gia la rosa quasi piena: non votare vuol dire che non ti dispiace. Fra
+  // piu indecisi decide la sorte, con un seme che tutti i telefoni rifanno
+  // uguale. Se non ha votato nessuno (o gli skip sono finiti e non si puo
+  // votare) resta la regola di prima: a chi ha piu posti vuoti.
+  const voti = s.auction.skipVoti || {};
+  const indecisi = candidati.filter((k) => !voti[k]);
+  if (indecisi.length && indecisi.length < candidati.length) {
+    const rng = makeRng(`${s.seed}:dufficio:${s.auction.idx}:${s.auction.log.length}`);
+    return award(s, pid, indecisi[Math.floor(rng() * indecisi.length)], 1, now);
+  }
   const scelto = candidati.slice().sort((a, b) =>
     slotsLeft(s, b) - slotsLeft(s, a)              // chi ha piu posti vuoti
     || s.teams[b].credits - s.teams[a].credits     // poi chi ha piu cassa
