@@ -42,6 +42,7 @@ export function passiFuoriRuolo(p, slot) {
 // avversario a 78 punti. Il resto del disastro lo fanno difesa perimetrale e
 // lunghi, che la casella sbagliata peggiora gia da soli.
 export const PENALITA_PASSI = [0, 0.9, 2.6, 3.0, 3.2];
+export const GRAVITA = 0.30;
 
 // Salire non e come scendere: un piccolo da ala grande o da centro deve
 // marcare lunghi e tenere i rimbalzi sotto canestro, un lungo da ala no.
@@ -155,6 +156,19 @@ export function buildTeam(key, lineup, tactics) {
     const d = 3.2 * Math.min(1, spazio - 3);
     off += d;
     factors.push({ key: 'spacing-totale', side: key, delta: d, label: tr('Spacing totale', 'Full spacing'), data: { shooters: Math.max(shooters, Math.round(spazio)) } });
+  }
+
+  // GRAVITA DEL TIRATORE. Lo spacing satura presto: Curry a 99 da tre
+  // valeva quasi quanto un tiratore da 85. Ma chi segna tanto E da lontano
+  // costringe la difesa a uscire fino a meta campo e libera tutti gli altri.
+  // Conta il tiratore piu pericoloso (tiro e realizzazione insieme, solo fra
+  // chi tira almeno 85), e solo sopra un livello alto.
+  const tiratore = five.filter((p) => a(p).tre >= 85)
+    .map((p) => ({ p, v: (a(p).tre + a(p).sco) / 2 })).sort((x, y) => y.v - x.v)[0];
+  if (tiratore && tiratore.v > 88) {
+    const d = (tiratore.v - 88) * GRAVITA;
+    off += d;
+    if (d >= 1) factors.push({ key: 'gravita-tiro', side: key, delta: d, label: tr('Gravita del tiratore', 'Shooting gravity'), data: { name: tiratore.p.n } });
   }
 
   // PRESSIONE SUL FERRO. L'attacco guardava solo chi segna, chi tira e chi

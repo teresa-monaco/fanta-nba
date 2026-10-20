@@ -101,10 +101,10 @@
    "era": "1980s",
    "tm": "Lakers",
    "attrs": {
-    "sco": 86,
+    "sco": 88,
     "tre": 40,
     "pla": 98,
-    "reb": 69,
+    "reb": 72,
     "dif": 42,
     "dpe": 79,
     "atl": 92,
@@ -127,7 +127,7 @@
     "tre": 70,
     "pla": 95,
     "reb": 99,
-    "dif": 55,
+    "dif": 57,
     "dpe": 40,
     "atl": 48,
     "usg": 94
@@ -147,11 +147,11 @@
    "attrs": {
     "sco": 96,
     "tre": 84,
-    "pla": 98,
+    "pla": 86,
     "reb": 67,
     "dif": 42,
-    "dpe": 82,
-    "atl": 89,
+    "dpe": 70,
+    "atl": 62,
     "usg": 99
    }
   },
@@ -229,11 +229,11 @@
    "era": "2000s",
    "tm": "Timberwolves",
    "attrs": {
-    "sco": 86,
+    "sco": 84,
     "tre": 31,
     "pla": 70,
-    "reb": 94,
-    "dif": 88,
+    "reb": 88,
+    "dif": 80,
     "dpe": 75,
     "atl": 80,
     "usg": 91
@@ -251,13 +251,13 @@
    "era": "2010s",
    "tm": "Warriors",
    "attrs": {
-    "sco": 94,
+    "sco": 97,
     "tre": 99,
-    "pla": 91,
-    "reb": 44,
+    "pla": 94,
+    "reb": 50,
     "dif": 23,
     "dpe": 48,
-    "atl": 71,
+    "atl": 76,
     "usg": 99
    }
   },
@@ -277,7 +277,7 @@
     "sco": 99,
     "tre": 30,
     "pla": 76,
-    "reb": 67,
+    "reb": 75,
     "dif": 80,
     "dpe": 96,
     "atl": 99,
@@ -297,12 +297,12 @@
    "tm": "Sixers",
    "attrs": {
     "sco": 97,
-    "tre": 56,
+    "tre": 60,
     "pla": 87,
-    "reb": 33,
+    "reb": 38,
     "dif": 20,
     "dpe": 68,
-    "atl": 76,
+    "atl": 82,
     "usg": 99
    }
   },
@@ -320,11 +320,11 @@
    "attrs": {
     "sco": 99,
     "tre": 85,
-    "pla": 69,
-    "reb": 46,
+    "pla": 72,
+    "reb": 55,
     "dif": 50,
-    "dpe": 58,
-    "atl": 77,
+    "dpe": 68,
+    "atl": 82,
     "usg": 99
    }
   },
@@ -406,13 +406,13 @@
    "era": "2010s",
    "tm": "Raptors",
    "attrs": {
-    "sco": 90,
-    "tre": 83,
-    "pla": 68,
+    "sco": 86,
+    "tre": 78,
+    "pla": 62,
     "reb": 55,
     "dif": 42,
-    "dpe": 94,
-    "atl": 87,
+    "dpe": 88,
+    "atl": 78,
     "usg": 81
    }
   },
@@ -449,10 +449,10 @@
    "tm": "Sixers",
    "attrs": {
     "sco": 95,
-    "tre": 57,
+    "tre": 52,
     "pla": 57,
-    "reb": 93,
-    "dif": 98,
+    "reb": 85,
+    "dif": 87,
     "dpe": 42,
     "atl": 76,
     "usg": 98
@@ -471,12 +471,12 @@
    "era": "2020s",
    "tm": "Mavericks",
    "attrs": {
-    "sco": 92,
+    "sco": 96,
     "tre": 84,
     "pla": 99,
-    "reb": 69,
+    "reb": 75,
     "dif": 40,
-    "dpe": 45,
+    "dpe": 50,
     "atl": 65,
     "usg": 99
    }
@@ -493,12 +493,12 @@
    "era": "2020s",
    "tm": "Thunder",
    "attrs": {
-    "sco": 99,
-    "tre": 70,
+    "sco": 92,
+    "tre": 67,
     "pla": 69,
     "reb": 49,
     "dif": 24,
-    "dpe": 74,
+    "dpe": 72,
     "atl": 79,
     "usg": 99
    }
@@ -578,13 +578,13 @@
    "era": "2010s",
    "tm": "Clippers",
    "attrs": {
-    "sco": 84,
-    "tre": 72,
+    "sco": 86,
+    "tre": 83,
     "pla": 99,
-    "reb": 42,
+    "reb": 50,
     "dif": 20,
     "dpe": 84,
-    "atl": 62,
+    "atl": 58,
     "usg": 71
    }
   },
@@ -686,7 +686,7 @@
    "era": "2010s",
    "tm": "Blazers",
    "attrs": {
-    "sco": 97,
+    "sco": 94,
     "tre": 94,
     "pla": 85,
     "reb": 40,
@@ -983,11 +983,11 @@
    "era": "2020s",
    "tm": "Spurs",
    "attrs": {
-    "sco": 78,
-    "tre": 52,
+    "sco": 74,
+    "tre": 50,
     "pla": 55,
-    "reb": 93,
-    "dif": 96,
+    "reb": 80,
+    "dif": 90,
     "dpe": 43,
     "atl": 84,
     "usg": 70
@@ -1027,13 +1027,13 @@
    "era": "2010s",
    "tm": "Pacers",
    "attrs": {
-    "sco": 86,
+    "sco": 85,
     "tre": 81,
     "pla": 62,
     "reb": 52,
     "dif": 38,
-    "dpe": 96,
-    "atl": 78,
+    "dpe": 88,
+    "atl": 72,
     "usg": 80
    }
   },
@@ -1050,12 +1050,12 @@
    "tm": "Nuggets",
    "attrs": {
     "sco": 97,
-    "tre": 74,
+    "tre": 80,
     "pla": 61,
-    "reb": 40,
+    "reb": 60,
     "dif": 22,
-    "dpe": 53,
-    "atl": 73,
+    "dpe": 58,
+    "atl": 78,
     "usg": 89
    }
   },
@@ -1329,13 +1329,13 @@
    "era": "2020s",
    "tm": "Timberwolves",
    "attrs": {
-    "sco": 86,
-    "tre": 78,
+    "sco": 82,
+    "tre": 72,
     "pla": 51,
     "reb": 52,
     "dif": 31,
-    "dpe": 76,
-    "atl": 95,
+    "dpe": 66,
+    "atl": 88,
     "usg": 80
    }
   },
@@ -2636,13 +2636,13 @@
    "era": "2020s",
    "tm": "Thunder",
    "attrs": {
-    "sco": 78,
-    "tre": 72,
-    "pla": 52,
-    "reb": 42,
+    "sco": 72,
+    "tre": 64,
+    "pla": 48,
+    "reb": 40,
     "dif": 34,
-    "dpe": 91,
-    "atl": 68,
+    "dpe": 75,
+    "atl": 64,
     "usg": 68
    }
   },
