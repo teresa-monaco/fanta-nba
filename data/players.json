@@ -1673,8 +1673,8 @@
    "era": "2010s",
    "tm": "Wizards",
    "attrs": {
-    "sco": 84,
-    "tre": 75,
+    "sco": 86,
+    "tre": 80,
     "pla": 58,
     "reb": 33,
     "dif": 21,
@@ -2150,11 +2150,11 @@
    "era": "1990s",
    "tm": "Bulls",
    "attrs": {
-    "sco": 39,
+    "sco": 46,
     "tre": 38,
     "pla": 64,
     "reb": 99,
-    "dif": 56,
+    "dif": 66,
     "dpe": 78,
     "atl": 60,
     "usg": 23
@@ -2528,9 +2528,9 @@
    "era": "2010s",
    "tm": "Celtics",
    "attrs": {
-    "sco": 62,
-    "tre": 33,
-    "pla": 94,
+    "sco": 66,
+    "tre": 38,
+    "pla": 98,
     "reb": 52,
     "dif": 20,
     "dpe": 84,
@@ -2681,10 +2681,10 @@
    "tm": "Magic",
    "attrs": {
     "sco": 92,
-    "tre": 49,
-    "pla": 56,
-    "reb": 33,
-    "dif": 22,
+    "tre": 55,
+    "pla": 62,
+    "reb": 55,
+    "dif": 42,
     "dpe": 47,
     "atl": 61,
     "usg": 82
@@ -3176,7 +3176,7 @@
    "attrs": {
     "sco": 70,
     "tre": 77,
-    "pla": 96,
+    "pla": 88,
     "reb": 24,
     "dif": 20,
     "dpe": 48,
@@ -3216,13 +3216,13 @@
    "era": "2010s",
    "tm": "Suns",
    "attrs": {
-    "sco": 83,
-    "tre": 68,
-    "pla": 76,
+    "sco": 78,
+    "tre": 62,
+    "pla": 69,
     "reb": 31,
     "dif": 20,
-    "dpe": 36,
-    "atl": 54,
+    "dpe": 32,
+    "atl": 50,
     "usg": 69
    }
   },
@@ -3495,7 +3495,7 @@
    "tm": "Warriors",
    "attrs": {
     "sco": 60,
-    "tre": 56,
+    "tre": 60,
     "pla": 40,
     "reb": 38,
     "dif": 24,
@@ -4202,11 +4202,11 @@
    "attrs": {
     "sco": 85,
     "tre": 45,
-    "pla": 82,
+    "pla": 86,
     "reb": 40,
     "dif": 24,
     "dpe": 54,
-    "atl": 80,
+    "atl": 82,
     "usg": 76
    }
   },
@@ -4595,12 +4595,12 @@
    "tm": "Nuggets",
    "attrs": {
     "sco": 68,
-    "tre": 42,
+    "tre": 55,
     "pla": 42,
-    "reb": 44,
-    "dif": 27,
-    "dpe": 54,
-    "atl": 91,
+    "reb": 55,
+    "dif": 50,
+    "dpe": 75,
+    "atl": 95,
     "usg": 60
    }
   },
