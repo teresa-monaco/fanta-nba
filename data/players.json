@@ -21,7 +21,8 @@
     "dpe": 99,
     "atl": 99,
     "usg": 99
-   }
+   },
+   "base": 99
   },
   {
    "id": "lebron",
@@ -44,12 +45,13 @@
     "dpe": 90,
     "atl": 97,
     "usg": 99
-   }
+   },
+   "base": 99
   },
   {
    "id": "shaq",
    "n": "Shaquille O'Neal",
-   "ovr": 99,
+   "ovr": 97,
    "pos": "C",
    "alt": [],
    "arc": "dominant-center",
@@ -64,7 +66,8 @@
     "dpe": 47,
     "atl": 85,
     "usg": 99
-   }
+   },
+   "base": 99
   },
   {
    "id": "kobe",
@@ -86,12 +89,13 @@
     "dpe": 88,
     "atl": 90,
     "usg": 99
-   }
+   },
+   "base": 98
   },
   {
    "id": "magic",
    "n": "Magic Johnson",
-   "ovr": 98,
+   "ovr": 97,
    "pos": "PG",
    "alt": [
     "SF",
@@ -109,12 +113,13 @@
     "dpe": 79,
     "atl": 92,
     "usg": 99
-   }
+   },
+   "base": 98
   },
   {
    "id": "jokic",
    "n": "Nikola Jokic",
-   "ovr": 98,
+   "ovr": 96,
    "pos": "C",
    "alt": [
     "PF"
@@ -131,12 +136,13 @@
     "dpe": 40,
     "atl": 48,
     "usg": 94
-   }
+   },
+   "base": 98
   },
   {
    "id": "bird",
    "n": "Larry Bird",
-   "ovr": 97,
+   "ovr": 98,
    "pos": "SF",
    "alt": [
     "PF"
@@ -153,7 +159,8 @@
     "dpe": 70,
     "atl": 62,
     "usg": 99
-   }
+   },
+   "base": 97
   },
   {
    "id": "kareem",
@@ -173,12 +180,13 @@
     "dpe": 42,
     "atl": 80,
     "usg": 97
-   }
+   },
+   "base": 97
   },
   {
    "id": "hakeem",
    "n": "Hakeem Olajuwon",
-   "ovr": 97,
+   "ovr": 98,
    "pos": "C",
    "alt": [],
    "arc": "dominant-center",
@@ -193,12 +201,13 @@
     "dpe": 60,
     "atl": 78,
     "usg": 98
-   }
+   },
+   "base": 97
   },
   {
    "id": "duncan",
    "n": "Tim Duncan",
-   "ovr": 97,
+   "ovr": 96,
    "pos": "PF",
    "alt": [
     "C"
@@ -215,12 +224,13 @@
     "dpe": 49,
     "atl": 65,
     "usg": 93
-   }
+   },
+   "base": 97
   },
   {
    "id": "garnett",
    "n": "Kevin Garnett",
-   "ovr": 97,
+   "ovr": 93,
    "pos": "PF",
    "alt": [
     "C"
@@ -237,7 +247,8 @@
     "dpe": 75,
     "atl": 80,
     "usg": 91
-   }
+   },
+   "base": 97
   },
   {
    "id": "curry",
@@ -259,12 +270,13 @@
     "dpe": 48,
     "atl": 76,
     "usg": 99
-   }
+   },
+   "base": 97
   },
   {
    "id": "giannis",
    "n": "Giannis Antetokounmpo",
-   "ovr": 97,
+   "ovr": 96,
    "pos": "PF",
    "alt": [
     "C",
@@ -282,12 +294,13 @@
     "dpe": 96,
     "atl": 99,
     "usg": 99
-   }
+   },
+   "base": 97
   },
   {
    "id": "iverson",
    "n": "Allen Iverson",
-   "ovr": 97,
+   "ovr": 93,
    "pos": "PG",
    "alt": [
     "SG"
@@ -304,12 +317,13 @@
     "dpe": 68,
     "atl": 82,
     "usg": 99
-   }
+   },
+   "base": 97
   },
   {
    "id": "durant",
    "n": "Kevin Durant",
-   "ovr": 96,
+   "ovr": 99,
    "pos": "SF",
    "alt": [
     "PF"
@@ -326,12 +340,13 @@
     "dpe": 68,
     "atl": 82,
     "usg": 99
-   }
+   },
+   "base": 96
   },
   {
    "id": "tmac",
    "n": "Tracy McGrady",
-   "ovr": 96,
+   "ovr": 95,
    "pos": "SG",
    "alt": [
     "SF"
@@ -348,12 +363,13 @@
     "dpe": 60,
     "atl": 80,
     "usg": 99
-   }
+   },
+   "base": 96
   },
   {
    "id": "dirk",
    "n": "Dirk Nowitzki",
-   "ovr": 96,
+   "ovr": 93,
    "pos": "PF",
    "alt": [
     "C"
@@ -370,7 +386,8 @@
     "dpe": 45,
     "atl": 54,
     "usg": 84
-   }
+   },
+   "base": 96
   },
   {
    "id": "wade",
@@ -392,12 +409,13 @@
     "dpe": 76,
     "atl": 99,
     "usg": 92
-   }
+   },
+   "base": 96
   },
   {
    "id": "kawhi",
    "n": "Kawhi Leonard",
-   "ovr": 96,
+   "ovr": 97,
    "pos": "SF",
    "alt": [
     "PF"
@@ -414,12 +432,13 @@
     "dpe": 88,
     "atl": 78,
     "usg": 81
-   }
+   },
+   "base": 96
   },
   {
    "id": "harden",
    "n": "James Harden",
-   "ovr": 96,
+   "ovr": 97,
    "pos": "SG",
    "alt": [
     "PG"
@@ -436,7 +455,8 @@
     "dpe": 40,
     "atl": 84,
     "usg": 99
-   }
+   },
+   "base": 96
   },
   {
    "id": "embiid",
@@ -456,12 +476,13 @@
     "dpe": 42,
     "atl": 76,
     "usg": 98
-   }
+   },
+   "base": 96
   },
   {
    "id": "luka",
    "n": "Luka Doncic",
-   "ovr": 96,
+   "ovr": 97,
    "pos": "PG",
    "alt": [
     "SG",
@@ -479,12 +500,13 @@
     "dpe": 50,
     "atl": 65,
     "usg": 99
-   }
+   },
+   "base": 96
   },
   {
    "id": "sga",
    "n": "Shai Gilgeous-Alexander",
-   "ovr": 96,
+   "ovr": 93,
    "pos": "SG",
    "alt": [
     "PG"
@@ -501,12 +523,13 @@
     "dpe": 72,
     "atl": 79,
     "usg": 99
-   }
+   },
+   "base": 96
   },
   {
    "id": "malone",
    "n": "Karl Malone",
-   "ovr": 95,
+   "ovr": 92,
    "pos": "PF",
    "alt": [
     "C"
@@ -523,12 +546,13 @@
     "dpe": 62,
     "atl": 77,
     "usg": 88
-   }
+   },
+   "base": 95
   },
   {
    "id": "barkley",
    "n": "Charles Barkley",
-   "ovr": 95,
+   "ovr": 92,
    "pos": "PF",
    "alt": [
     "C",
@@ -546,12 +570,13 @@
     "dpe": 60,
     "atl": 74,
     "usg": 88
-   }
+   },
+   "base": 95
   },
   {
    "id": "robinson",
    "n": "David Robinson",
-   "ovr": 95,
+   "ovr": 97,
    "pos": "C",
    "alt": [],
    "arc": "dominant-center",
@@ -566,7 +591,8 @@
     "dpe": 44,
     "atl": 76,
     "usg": 96
-   }
+   },
+   "base": 95
   },
   {
    "id": "cp3",
@@ -586,12 +612,13 @@
     "dpe": 84,
     "atl": 58,
     "usg": 71
-   }
+   },
+   "base": 95
   },
   {
    "id": "ad",
    "n": "Anthony Davis",
-   "ovr": 95,
+   "ovr": 96,
    "pos": "PF",
    "alt": [
     "C"
@@ -608,12 +635,13 @@
     "dpe": 60,
     "atl": 82,
     "usg": 86
-   }
+   },
+   "base": 95
   },
   {
    "id": "tatum",
    "n": "Jayson Tatum",
-   "ovr": 95,
+   "ovr": 93,
    "pos": "SF",
    "alt": [
     "PF"
@@ -630,7 +658,8 @@
     "dpe": 58,
     "atl": 81,
     "usg": 86
-   }
+   },
+   "base": 95
   },
   {
    "id": "erving",
@@ -650,12 +679,13 @@
     "dpe": 73,
     "atl": 99,
     "usg": 78
-   }
+   },
+   "base": 94
   },
   {
    "id": "westbrook",
    "n": "Russell Westbrook",
-   "ovr": 94,
+   "ovr": 95,
    "pos": "PG",
    "alt": [
     "SG"
@@ -672,12 +702,13 @@
     "dpe": 66,
     "atl": 94,
     "usg": 86
-   }
+   },
+   "base": 94
   },
   {
    "id": "lillard",
    "n": "Damian Lillard",
-   "ovr": 94,
+   "ovr": 93,
    "pos": "PG",
    "alt": [
     "SG"
@@ -694,12 +725,13 @@
     "dpe": 45,
     "atl": 71,
     "usg": 97
-   }
+   },
+   "base": 94
   },
   {
    "id": "pippen",
    "n": "Scottie Pippen",
-   "ovr": 93,
+   "ovr": 96,
    "pos": "SF",
    "alt": [
     "PF",
@@ -717,12 +749,13 @@
     "dpe": 97,
     "atl": 82,
     "usg": 79
-   }
+   },
+   "base": 93
   },
   {
    "id": "ewing",
    "n": "Patrick Ewing",
-   "ovr": 93,
+   "ovr": 95,
    "pos": "C",
    "alt": [],
    "arc": "post-scorer",
@@ -737,7 +770,8 @@
     "dpe": 45,
     "atl": 60,
     "usg": 83
-   }
+   },
+   "base": 93
   },
   {
    "id": "mosesmalone",
@@ -759,7 +793,8 @@
     "dpe": 40,
     "atl": 70,
     "usg": 92
-   }
+   },
+   "base": 93
   },
   {
    "id": "mchale",
@@ -781,12 +816,13 @@
     "dpe": 41,
     "atl": 63,
     "usg": 82
-   }
+   },
+   "base": 93
   },
   {
    "id": "drexler",
    "n": "Clyde Drexler",
-   "ovr": 93,
+   "ovr": 92,
    "pos": "SG",
    "alt": [
     "SF"
@@ -803,12 +839,13 @@
     "dpe": 74,
     "atl": 99,
     "usg": 76
-   }
+   },
+   "base": 93
   },
   {
    "id": "kidd",
    "n": "Jason Kidd",
-   "ovr": 93,
+   "ovr": 92,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -823,12 +860,13 @@
     "dpe": 82,
     "atl": 57,
     "usg": 66
-   }
+   },
+   "base": 93
   },
   {
    "id": "nash",
    "n": "Steve Nash",
-   "ovr": 93,
+   "ovr": 90,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -843,12 +881,13 @@
     "dpe": 60,
     "atl": 54,
     "usg": 67
-   }
+   },
+   "base": 93
   },
   {
    "id": "payton",
    "n": "Gary Payton",
-   "ovr": 93,
+   "ovr": 91,
    "pos": "PG",
    "alt": [
     "SG"
@@ -865,12 +904,13 @@
     "dpe": 94,
     "atl": 70,
     "usg": 72
-   }
+   },
+   "base": 93
   },
   {
    "id": "isiah",
    "n": "Isiah Thomas",
-   "ovr": 93,
+   "ovr": 89,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -885,7 +925,8 @@
     "dpe": 66,
     "atl": 80,
     "usg": 67
-   }
+   },
+   "base": 93
   },
   {
    "id": "dhoward",
@@ -905,12 +946,13 @@
     "dpe": 43,
     "atl": 75,
     "usg": 60
-   }
+   },
+   "base": 93
   },
   {
    "id": "butler",
    "n": "Jimmy Butler",
-   "ovr": 93,
+   "ovr": 94,
    "pos": "SF",
    "alt": [
     "SG"
@@ -927,12 +969,13 @@
     "dpe": 97,
     "atl": 78,
     "usg": 74
-   }
+   },
+   "base": 93
   },
   {
    "id": "drose",
    "n": "Derrick Rose",
-   "ovr": 93,
+   "ovr": 92,
    "pos": "PG",
    "alt": [],
    "arc": "slasher",
@@ -947,7 +990,8 @@
     "dpe": 68,
     "atl": 97,
     "usg": 88
-   }
+   },
+   "base": 93
   },
   {
    "id": "kyrie",
@@ -969,7 +1013,8 @@
     "dpe": 46,
     "atl": 78,
     "usg": 90
-   }
+   },
+   "base": 93
   },
   {
    "id": "wemby",
@@ -991,12 +1036,13 @@
     "dpe": 43,
     "atl": 84,
     "usg": 70
-   }
+   },
+   "base": 93
   },
   {
    "id": "vcarter",
    "n": "Vince Carter",
-   "ovr": 93,
+   "ovr": 95,
    "pos": "SG",
    "alt": [
     "SF"
@@ -1013,12 +1059,13 @@
     "dpe": 69,
     "atl": 98,
     "usg": 82
-   }
+   },
+   "base": 93
   },
   {
    "id": "pgeorge",
    "n": "Paul George",
-   "ovr": 92,
+   "ovr": 96,
    "pos": "SF",
    "alt": [
     "SG"
@@ -1035,12 +1082,13 @@
     "dpe": 88,
     "atl": 72,
     "usg": 80
-   }
+   },
+   "base": 92
   },
   {
    "id": "melo",
    "n": "Carmelo Anthony",
-   "ovr": 92,
+   "ovr": 96,
    "pos": "SF",
    "alt": [
     "PF"
@@ -1057,12 +1105,13 @@
     "dpe": 58,
     "atl": 78,
     "usg": 89
-   }
+   },
+   "base": 92
   },
   {
    "id": "ghill",
    "n": "Grant Hill",
-   "ovr": 92,
+   "ovr": 90,
    "pos": "SF",
    "alt": [
     "SG"
@@ -1079,12 +1128,13 @@
     "dpe": 66,
     "atl": 70,
     "usg": 88
-   }
+   },
+   "base": 92
   },
   {
    "id": "cwebb",
    "n": "Chris Webber",
-   "ovr": 92,
+   "ovr": 91,
    "pos": "PF",
    "alt": [
     "C"
@@ -1101,12 +1151,13 @@
     "dpe": 55,
     "atl": 69,
     "usg": 80
-   }
+   },
+   "base": 92
   },
   {
    "id": "kemp",
    "n": "Shawn Kemp",
-   "ovr": 92,
+   "ovr": 90,
    "pos": "PF",
    "alt": [
     "C"
@@ -1123,12 +1174,13 @@
     "dpe": 40,
     "atl": 95,
     "usg": 58
-   }
+   },
+   "base": 92
   },
   {
    "id": "zo",
    "n": "Alonzo Mourning",
-   "ovr": 92,
+   "ovr": 94,
    "pos": "C",
    "alt": [
     "PF"
@@ -1145,12 +1197,13 @@
     "dpe": 45,
     "atl": 70,
     "usg": 64
-   }
+   },
+   "base": 92
   },
   {
    "id": "nique",
    "n": "Dominique Wilkins",
-   "ovr": 92,
+   "ovr": 93,
    "pos": "SF",
    "alt": [],
    "arc": "iso-scorer",
@@ -1165,12 +1218,13 @@
     "dpe": 54,
     "atl": 96,
     "usg": 94
-   }
+   },
+   "base": 92
   },
   {
    "id": "stockton",
    "n": "John Stockton",
-   "ovr": 92,
+   "ovr": 91,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -1185,12 +1239,13 @@
     "dpe": 80,
     "atl": 52,
     "usg": 64
-   }
+   },
+   "base": 92
   },
   {
    "id": "pierce",
    "n": "Paul Pierce",
-   "ovr": 91,
+   "ovr": 95,
    "pos": "SF",
    "alt": [
     "SG"
@@ -1207,7 +1262,8 @@
     "dpe": 60,
     "atl": 68,
     "usg": 86
-   }
+   },
+   "base": 91
   },
   {
    "id": "rayallen",
@@ -1229,12 +1285,13 @@
     "dpe": 54,
     "atl": 48,
     "usg": 75
-   }
+   },
+   "base": 91
   },
   {
    "id": "reggie",
    "n": "Reggie Miller",
-   "ovr": 91,
+   "ovr": 88,
    "pos": "SG",
    "alt": [],
    "arc": "sharpshooter",
@@ -1249,12 +1306,13 @@
     "dpe": 50,
     "atl": 50,
     "usg": 70
-   }
+   },
+   "base": 91
   },
   {
    "id": "penny",
    "n": "Penny Hardaway",
-   "ovr": 91,
+   "ovr": 88,
    "pos": "PG",
    "alt": [
     "SG"
@@ -1271,12 +1329,13 @@
     "dpe": 70,
     "atl": 76,
     "usg": 82
-   }
+   },
+   "base": 91
   },
   {
    "id": "amare",
    "n": "Amar'e Stoudemire",
-   "ovr": 91,
+   "ovr": 88,
    "pos": "PF",
    "alt": [
     "C"
@@ -1293,12 +1352,13 @@
     "dpe": 42,
     "atl": 91,
     "usg": 72
-   }
+   },
+   "base": 91
   },
   {
    "id": "booker",
    "n": "Devin Booker",
-   "ovr": 91,
+   "ovr": 92,
    "pos": "SG",
    "alt": [
     "PG"
@@ -1315,7 +1375,8 @@
     "dpe": 50,
     "atl": 67,
     "usg": 91
-   }
+   },
+   "base": 91
   },
   {
    "id": "antedwards",
@@ -1337,7 +1398,8 @@
     "dpe": 66,
     "atl": 88,
     "usg": 80
-   }
+   },
+   "base": 91
   },
   {
    "id": "worthy",
@@ -1359,7 +1421,8 @@
     "dpe": 65,
     "atl": 95,
     "usg": 70
-   }
+   },
+   "base": 90
   },
   {
    "id": "bking",
@@ -1379,12 +1442,13 @@
     "dpe": 49,
     "atl": 80,
     "usg": 87
-   }
+   },
+   "base": 90
   },
   {
    "id": "gasol",
    "n": "Pau Gasol",
-   "ovr": 90,
+   "ovr": 91,
    "pos": "PF",
    "alt": [
     "C"
@@ -1401,12 +1465,13 @@
     "dpe": 39,
     "atl": 53,
     "usg": 79
-   }
+   },
+   "base": 90
   },
   {
    "id": "yao",
    "n": "Yao Ming",
-   "ovr": 90,
+   "ovr": 92,
    "pos": "C",
    "alt": [],
    "arc": "post-scorer",
@@ -1421,12 +1486,13 @@
     "dpe": 39,
     "atl": 55,
     "usg": 77
-   }
+   },
+   "base": 90
   },
   {
    "id": "aldridge",
    "n": "LaMarcus Aldridge",
-   "ovr": 90,
+   "ovr": 89,
    "pos": "PF",
    "alt": [
     "C"
@@ -1443,12 +1509,13 @@
     "dpe": 37,
     "atl": 53,
     "usg": 76
-   }
+   },
+   "base": 90
   },
   {
    "id": "griffin",
    "n": "Blake Griffin",
-   "ovr": 90,
+   "ovr": 87,
    "pos": "PF",
    "alt": [
     "C"
@@ -1465,7 +1532,8 @@
     "dpe": 51,
     "atl": 88,
     "usg": 74
-   }
+   },
+   "base": 90
   },
   {
    "id": "boogie",
@@ -1487,7 +1555,8 @@
     "dpe": 35,
     "atl": 50,
     "usg": 82
-   }
+   },
+   "base": 90
   },
   {
    "id": "kat",
@@ -1509,12 +1578,13 @@
     "dpe": 40,
     "atl": 44,
     "usg": 76
-   }
+   },
+   "base": 90
   },
   {
    "id": "klay",
    "n": "Klay Thompson",
-   "ovr": 90,
+   "ovr": 93,
    "pos": "SG",
    "alt": [
     "SF"
@@ -1531,12 +1601,13 @@
     "dpe": 80,
     "atl": 49,
     "usg": 68
-   }
+   },
+   "base": 90
   },
   {
    "id": "mitchell",
    "n": "Donovan Mitchell",
-   "ovr": 90,
+   "ovr": 91,
    "pos": "SG",
    "alt": [
     "PG"
@@ -1553,12 +1624,13 @@
     "dpe": 50,
     "atl": 68,
     "usg": 88
-   }
+   },
+   "base": 90
   },
   {
    "id": "dwill",
    "n": "Deron Williams",
-   "ovr": 90,
+   "ovr": 87,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -1573,12 +1645,13 @@
     "dpe": 57,
     "atl": 54,
     "usg": 62
-   }
+   },
+   "base": 90
   },
   {
    "id": "arenas",
    "n": "Gilbert Arenas",
-   "ovr": 90,
+   "ovr": 89,
    "pos": "SG",
    "alt": [
     "PG"
@@ -1595,7 +1668,8 @@
     "dpe": 42,
     "atl": 60,
     "usg": 79
-   }
+   },
+   "base": 90
   },
   {
    "id": "manu",
@@ -1617,12 +1691,13 @@
     "dpe": 59,
     "atl": 72,
     "usg": 75
-   }
+   },
+   "base": 89
   },
   {
    "id": "broy",
    "n": "Brandon Roy",
-   "ovr": 89,
+   "ovr": 87,
    "pos": "SG",
    "alt": [
     "SF"
@@ -1639,12 +1714,13 @@
     "dpe": 43,
     "atl": 59,
     "usg": 77
-   }
+   },
+   "base": 89
   },
   {
    "id": "derozan",
    "n": "DeMar DeRozan",
-   "ovr": 89,
+   "ovr": 86,
    "pos": "SG",
    "alt": [
     "SF"
@@ -1661,12 +1737,13 @@
     "dpe": 41,
     "atl": 49,
     "usg": 77
-   }
+   },
+   "base": 89
   },
   {
    "id": "beal",
    "n": "Bradley Beal",
-   "ovr": 89,
+   "ovr": 87,
    "pos": "SG",
    "alt": [],
    "arc": "combo-guard",
@@ -1681,12 +1758,13 @@
     "dpe": 41,
     "atl": 59,
     "usg": 75
-   }
+   },
+   "base": 89
   },
   {
    "id": "jbrown",
    "n": "Jaylen Brown",
-   "ovr": 89,
+   "ovr": 93,
    "pos": "SG",
    "alt": [
     "SF"
@@ -1703,12 +1781,13 @@
     "dpe": 88,
     "atl": 71,
     "usg": 74
-   }
+   },
+   "base": 89
   },
   {
    "id": "trae",
    "n": "Trae Young",
-   "ovr": 89,
+   "ovr": 87,
    "pos": "PG",
    "alt": [],
    "arc": "scoring-pg",
@@ -1723,7 +1802,8 @@
     "dpe": 27,
     "atl": 61,
     "usg": 84
-   }
+   },
+   "base": 89
   },
   {
    "id": "brunson",
@@ -1745,7 +1825,8 @@
     "dpe": 46,
     "atl": 66,
     "usg": 87
-   }
+   },
+   "base": 89
   },
   {
    "id": "halliburton",
@@ -1767,7 +1848,8 @@
     "dpe": 54,
     "atl": 51,
     "usg": 63
-   }
+   },
+   "base": 89
   },
   {
    "id": "zion",
@@ -1789,12 +1871,13 @@
     "dpe": 52,
     "atl": 90,
     "usg": 80
-   }
+   },
+   "base": 89
   },
   {
    "id": "gobert",
    "n": "Rudy Gobert",
-   "ovr": 89,
+   "ovr": 87,
    "pos": "C",
    "alt": [],
    "arc": "defensive-anchor",
@@ -1809,12 +1892,13 @@
     "dpe": 41,
     "atl": 68,
     "usg": 30
-   }
+   },
+   "base": 89
   },
   {
    "id": "sheed",
    "n": "Rasheed Wallace",
-   "ovr": 89,
+   "ovr": 90,
    "pos": "PF",
    "alt": [
     "C"
@@ -1831,12 +1915,13 @@
     "dpe": 41,
     "atl": 43,
     "usg": 66
-   }
+   },
+   "base": 89
   },
   {
    "id": "brand",
    "n": "Elton Brand",
-   "ovr": 89,
+   "ovr": 88,
    "pos": "PF",
    "alt": [
     "C"
@@ -1853,12 +1938,13 @@
     "dpe": 50,
     "atl": 64,
     "usg": 72
-   }
+   },
+   "base": 89
   },
   {
    "id": "klove",
    "n": "Kevin Love",
-   "ovr": 89,
+   "ovr": 92,
    "pos": "PF",
    "alt": [
     "C"
@@ -1875,12 +1961,13 @@
     "dpe": 37,
     "atl": 43,
     "usg": 74
-   }
+   },
+   "base": 89
   },
   {
    "id": "bosh",
    "n": "Chris Bosh",
-   "ovr": 89,
+   "ovr": 90,
    "pos": "PF",
    "alt": [
     "C"
@@ -1897,12 +1984,13 @@
     "dpe": 37,
     "atl": 42,
     "usg": 72
-   }
+   },
+   "base": 89
   },
   {
    "id": "mullin",
    "n": "Chris Mullin",
-   "ovr": 89,
+   "ovr": 93,
    "pos": "SF",
    "alt": [
     "SG"
@@ -1919,12 +2007,13 @@
     "dpe": 51,
     "atl": 44,
     "usg": 72
-   }
+   },
+   "base": 89
   },
   {
    "id": "english",
    "n": "Alex English",
-   "ovr": 89,
+   "ovr": 88,
    "pos": "SF",
    "alt": [],
    "arc": "iso-scorer",
@@ -1939,12 +2028,13 @@
     "dpe": 47,
     "atl": 65,
     "usg": 84
-   }
+   },
+   "base": 89
   },
   {
    "id": "dantley",
    "n": "Adrian Dantley",
-   "ovr": 89,
+   "ovr": 85,
    "pos": "SF",
    "alt": [
     "PF"
@@ -1961,7 +2051,8 @@
     "dpe": 40,
     "atl": 52,
     "usg": 77
-   }
+   },
+   "base": 89
   },
   {
    "id": "simmons",
@@ -1984,12 +2075,13 @@
     "dpe": 85,
     "atl": 70,
     "usg": 77
-   }
+   },
+   "base": 88
   },
   {
    "id": "jwall",
    "n": "John Wall",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "PG",
    "alt": [],
    "arc": "slasher",
@@ -2004,7 +2096,8 @@
     "dpe": 65,
     "atl": 90,
     "usg": 74
-   }
+   },
+   "base": 88
   },
   {
    "id": "morant",
@@ -2024,12 +2117,13 @@
     "dpe": 56,
     "atl": 95,
     "usg": 82
-   }
+   },
+   "base": 88
   },
   {
    "id": "fox",
    "n": "De'Aaron Fox",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "PG",
    "alt": [
     "SG"
@@ -2046,7 +2140,8 @@
     "dpe": 58,
     "atl": 90,
     "usg": 78
-   }
+   },
+   "base": 88
   },
   {
    "id": "cade",
@@ -2068,7 +2163,8 @@
     "dpe": 63,
     "atl": 70,
     "usg": 76
-   }
+   },
+   "base": 88
   },
   {
    "id": "maxey",
@@ -2090,7 +2186,8 @@
     "dpe": 36,
     "atl": 56,
     "usg": 77
-   }
+   },
+   "base": 88
   },
   {
    "id": "middleton",
@@ -2112,7 +2209,8 @@
     "dpe": 56,
     "atl": 67,
     "usg": 66
-   }
+   },
+   "base": 88
   },
   {
    "id": "draymond",
@@ -2135,12 +2233,13 @@
     "dpe": 84,
     "atl": 64,
     "usg": 32
-   }
+   },
+   "base": 88
   },
   {
    "id": "rodman",
    "n": "Dennis Rodman",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "PF",
    "alt": [
     "C",
@@ -2158,12 +2257,13 @@
     "dpe": 88,
     "atl": 60,
     "usg": 23
-   }
+   },
+   "base": 88
   },
   {
    "id": "benwallace",
    "n": "Ben Wallace",
-   "ovr": 88,
+   "ovr": 89,
    "pos": "C",
    "alt": [
     "PF"
@@ -2180,7 +2280,8 @@
     "dpe": 38,
     "atl": 63,
     "usg": 20
-   }
+   },
+   "base": 88
   },
   {
    "id": "mutombo",
@@ -2200,12 +2301,13 @@
     "dpe": 39,
     "atl": 65,
     "usg": 30
-   }
+   },
+   "base": 88
   },
   {
    "id": "jermaine",
    "n": "Jermaine O'Neal",
-   "ovr": 88,
+   "ovr": 89,
    "pos": "PF",
    "alt": [
     "C"
@@ -2222,7 +2324,8 @@
     "dpe": 36,
     "atl": 62,
     "usg": 66
-   }
+   },
+   "base": 88
   },
   {
    "id": "sabonis-d",
@@ -2244,7 +2347,8 @@
     "dpe": 34,
     "atl": 38,
     "usg": 66
-   }
+   },
+   "base": 88
   },
   {
    "id": "bam",
@@ -2266,12 +2370,13 @@
     "dpe": 75,
     "atl": 64,
     "usg": 67
-   }
+   },
+   "base": 88
   },
   {
    "id": "mgasol",
    "n": "Marc Gasol",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "C",
    "alt": [],
    "arc": "playmaking-center",
@@ -2286,12 +2391,13 @@
     "dpe": 33,
     "atl": 36,
     "usg": 68
-   }
+   },
+   "base": 88
   },
   {
    "id": "thardaway",
    "n": "Tim Hardaway",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "PG",
    "alt": [
     "SG"
@@ -2308,12 +2414,13 @@
     "dpe": 38,
     "atl": 59,
     "usg": 82
-   }
+   },
+   "base": 88
   },
   {
    "id": "kjohnson",
    "n": "Kevin Johnson",
-   "ovr": 88,
+   "ovr": 86,
    "pos": "PG",
    "alt": [],
    "arc": "slasher",
@@ -2328,12 +2435,13 @@
     "dpe": 54,
     "atl": 93,
     "usg": 70
-   }
+   },
+   "base": 88
   },
   {
    "id": "billups",
    "n": "Chauncey Billups",
-   "ovr": 88,
+   "ovr": 89,
    "pos": "PG",
    "alt": [
     "SG"
@@ -2350,12 +2458,13 @@
     "dpe": 65,
     "atl": 48,
     "usg": 60
-   }
+   },
+   "base": 88
   },
   {
    "id": "marbury",
    "n": "Stephon Marbury",
-   "ovr": 88,
+   "ovr": 86,
    "pos": "PG",
    "alt": [],
    "arc": "scoring-pg",
@@ -2370,12 +2479,13 @@
     "dpe": 39,
     "atl": 60,
     "usg": 82
-   }
+   },
+   "base": 88
   },
   {
    "id": "dumars",
    "n": "Joe Dumars",
-   "ovr": 88,
+   "ovr": 89,
    "pos": "SG",
    "alt": [],
    "arc": "two-way-guard",
@@ -2390,7 +2500,8 @@
     "dpe": 92,
     "atl": 59,
     "usg": 62
-   }
+   },
+   "base": 88
   },
   {
    "id": "richmond",
@@ -2410,12 +2521,13 @@
     "dpe": 49,
     "atl": 45,
     "usg": 72
-   }
+   },
+   "base": 88
   },
   {
    "id": "peja",
    "n": "Peja Stojakovic",
-   "ovr": 88,
+   "ovr": 90,
    "pos": "SF",
    "alt": [
     "SG"
@@ -2432,12 +2544,13 @@
     "dpe": 50,
     "atl": 43,
     "usg": 68
-   }
+   },
+   "base": 88
   },
   {
    "id": "moncrief",
    "n": "Sidney Moncrief",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "SG",
    "alt": [],
    "arc": "two-way-guard",
@@ -2452,12 +2565,13 @@
     "dpe": 91,
     "atl": 63,
     "usg": 66
-   }
+   },
+   "base": 88
   },
   {
    "id": "parish",
    "n": "Robert Parish",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "C",
    "alt": [],
    "arc": "post-scorer",
@@ -2472,7 +2586,8 @@
     "dpe": 37,
     "atl": 53,
     "usg": 74
-   }
+   },
+   "base": 88
   },
   {
    "id": "lowry",
@@ -2494,7 +2609,8 @@
     "dpe": 72,
     "atl": 59,
     "usg": 62
-   }
+   },
+   "base": 87
   },
   {
    "id": "jrue",
@@ -2516,12 +2632,13 @@
     "dpe": 85,
     "atl": 59,
     "usg": 60
-   }
+   },
+   "base": 87
   },
   {
    "id": "rondo",
    "n": "Rajon Rondo",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -2536,12 +2653,13 @@
     "dpe": 84,
     "atl": 70,
     "usg": 55
-   }
+   },
+   "base": 87
   },
   {
    "id": "kemba",
    "n": "Kemba Walker",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "PG",
    "alt": [],
    "arc": "scoring-pg",
@@ -2556,7 +2674,8 @@
     "dpe": 38,
     "atl": 53,
     "usg": 80
-   }
+   },
+   "base": 87
   },
   {
    "id": "melo-ball",
@@ -2578,12 +2697,13 @@
     "dpe": 52,
     "atl": 49,
     "usg": 60
-   }
+   },
+   "base": 87
   },
   {
    "id": "jmurray",
    "n": "Jamal Murray",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "PG",
    "alt": [
     "SG"
@@ -2600,12 +2720,13 @@
     "dpe": 38,
     "atl": 54,
     "usg": 79
-   }
+   },
+   "base": 87
   },
   {
    "id": "lavine",
    "n": "Zach LaVine",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "SG",
    "alt": [
     "SF"
@@ -2622,12 +2743,13 @@
     "dpe": 40,
     "atl": 54,
     "usg": 71
-   }
+   },
+   "base": 87
   },
   {
    "id": "jjwilliams",
    "n": "Jalen Williams",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "SF",
    "alt": [
     "SG"
@@ -2644,12 +2766,13 @@
     "dpe": 75,
     "atl": 64,
     "usg": 68
-   }
+   },
+   "base": 87
   },
   {
    "id": "siakam",
    "n": "Pascal Siakam",
-   "ovr": 87,
+   "ovr": 85,
    "pos": "PF",
    "alt": [
     "SF"
@@ -2666,12 +2789,13 @@
     "dpe": 72,
     "atl": 64,
     "usg": 77
-   }
+   },
+   "base": 87
   },
   {
    "id": "banchero",
    "n": "Paolo Banchero",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "PF",
    "alt": [
     "SF"
@@ -2688,12 +2812,13 @@
     "dpe": 47,
     "atl": 61,
     "usg": 82
-   }
+   },
+   "base": 87
   },
   {
    "id": "mobley",
    "n": "Evan Mobley",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "PF",
    "alt": [
     "C"
@@ -2710,12 +2835,13 @@
     "dpe": 40,
     "atl": 62,
     "usg": 50
-   }
+   },
+   "base": 87
   },
   {
    "id": "jjj",
    "n": "Jaren Jackson Jr.",
-   "ovr": 87,
+   "ovr": 90,
    "pos": "PF",
    "alt": [
     "C"
@@ -2732,7 +2858,8 @@
     "dpe": 40,
     "atl": 63,
     "usg": 62
-   }
+   },
+   "base": 87
   },
   {
    "id": "porzingis",
@@ -2754,12 +2881,13 @@
     "dpe": 30,
     "atl": 56,
     "usg": 76
-   }
+   },
+   "base": 87
   },
   {
    "id": "markkanen",
    "n": "Lauri Markkanen",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "PF",
    "alt": [
     "SF"
@@ -2776,12 +2904,13 @@
     "dpe": 37,
     "atl": 40,
     "usg": 72
-   }
+   },
+   "base": 87
   },
   {
    "id": "chet",
    "n": "Chet Holmgren",
-   "ovr": 87,
+   "ovr": 89,
    "pos": "C",
    "alt": [
     "PF"
@@ -2798,12 +2927,13 @@
     "dpe": 36,
     "atl": 59,
     "usg": 48
-   }
+   },
+   "base": 87
   },
   {
    "id": "sengun",
    "n": "Alperen Sengun",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "C",
    "alt": [],
    "arc": "playmaking-center",
@@ -2818,7 +2948,8 @@
     "dpe": 34,
     "atl": 34,
     "usg": 66
-   }
+   },
+   "base": 87
   },
   {
    "id": "horford",
@@ -2840,12 +2971,13 @@
     "dpe": 25,
     "atl": 32,
     "usg": 60
-   }
+   },
+   "base": 87
   },
   {
    "id": "sabonis-a",
    "n": "Arvydas Sabonis",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "C",
    "alt": [],
    "arc": "playmaking-center",
@@ -2860,12 +2992,13 @@
     "dpe": 34,
     "atl": 33,
     "usg": 68
-   }
+   },
+   "base": 87
   },
   {
    "id": "dejordan",
    "n": "DeAndre Jordan",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "C",
    "alt": [],
    "arc": "rim-runner",
@@ -2880,12 +3013,13 @@
     "dpe": 33,
     "atl": 88,
     "usg": 30
-   }
+   },
+   "base": 87
   },
   {
    "id": "zbo",
    "n": "Zach Randolph",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "PF",
    "alt": [
     "C"
@@ -2902,7 +3036,8 @@
     "dpe": 33,
     "atl": 50,
     "usg": 72
-   }
+   },
+   "base": 87
   },
   {
    "id": "jamison",
@@ -2924,12 +3059,13 @@
     "dpe": 34,
     "atl": 42,
     "usg": 70
-   }
+   },
+   "base": 87
   },
   {
    "id": "boozer",
    "n": "Carlos Boozer",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "PF",
    "alt": [],
    "arc": "power-forward",
@@ -2944,12 +3080,13 @@
     "dpe": 49,
     "atl": 60,
     "usg": 68
-   }
+   },
+   "base": 87
   },
   {
    "id": "ljohnson",
    "n": "Larry Johnson",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "PF",
    "alt": [
     "SF"
@@ -2966,12 +3103,13 @@
     "dpe": 46,
     "atl": 62,
     "usg": 68
-   }
+   },
+   "base": 87
   },
   {
    "id": "mcdyess",
    "n": "Antonio McDyess",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "PF",
    "alt": [
     "C"
@@ -2988,12 +3126,13 @@
     "dpe": 45,
     "atl": 61,
     "usg": 68
-   }
+   },
+   "base": 87
   },
   {
    "id": "randle",
    "n": "Julius Randle",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "PF",
    "alt": [
     "C"
@@ -3010,12 +3149,13 @@
     "dpe": 48,
     "atl": 58,
     "usg": 72
-   }
+   },
+   "base": 87
   },
   {
    "id": "artest",
    "n": "Ron Artest",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "SF",
    "alt": [
     "PF"
@@ -3032,12 +3172,13 @@
     "dpe": 83,
     "atl": 60,
     "usg": 52
-   }
+   },
+   "base": 87
   },
   {
    "id": "kirilenko",
    "n": "Andrei Kirilenko",
-   "ovr": 87,
+   "ovr": 89,
    "pos": "SF",
    "alt": [
     "PF"
@@ -3054,12 +3195,13 @@
     "dpe": 76,
     "atl": 61,
     "usg": 40
-   }
+   },
+   "base": 87
   },
   {
    "id": "jjohnson",
    "n": "Joe Johnson",
-   "ovr": 87,
+   "ovr": 89,
    "pos": "SG",
    "alt": [
     "SF"
@@ -3076,12 +3218,13 @@
     "dpe": 48,
     "atl": 60,
     "usg": 79
-   }
+   },
+   "base": 87
   },
   {
    "id": "sprewell",
    "n": "Latrell Sprewell",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "SG",
    "alt": [
     "SF"
@@ -3098,12 +3241,13 @@
     "dpe": 75,
     "atl": 91,
     "usg": 68
-   }
+   },
+   "base": 87
   },
   {
    "id": "glenrice",
    "n": "Glen Rice",
-   "ovr": 87,
+   "ovr": 90,
    "pos": "SF",
    "alt": [
     "SG"
@@ -3120,7 +3264,8 @@
     "dpe": 45,
     "atl": 45,
     "usg": 72
-   }
+   },
+   "base": 87
   },
   {
    "id": "mprice",
@@ -3140,12 +3285,13 @@
     "dpe": 52,
     "atl": 45,
     "usg": 59
-   }
+   },
+   "base": 87
   },
   {
    "id": "mjohnson-m",
    "n": "Marques Johnson",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "SF",
    "alt": [
     "PF"
@@ -3162,12 +3308,13 @@
     "dpe": 56,
     "atl": 94,
     "usg": 70
-   }
+   },
+   "base": 87
   },
   {
    "id": "conley",
    "n": "Mike Conley",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -3182,12 +3329,13 @@
     "dpe": 48,
     "atl": 45,
     "usg": 56
-   }
+   },
+   "base": 86
   },
   {
    "id": "bibby",
    "n": "Mike Bibby",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "PG",
    "alt": [],
    "arc": "scoring-pg",
@@ -3202,12 +3350,13 @@
     "dpe": 37,
     "atl": 53,
     "usg": 78
-   }
+   },
+   "base": 86
   },
   {
    "id": "dragic",
    "n": "Goran Dragic",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "PG",
    "alt": [
     "SG"
@@ -3224,7 +3373,8 @@
     "dpe": 32,
     "atl": 50,
     "usg": 69
-   }
+   },
+   "base": 86
   },
   {
    "id": "garland",
@@ -3244,12 +3394,13 @@
     "dpe": 46,
     "atl": 45,
     "usg": 54
-   }
+   },
+   "base": 86
   },
   {
    "id": "fvv",
    "n": "Fred VanVleet",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "PG",
    "alt": [
     "SG"
@@ -3266,7 +3417,8 @@
     "dpe": 78,
     "atl": 58,
     "usg": 50
-   }
+   },
+   "base": 86
   },
   {
    "id": "dwhite",
@@ -3288,7 +3440,8 @@
     "dpe": 80,
     "atl": 56,
     "usg": 40
-   }
+   },
+   "base": 86
   },
   {
    "id": "bane",
@@ -3308,12 +3461,13 @@
     "dpe": 42,
     "atl": 45,
     "usg": 65
-   }
+   },
+   "base": 86
   },
   {
    "id": "oladipo",
    "n": "Victor Oladipo",
-   "ovr": 86,
+   "ovr": 89,
    "pos": "SG",
    "alt": [
     "PG"
@@ -3330,7 +3484,8 @@
     "dpe": 88,
     "atl": 56,
     "usg": 66
-   }
+   },
+   "base": 86
   },
   {
    "id": "cjmc",
@@ -3352,12 +3507,13 @@
     "dpe": 37,
     "atl": 56,
     "usg": 71
-   }
+   },
+   "base": 86
   },
   {
    "id": "monta",
    "n": "Monta Ellis",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "SG",
    "alt": [
     "PG"
@@ -3374,12 +3530,13 @@
     "dpe": 35,
     "atl": 58,
     "usg": 69
-   }
+   },
+   "base": 86
   },
   {
    "id": "rip",
    "n": "Richard Hamilton",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "SG",
    "alt": [],
    "arc": "midrange-scorer",
@@ -3394,12 +3551,13 @@
     "dpe": 37,
     "atl": 49,
     "usg": 69
-   }
+   },
+   "base": 86
   },
   {
    "id": "jrichardson",
    "n": "Jason Richardson",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "SG",
    "alt": [
     "SF"
@@ -3416,7 +3574,8 @@
     "dpe": 57,
     "atl": 95,
     "usg": 68
-   }
+   },
+   "base": 86
   },
   {
    "id": "houston",
@@ -3436,7 +3595,8 @@
     "dpe": 45,
     "atl": 45,
     "usg": 60
-   }
+   },
+   "base": 86
   },
   {
    "id": "finley",
@@ -3458,7 +3618,8 @@
     "dpe": 55,
     "atl": 91,
     "usg": 66
-   }
+   },
+   "base": 86
   },
   {
    "id": "hornacek",
@@ -3480,12 +3641,13 @@
     "dpe": 43,
     "atl": 40,
     "usg": 58
-   }
+   },
+   "base": 86
   },
   {
    "id": "iguodala",
    "n": "Andre Iguodala",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "SF",
    "alt": [
     "SG"
@@ -3502,12 +3664,13 @@
     "dpe": 89,
     "atl": 56,
     "usg": 45
-   }
+   },
+   "base": 86
   },
   {
    "id": "mbridges",
    "n": "Mikal Bridges",
-   "ovr": 86,
+   "ovr": 88,
    "pos": "SF",
    "alt": [
     "SG"
@@ -3524,12 +3687,13 @@
     "dpe": 76,
     "atl": 57,
     "usg": 48
-   }
+   },
+   "base": 86
   },
   {
    "id": "fwagner",
    "n": "Franz Wagner",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "SF",
    "alt": [
     "PF"
@@ -3546,12 +3710,13 @@
     "dpe": 72,
     "atl": 64,
     "usg": 70
-   }
+   },
+   "base": 86
   },
   {
    "id": "hayward",
    "n": "Gordon Hayward",
-   "ovr": 86,
+   "ovr": 88,
    "pos": "SF",
    "alt": [
     "SG"
@@ -3568,12 +3733,13 @@
     "dpe": 60,
     "atl": 62,
     "usg": 66
-   }
+   },
+   "base": 86
   },
   {
    "id": "granger",
    "n": "Danny Granger",
-   "ovr": 86,
+   "ovr": 88,
    "pos": "SF",
    "alt": [
     "PF"
@@ -3590,12 +3756,13 @@
     "dpe": 45,
     "atl": 40,
     "usg": 70
-   }
+   },
+   "base": 86
   },
   {
    "id": "rlewis",
    "n": "Rashard Lewis",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "SF",
    "alt": [
     "PF"
@@ -3612,7 +3779,8 @@
     "dpe": 35,
     "atl": 43,
     "usg": 64
-   }
+   },
+   "base": 86
   },
   {
    "id": "odom",
@@ -3634,7 +3802,8 @@
     "dpe": 60,
     "atl": 65,
     "usg": 73
-   }
+   },
+   "base": 86
   },
   {
    "id": "schrempf",
@@ -3656,7 +3825,8 @@
     "dpe": 33,
     "atl": 40,
     "usg": 62
-   }
+   },
+   "base": 86
   },
   {
    "id": "aguirre",
@@ -3676,12 +3846,13 @@
     "dpe": 46,
     "atl": 58,
     "usg": 79
-   }
+   },
+   "base": 86
   },
   {
    "id": "kiki",
    "n": "Kiki Vandeweghe",
-   "ovr": 86,
+   "ovr": 89,
    "pos": "SF",
    "alt": [
     "PF"
@@ -3698,12 +3869,13 @@
     "dpe": 46,
     "atl": 43,
     "usg": 72
-   }
+   },
+   "base": 86
   },
   {
    "id": "tchambers",
    "n": "Tom Chambers",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "PF",
    "alt": [
     "SF"
@@ -3720,7 +3892,8 @@
     "dpe": 32,
     "atl": 41,
     "usg": 72
-   }
+   },
+   "base": 86
   },
   {
    "id": "cummings",
@@ -3742,7 +3915,8 @@
     "dpe": 43,
     "atl": 58,
     "usg": 68
-   }
+   },
+   "base": 86
   },
   {
    "id": "vinbaker",
@@ -3764,7 +3938,8 @@
     "dpe": 47,
     "atl": 59,
     "usg": 66
-   }
+   },
+   "base": 86
   },
   {
    "id": "laimbeer",
@@ -3786,12 +3961,13 @@
     "dpe": 35,
     "atl": 44,
     "usg": 58
-   }
+   },
+   "base": 86
   },
   {
    "id": "sikma",
    "n": "Jack Sikma",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "C",
    "alt": [
     "PF"
@@ -3808,12 +3984,13 @@
     "dpe": 35,
     "atl": 38,
     "usg": 66
-   }
+   },
+   "base": 86
   },
   {
    "id": "camby",
    "n": "Marcus Camby",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "C",
    "alt": [
     "PF"
@@ -3830,12 +4007,13 @@
     "dpe": 38,
     "atl": 60,
     "usg": 34
-   }
+   },
+   "base": 86
   },
   {
    "id": "divac",
    "n": "Vlade Divac",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "C",
    "alt": [],
    "arc": "playmaking-center",
@@ -3850,7 +4028,8 @@
     "dpe": 27,
     "atl": 32,
     "usg": 65
-   }
+   },
+   "base": 86
   },
   {
    "id": "daugherty",
@@ -3870,7 +4049,8 @@
     "dpe": 32,
     "atl": 35,
     "usg": 66
-   }
+   },
+   "base": 86
   },
   {
    "id": "drummond",
@@ -3890,12 +4070,13 @@
     "dpe": 32,
     "atl": 87,
     "usg": 40
-   }
+   },
+   "base": 86
   },
   {
    "id": "chandler",
    "n": "Tyson Chandler",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "C",
    "alt": [],
    "arc": "rim-runner",
@@ -3910,12 +4091,13 @@
     "dpe": 33,
     "atl": 86,
     "usg": 27
-   }
+   },
+   "base": 86
   },
   {
    "id": "blopez",
    "n": "Brook Lopez",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "C",
    "alt": [],
    "arc": "stretch-center",
@@ -3930,7 +4112,8 @@
     "dpe": 30,
     "atl": 41,
     "usg": 66
-   }
+   },
+   "base": 86
   },
   {
    "id": "vucevic",
@@ -3952,7 +4135,8 @@
     "dpe": 31,
     "atl": 42,
     "usg": 68
-   }
+   },
+   "base": 86
   },
   {
    "id": "ayton",
@@ -3972,7 +4156,8 @@
     "dpe": 37,
     "atl": 47,
     "usg": 65
-   }
+   },
+   "base": 86
   },
   {
    "id": "aljefferson",
@@ -3994,12 +4179,13 @@
     "dpe": 37,
     "atl": 49,
     "usg": 67
-   }
+   },
+   "base": 86
   },
   {
    "id": "cheeks",
    "n": "Maurice Cheeks",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -4014,12 +4200,13 @@
     "dpe": 82,
     "atl": 62,
     "usg": 52
-   }
+   },
+   "base": 86
   },
   {
    "id": "strickland",
    "n": "Rod Strickland",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -4034,12 +4221,13 @@
     "dpe": 50,
     "atl": 45,
     "usg": 54
-   }
+   },
+   "base": 86
   },
   {
    "id": "marion",
    "n": "Shawn Marion",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4056,7 +4244,8 @@
     "dpe": 65,
     "atl": 65,
     "usg": 52
-   }
+   },
+   "base": 88
   },
   {
    "id": "cassell",
@@ -4078,7 +4267,8 @@
     "dpe": 46,
     "atl": 43,
     "usg": 53
-   }
+   },
+   "base": 85
   },
   {
    "id": "tporter",
@@ -4100,7 +4290,8 @@
     "dpe": 44,
     "atl": 45,
     "usg": 54
-   }
+   },
+   "base": 85
   },
   {
    "id": "blaylock",
@@ -4122,7 +4313,8 @@
     "dpe": 90,
     "atl": 52,
     "usg": 54
-   }
+   },
+   "base": 85
   },
   {
    "id": "nixon",
@@ -4144,7 +4336,8 @@
     "dpe": 46,
     "atl": 41,
     "usg": 53
-   }
+   },
+   "base": 85
   },
   {
    "id": "smart",
@@ -4166,7 +4359,8 @@
     "dpe": 90,
     "atl": 52,
     "usg": 32
-   }
+   },
+   "base": 85
   },
   {
    "id": "bledsoe",
@@ -4188,12 +4382,13 @@
     "dpe": 85,
     "atl": 89,
     "usg": 62
-   }
+   },
+   "base": 85
   },
   {
    "id": "tparker",
    "n": "Tony Parker",
-   "ovr": 89,
+   "ovr": 86,
    "pos": "PG",
    "alt": [],
    "arc": "slasher",
@@ -4208,7 +4403,8 @@
     "dpe": 54,
     "atl": 82,
     "usg": 76
-   }
+   },
+   "base": 89
   },
   {
    "id": "korver",
@@ -4230,7 +4426,8 @@
     "dpe": 42,
     "atl": 42,
     "usg": 45
-   }
+   },
+   "base": 85
   },
   {
    "id": "jrsmith",
@@ -4252,12 +4449,13 @@
     "dpe": 41,
     "atl": 41,
     "usg": 58
-   }
+   },
+   "base": 85
   },
   {
    "id": "ssmith",
    "n": "Steve Smith",
-   "ovr": 85,
+   "ovr": 86,
    "pos": "SG",
    "alt": [
     "SF"
@@ -4274,7 +4472,8 @@
     "dpe": 40,
     "atl": 42,
     "usg": 58
-   }
+   },
+   "base": 85
   },
   {
    "id": "hawkins-h",
@@ -4294,12 +4493,13 @@
     "dpe": 44,
     "atl": 39,
     "usg": 60
-   }
+   },
+   "base": 85
   },
   {
    "id": "majerle",
    "n": "Dan Majerle",
-   "ovr": 85,
+   "ovr": 87,
    "pos": "SG",
    "alt": [
     "SF"
@@ -4316,12 +4516,13 @@
     "dpe": 90,
     "atl": 50,
     "usg": 40
-   }
+   },
+   "base": 85
   },
   {
    "id": "cooper",
    "n": "Michael Cooper",
-   "ovr": 85,
+   "ovr": 87,
    "pos": "SG",
    "alt": [
     "SF"
@@ -4338,12 +4539,13 @@
     "dpe": 92,
     "atl": 53,
     "usg": 31
-   }
+   },
+   "base": 85
   },
   {
    "id": "arobertson",
    "n": "Alvin Robertson",
-   "ovr": 85,
+   "ovr": 86,
    "pos": "SG",
    "alt": [
     "PG"
@@ -4360,12 +4562,13 @@
     "dpe": 89,
     "atl": 52,
     "usg": 54
-   }
+   },
+   "base": 85
   },
   {
    "id": "battier",
    "n": "Shane Battier",
-   "ovr": 85,
+   "ovr": 89,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4382,12 +4585,13 @@
     "dpe": 93,
     "atl": 55,
     "usg": 27
-   }
+   },
+   "base": 85
   },
   {
    "id": "oganunoby",
    "n": "OG Anunoby",
-   "ovr": 85,
+   "ovr": 89,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4404,12 +4608,13 @@
     "dpe": 90,
     "atl": 52,
     "usg": 42
-   }
+   },
+   "base": 85
   },
   {
    "id": "wiggins",
    "n": "Andrew Wiggins",
-   "ovr": 85,
+   "ovr": 86,
    "pos": "SF",
    "alt": [
     "SG"
@@ -4426,12 +4631,13 @@
     "dpe": 75,
     "atl": 60,
     "usg": 68
-   }
+   },
+   "base": 85
   },
   {
    "id": "mpj",
    "n": "Michael Porter Jr.",
-   "ovr": 85,
+   "ovr": 86,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4448,7 +4654,8 @@
     "dpe": 41,
     "atl": 40,
     "usg": 58
-   }
+   },
+   "base": 85
   },
   {
    "id": "sbarnes",
@@ -4470,12 +4677,13 @@
     "dpe": 53,
     "atl": 64,
     "usg": 66
-   }
+   },
+   "base": 85
   },
   {
    "id": "jhoward",
    "n": "Josh Howard",
-   "ovr": 85,
+   "ovr": 86,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4492,12 +4700,13 @@
     "dpe": 75,
     "atl": 60,
     "usg": 62
-   }
+   },
+   "base": 85
   },
   {
    "id": "cbutler",
    "n": "Caron Butler",
-   "ovr": 85,
+   "ovr": 87,
    "pos": "SF",
    "alt": [
     "SG"
@@ -4514,12 +4723,13 @@
     "dpe": 72,
     "atl": 65,
     "usg": 66
-   }
+   },
+   "base": 85
   },
   {
    "id": "selliott",
    "n": "Sean Elliott",
-   "ovr": 85,
+   "ovr": 87,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4536,12 +4746,13 @@
     "dpe": 43,
     "atl": 39,
     "usg": 58
-   }
+   },
+   "base": 85
   },
   {
    "id": "wilkes",
    "n": "Jamaal Wilkes",
-   "ovr": 85,
+   "ovr": 86,
    "pos": "SF",
    "alt": [
     "SG"
@@ -4558,7 +4769,8 @@
     "dpe": 66,
     "atl": 90,
     "usg": 60
-   }
+   },
+   "base": 85
   },
   {
    "id": "tharris",
@@ -4580,7 +4792,8 @@
     "dpe": 60,
     "atl": 63,
     "usg": 64
-   }
+   },
+   "base": 85
   },
   {
    "id": "agordon",
@@ -4602,7 +4815,8 @@
     "dpe": 75,
     "atl": 95,
     "usg": 60
-   }
+   },
+   "base": 85
   },
   {
    "id": "horace",
@@ -4624,7 +4838,8 @@
     "dpe": 71,
     "atl": 53,
     "usg": 36
-   }
+   },
+   "base": 85
   },
   {
    "id": "horry",
@@ -4646,7 +4861,8 @@
     "dpe": 70,
     "atl": 54,
     "usg": 29
-   }
+   },
+   "base": 85
   },
   {
    "id": "buckwilliams",
@@ -4668,7 +4884,8 @@
     "dpe": 66,
     "atl": 56,
     "usg": 40
-   }
+   },
+   "base": 85
   },
   {
    "id": "bobbyjones",
@@ -4690,7 +4907,8 @@
     "dpe": 85,
     "atl": 55,
     "usg": 21
-   }
+   },
+   "base": 85
   },
   {
    "id": "othorpe",
@@ -4712,12 +4930,13 @@
     "dpe": 69,
     "atl": 59,
     "usg": 40
-   }
+   },
+   "base": 85
   },
   {
    "id": "mturner",
    "n": "Myles Turner",
-   "ovr": 85,
+   "ovr": 88,
    "pos": "C",
    "alt": [
     "PF"
@@ -4734,7 +4953,8 @@
     "dpe": 32,
     "atl": 58,
     "usg": 46
-   }
+   },
+   "base": 85
   },
   {
    "id": "capela",
@@ -4754,7 +4974,8 @@
     "dpe": 29,
     "atl": 88,
     "usg": 34
-   }
+   },
+   "base": 85
   },
   {
    "id": "sadams",
@@ -4774,7 +4995,8 @@
     "dpe": 34,
     "atl": 88,
     "usg": 23
-   }
+   },
+   "base": 85
   },
   {
    "id": "nurkic",
@@ -4794,7 +5016,8 @@
     "dpe": 35,
     "atl": 45,
     "usg": 64
-   }
+   },
+   "base": 85
   },
   {
    "id": "smits",
@@ -4814,7 +5037,8 @@
     "dpe": 31,
     "atl": 48,
     "usg": 68
-   }
+   },
+   "base": 85
   },
   {
    "id": "ilgauskas",
@@ -4834,7 +5058,8 @@
     "dpe": 32,
     "atl": 48,
     "usg": 65
-   }
+   },
+   "base": 85
   }
  ]
 }

@@ -72,7 +72,8 @@ export function installaRiserve() {
   riserve = PERC.map((pc) => {
     const set = {};
     for (const sl of SLOTS) {
-      const delRuolo = D.players.filter((p) => p.pos === sl).sort((a, b) => a.ovr - b.ovr);
+      // Sul livello di base, come l'anello debole: vedi engine.js.
+      const delRuolo = D.players.filter((p) => p.pos === sl).sort((a, b) => (a.base ?? a.ovr) - (b.base ?? b.ovr));
       set[sl] = delRuolo[Math.floor(delRuolo.length * pc)]?.id || delRuolo[0]?.id;
     }
     return set;

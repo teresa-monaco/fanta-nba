@@ -207,13 +207,18 @@ export function buildTeam(key, lineup, tactics) {
   // Il quinto uomo gioca gli stessi minuti della stella. Senza questo, il
   // modello premiava solo i picchi e comprare una superstar circondata da
   // gregari era sempre la mossa giusta: una risposta giusta uccide l'asta.
-  const sottoMedia = five.reduce((s, p) => s + Math.max(0, 89 - p.ovr), 0);
+  // Sul livello di BASE, non sull'overall mostrato: l'overall si ricava dal
+  // valore all'asta, che a sua volta passa di qui. Leggendo l'overall il
+  // calcolo girava in tondo e non si fermava mai (oltre 200 posti diversi a
+  // ogni giro). "base" e l'overall com'era prima di ricavarlo dal valore.
+  const livello = (p) => p.base ?? p.ovr;
+  const sottoMedia = five.reduce((s, p) => s + Math.max(0, 89 - livello(p)), 0);
   if (sottoMedia > 6) {
     const d = -(sottoMedia - 6) * 0.60;
     off += d * 0.55; def += d * 0.45;
-    const peggiore = five.slice().sort((x, y) => x.ovr - y.ovr)[0];
+    const peggiore = five.slice().sort((x, y) => livello(x) - livello(y))[0];
     factors.push({ key: 'anello-debole', side: key, delta: d, label: tr('Anello debole', 'Weak link'),
-      data: { worst: peggiore.n, n: five.filter((p) => p.ovr < 89).length } });
+      data: { worst: peggiore.n, n: five.filter((p) => livello(p) < 89).length } });
   }
 
   if (size < 13) {
