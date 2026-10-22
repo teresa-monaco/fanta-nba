@@ -95,7 +95,7 @@
   {
    "id": "magic",
    "n": "Magic Johnson",
-   "ovr": 97,
+   "ovr": 96,
    "pos": "PG",
    "alt": [
     "SF",
@@ -333,12 +333,12 @@
    "tm": "Thunder",
    "attrs": {
     "sco": 99,
-    "tre": 85,
+    "tre": 89,
     "pla": 72,
-    "reb": 55,
+    "reb": 52,
     "dif": 50,
-    "dpe": 68,
-    "atl": 82,
+    "dpe": 60,
+    "atl": 77,
     "usg": 99
    },
    "base": 96
@@ -482,7 +482,7 @@
   {
    "id": "luka",
    "n": "Luka Doncic",
-   "ovr": 97,
+   "ovr": 96,
    "pos": "PG",
    "alt": [
     "SG",
@@ -529,7 +529,7 @@
   {
    "id": "malone",
    "n": "Karl Malone",
-   "ovr": 92,
+   "ovr": 93,
    "pos": "PF",
    "alt": [
     "C"
@@ -664,7 +664,7 @@
   {
    "id": "erving",
    "n": "Julius Erving",
-   "ovr": 93,
+   "ovr": 95,
    "pos": "SF",
    "alt": [],
    "arc": "athletic-wing",
@@ -731,7 +731,7 @@
   {
    "id": "pippen",
    "n": "Scottie Pippen",
-   "ovr": 96,
+   "ovr": 97,
    "pos": "SF",
    "alt": [
     "PF",
@@ -755,7 +755,7 @@
   {
    "id": "ewing",
    "n": "Patrick Ewing",
-   "ovr": 95,
+   "ovr": 94,
    "pos": "C",
    "alt": [],
    "arc": "post-scorer",
@@ -874,7 +874,7 @@
    "tm": "Suns",
    "attrs": {
     "sco": 80,
-    "tre": 88,
+    "tre": 92,
     "pla": 98,
     "reb": 33,
     "dif": 20,
@@ -887,7 +887,7 @@
   {
    "id": "payton",
    "n": "Gary Payton",
-   "ovr": 91,
+   "ovr": 90,
    "pos": "PG",
    "alt": [
     "SG"
@@ -975,7 +975,7 @@
   {
    "id": "drose",
    "n": "Derrick Rose",
-   "ovr": 92,
+   "ovr": 91,
    "pos": "PG",
    "alt": [],
    "arc": "slasher",
@@ -1065,7 +1065,7 @@
   {
    "id": "pgeorge",
    "n": "Paul George",
-   "ovr": 96,
+   "ovr": 97,
    "pos": "SF",
    "alt": [
     "SG"
@@ -1111,7 +1111,7 @@
   {
    "id": "ghill",
    "n": "Grant Hill",
-   "ovr": 90,
+   "ovr": 91,
    "pos": "SF",
    "alt": [
     "SG"
@@ -1134,7 +1134,7 @@
   {
    "id": "cwebb",
    "n": "Chris Webber",
-   "ovr": 91,
+   "ovr": 92,
    "pos": "PF",
    "alt": [
     "C"
@@ -1180,7 +1180,7 @@
   {
    "id": "zo",
    "n": "Alonzo Mourning",
-   "ovr": 94,
+   "ovr": 93,
    "pos": "C",
    "alt": [
     "PF"
@@ -1224,7 +1224,7 @@
   {
    "id": "stockton",
    "n": "John Stockton",
-   "ovr": 91,
+   "ovr": 90,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -1268,7 +1268,7 @@
   {
    "id": "rayallen",
    "n": "Ray Allen",
-   "ovr": 91,
+   "ovr": 92,
    "pos": "SG",
    "alt": [
     "SF"
@@ -1278,7 +1278,7 @@
    "tm": "Sonics",
    "attrs": {
     "sco": 86,
-    "tre": 96,
+    "tre": 98,
     "pla": 49,
     "reb": 31,
     "dif": 21,
@@ -1291,7 +1291,7 @@
   {
    "id": "reggie",
    "n": "Reggie Miller",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "SG",
    "alt": [],
    "arc": "sharpshooter",
@@ -1404,7 +1404,7 @@
   {
    "id": "worthy",
    "n": "James Worthy",
-   "ovr": 89,
+   "ovr": 90,
    "pos": "SF",
    "alt": [
     "PF"
@@ -1538,7 +1538,7 @@
   {
    "id": "boogie",
    "n": "DeMarcus Cousins",
-   "ovr": 91,
+   "ovr": 90,
    "pos": "C",
    "alt": [
     "PF"
@@ -1561,7 +1561,7 @@
   {
    "id": "kat",
    "n": "Karl-Anthony Towns",
-   "ovr": 90,
+   "ovr": 89,
    "pos": "C",
    "alt": [
     "PF"
@@ -1571,7 +1571,7 @@
    "tm": "Timberwolves",
    "attrs": {
     "sco": 86,
-    "tre": 87,
+    "tre": 88,
     "pla": 44,
     "reb": 80,
     "dif": 55,
@@ -1808,7 +1808,7 @@
   {
    "id": "brunson",
    "n": "Jalen Brunson",
-   "ovr": 89,
+   "ovr": 88,
    "pos": "PG",
    "alt": [
     "SG"
@@ -1841,7 +1841,7 @@
    "tm": "Pacers",
    "attrs": {
     "sco": 74,
-    "tre": 82,
+    "tre": 90,
     "pla": 98,
     "reb": 26,
     "dif": 20,
@@ -1954,7 +1954,7 @@
    "tm": "Timberwolves",
    "attrs": {
     "sco": 84,
-    "tre": 91,
+    "tre": 86,
     "pla": 43,
     "reb": 90,
     "dif": 42,
@@ -1990,7 +1990,7 @@
   {
    "id": "mullin",
    "n": "Chris Mullin",
-   "ovr": 93,
+   "ovr": 91,
    "pos": "SF",
    "alt": [
     "SG"
@@ -2000,7 +2000,7 @@
    "tm": "Warriors",
    "attrs": {
     "sco": 86,
-    "tre": 97,
+    "tre": 88,
     "pla": 42,
     "reb": 29,
     "dif": 20,
@@ -2013,7 +2013,7 @@
   {
    "id": "english",
    "n": "Alex English",
-   "ovr": 88,
+   "ovr": 89,
    "pos": "SF",
    "alt": [],
    "arc": "iso-scorer",
@@ -2201,8 +2201,8 @@
    "era": "2020s",
    "tm": "Bucks",
    "attrs": {
-    "sco": 72,
-    "tre": 72,
+    "sco": 68,
+    "tre": 68,
     "pla": 55,
     "reb": 47,
     "dif": 32,
@@ -2307,7 +2307,7 @@
   {
    "id": "jermaine",
    "n": "Jermaine O'Neal",
-   "ovr": 90,
+   "ovr": 89,
    "pos": "PF",
    "alt": [
     "C"
@@ -2514,7 +2514,7 @@
    "tm": "Kings",
    "attrs": {
     "sco": 84,
-    "tre": 95,
+    "tre": 90,
     "pla": 40,
     "reb": 31,
     "dif": 20,
@@ -2527,7 +2527,7 @@
   {
    "id": "peja",
    "n": "Peja Stojakovic",
-   "ovr": 90,
+   "ovr": 91,
    "pos": "SF",
    "alt": [
     "SG"
@@ -2592,7 +2592,7 @@
   {
    "id": "lowry",
    "n": "Kyle Lowry",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "PG",
    "alt": [
     "SG"
@@ -2615,7 +2615,7 @@
   {
    "id": "jrue",
    "n": "Jrue Holiday",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "PG",
    "alt": [
     "SG"
@@ -2680,7 +2680,7 @@
   {
    "id": "melo-ball",
    "n": "LaMelo Ball",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "PG",
    "alt": [
     "SG"
@@ -2759,11 +2759,11 @@
    "tm": "Thunder",
    "attrs": {
     "sco": 72,
-    "tre": 64,
+    "tre": 60,
     "pla": 48,
     "reb": 40,
     "dif": 34,
-    "dpe": 75,
+    "dpe": 72,
     "atl": 64,
     "usg": 68
    },
@@ -2887,7 +2887,7 @@
   {
    "id": "markkanen",
    "n": "Lauri Markkanen",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "PF",
    "alt": [
     "SF"
@@ -3019,7 +3019,7 @@
   {
    "id": "zbo",
    "n": "Zach Randolph",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "PF",
    "alt": [
     "C"
@@ -3042,7 +3042,7 @@
   {
    "id": "jamison",
    "n": "Antawn Jamison",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "PF",
    "alt": [
     "SF"
@@ -3052,7 +3052,7 @@
    "tm": "Warriors",
    "attrs": {
     "sco": 82,
-    "tre": 88,
+    "tre": 80,
     "pla": 42,
     "reb": 62,
     "dif": 38,
@@ -3155,7 +3155,7 @@
   {
    "id": "artest",
    "n": "Ron Artest",
-   "ovr": 88,
+   "ovr": 89,
    "pos": "SF",
    "alt": [
     "PF"
@@ -3165,7 +3165,7 @@
    "tm": "Pacers",
    "attrs": {
     "sco": 60,
-    "tre": 64,
+    "tre": 63,
     "pla": 41,
     "reb": 48,
     "dif": 29,
@@ -3247,7 +3247,7 @@
   {
    "id": "glenrice",
    "n": "Glen Rice",
-   "ovr": 90,
+   "ovr": 91,
    "pos": "SF",
    "alt": [
     "SG"
@@ -3278,7 +3278,7 @@
    "tm": "Cavaliers",
    "attrs": {
     "sco": 78,
-    "tre": 82,
+    "tre": 90,
     "pla": 93,
     "reb": 28,
     "dif": 20,
@@ -3400,7 +3400,7 @@
   {
    "id": "fvv",
    "n": "Fred VanVleet",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "PG",
    "alt": [
     "SG"
@@ -3454,7 +3454,7 @@
    "tm": "Grizzlies",
    "attrs": {
     "sco": 78,
-    "tre": 95,
+    "tre": 92,
     "pla": 40,
     "reb": 28,
     "dif": 20,
@@ -3680,11 +3680,11 @@
    "tm": "Suns",
    "attrs": {
     "sco": 60,
-    "tre": 82,
+    "tre": 80,
     "pla": 42,
     "reb": 34,
     "dif": 26,
-    "dpe": 76,
+    "dpe": 72,
     "atl": 57,
     "usg": 48
    },
@@ -3725,12 +3725,12 @@
    "era": "2010s",
    "tm": "Jazz",
    "attrs": {
-    "sco": 78,
+    "sco": 76,
     "tre": 70,
     "pla": 50,
     "reb": 42,
     "dif": 31,
-    "dpe": 60,
+    "dpe": 55,
     "atl": 62,
     "usg": 66
    },
@@ -3749,7 +3749,7 @@
    "tm": "Pacers",
    "attrs": {
     "sco": 82,
-    "tre": 93,
+    "tre": 88,
     "pla": 38,
     "reb": 29,
     "dif": 20,
@@ -3818,7 +3818,7 @@
    "tm": "Sonics",
    "attrs": {
     "sco": 74,
-    "tre": 85,
+    "tre": 80,
     "pla": 43,
     "reb": 52,
     "dif": 41,
@@ -3852,7 +3852,7 @@
   {
    "id": "kiki",
    "n": "Kiki Vandeweghe",
-   "ovr": 89,
+   "ovr": 88,
    "pos": "SF",
    "alt": [
     "PF"
@@ -3862,7 +3862,7 @@
    "tm": "Nuggets",
    "attrs": {
     "sco": 86,
-    "tre": 91,
+    "tre": 80,
     "pla": 38,
     "reb": 24,
     "dif": 20,
@@ -4227,7 +4227,7 @@
   {
    "id": "marion",
    "n": "Shawn Marion",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4419,7 +4419,7 @@
    "tm": "Hawks",
    "attrs": {
     "sco": 62,
-    "tre": 92,
+    "tre": 97,
     "pla": 41,
     "reb": 27,
     "dif": 20,
@@ -4442,7 +4442,7 @@
    "tm": "Knicks",
    "attrs": {
     "sco": 72,
-    "tre": 95,
+    "tre": 88,
     "pla": 37,
     "reb": 26,
     "dif": 20,
@@ -4455,7 +4455,7 @@
   {
    "id": "ssmith",
    "n": "Steve Smith",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "SG",
    "alt": [
     "SF"
@@ -4465,7 +4465,7 @@
    "tm": "Hawks",
    "attrs": {
     "sco": 74,
-    "tre": 95,
+    "tre": 85,
     "pla": 38,
     "reb": 25,
     "dif": 20,
@@ -4532,7 +4532,7 @@
    "tm": "Lakers",
    "attrs": {
     "sco": 44,
-    "tre": 85,
+    "tre": 72,
     "pla": 41,
     "reb": 37,
     "dif": 26,
@@ -4591,7 +4591,7 @@
   {
    "id": "oganunoby",
    "n": "OG Anunoby",
-   "ovr": 89,
+   "ovr": 90,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4614,7 +4614,7 @@
   {
    "id": "wiggins",
    "n": "Andrew Wiggins",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "SF",
    "alt": [
     "SG"
@@ -4647,7 +4647,7 @@
    "tm": "Nuggets",
    "attrs": {
     "sco": 74,
-    "tre": 95,
+    "tre": 92,
     "pla": 39,
     "reb": 26,
     "dif": 20,
@@ -4683,7 +4683,7 @@
   {
    "id": "jhoward",
    "n": "Josh Howard",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4729,7 +4729,7 @@
   {
    "id": "selliott",
    "n": "Sean Elliott",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4739,7 +4739,7 @@
    "tm": "Spurs",
    "attrs": {
     "sco": 74,
-    "tre": 95,
+    "tre": 84,
     "pla": 39,
     "reb": 28,
     "dif": 20,
@@ -4821,7 +4821,7 @@
   {
    "id": "horace",
    "n": "Horace Grant",
-   "ovr": 85,
+   "ovr": 86,
    "pos": "PF",
    "alt": [
     "C"
@@ -4854,7 +4854,7 @@
    "tm": "Spurs",
    "attrs": {
     "sco": 43,
-    "tre": 83,
+    "tre": 76,
     "pla": 55,
     "reb": 32,
     "dif": 45,
