@@ -172,7 +172,7 @@
    "era": "1980s",
    "tm": "Lakers",
    "attrs": {
-    "sco": 96,
+    "sco": 98,
     "tre": 25,
     "pla": 56,
     "reb": 92,
@@ -286,7 +286,7 @@
    "era": "2020s",
    "tm": "Bucks",
    "attrs": {
-    "sco": 99,
+    "sco": 97,
     "tre": 30,
     "pla": 76,
     "reb": 75,
@@ -346,7 +346,7 @@
   {
    "id": "tmac",
    "n": "Tracy McGrady",
-   "ovr": 95,
+   "ovr": 94,
    "pos": "SG",
    "alt": [
     "SF"
@@ -355,7 +355,7 @@
    "era": "2000s",
    "tm": "Magic",
    "attrs": {
-    "sco": 99,
+    "sco": 97,
     "tre": 72,
     "pla": 68,
     "reb": 45,
@@ -369,7 +369,7 @@
   {
    "id": "dirk",
    "n": "Dirk Nowitzki",
-   "ovr": 94,
+   "ovr": 95,
    "pos": "PF",
    "alt": [
     "C"
@@ -378,7 +378,7 @@
    "era": "2000s",
    "tm": "Mavericks",
    "attrs": {
-    "sco": 91,
+    "sco": 94,
     "tre": 88,
     "pla": 52,
     "reb": 73,
@@ -401,7 +401,7 @@
    "era": "2000s",
    "tm": "Heat",
    "attrs": {
-    "sco": 94,
+    "sco": 95,
     "tre": 31,
     "pla": 85,
     "reb": 48,
@@ -1335,7 +1335,7 @@
   {
    "id": "amare",
    "n": "Amar'e Stoudemire",
-   "ovr": 88,
+   "ovr": 89,
    "pos": "PF",
    "alt": [
     "C"
@@ -1381,7 +1381,7 @@
   {
    "id": "antedwards",
    "n": "Anthony Edwards",
-   "ovr": 90,
+   "ovr": 91,
    "pos": "SG",
    "alt": [
     "SF"
@@ -1607,7 +1607,7 @@
   {
    "id": "mitchell",
    "n": "Donovan Mitchell",
-   "ovr": 91,
+   "ovr": 90,
    "pos": "SG",
    "alt": [
     "PG"
@@ -1616,7 +1616,7 @@
    "era": "2020s",
    "tm": "Cavaliers",
    "attrs": {
-    "sco": 95,
+    "sco": 93,
     "tre": 71,
     "pla": 72,
     "reb": 37,
@@ -1720,7 +1720,7 @@
   {
    "id": "derozan",
    "n": "DeMar DeRozan",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "SG",
    "alt": [
     "SF"
@@ -1729,7 +1729,7 @@
    "era": "2010s",
    "tm": "Raptors",
    "attrs": {
-    "sco": 92,
+    "sco": 89,
     "tre": 41,
     "pla": 62,
     "reb": 32,
@@ -2804,7 +2804,7 @@
    "era": "2020s",
    "tm": "Magic",
    "attrs": {
-    "sco": 92,
+    "sco": 87,
     "tre": 55,
     "pla": 62,
     "reb": 55,
@@ -3201,7 +3201,7 @@
   {
    "id": "jjohnson",
    "n": "Joe Johnson",
-   "ovr": 89,
+   "ovr": 88,
    "pos": "SG",
    "alt": [
     "SF"
@@ -3210,7 +3210,7 @@
    "era": "2000s",
    "tm": "Hawks",
    "attrs": {
-    "sco": 94,
+    "sco": 88,
     "tre": 77,
     "pla": 53,
     "reb": 34,
@@ -3224,7 +3224,7 @@
   {
    "id": "sprewell",
    "n": "Latrell Sprewell",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "SG",
    "alt": [
     "SF"
@@ -4227,7 +4227,7 @@
   {
    "id": "marion",
    "n": "Shawn Marion",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4455,7 +4455,7 @@
   {
    "id": "ssmith",
    "n": "Steve Smith",
-   "ovr": 85,
+   "ovr": 86,
    "pos": "SG",
    "alt": [
     "SF"
