@@ -62,7 +62,7 @@
     "tre": 25,
     "pla": 64,
     "reb": 94,
-    "dif": 99,
+    "dif": 96,
     "dpe": 47,
     "atl": 85,
     "usg": 99
@@ -95,7 +95,7 @@
   {
    "id": "magic",
    "n": "Magic Johnson",
-   "ovr": 96,
+   "ovr": 97,
    "pos": "PG",
    "alt": [
     "SF",
@@ -130,7 +130,7 @@
    "attrs": {
     "sco": 94,
     "tre": 70,
-    "pla": 95,
+    "pla": 97,
     "reb": 95,
     "dif": 57,
     "dpe": 40,
@@ -176,7 +176,7 @@
     "tre": 25,
     "pla": 56,
     "reb": 92,
-    "dif": 99,
+    "dif": 95,
     "dpe": 42,
     "atl": 80,
     "usg": 97
@@ -403,7 +403,7 @@
    "attrs": {
     "sco": 95,
     "tre": 31,
-    "pla": 85,
+    "pla": 82,
     "reb": 48,
     "dif": 55,
     "dpe": 76,
@@ -576,7 +576,7 @@
   {
    "id": "robinson",
    "n": "David Robinson",
-   "ovr": 97,
+   "ovr": 96,
    "pos": "C",
    "alt": [],
    "arc": "dominant-center",
@@ -696,7 +696,7 @@
    "attrs": {
     "sco": 93,
     "tre": 37,
-    "pla": 92,
+    "pla": 94,
     "reb": 64,
     "dif": 23,
     "dpe": 66,
@@ -708,7 +708,7 @@
   {
    "id": "lillard",
    "n": "Damian Lillard",
-   "ovr": 93,
+   "ovr": 94,
    "pos": "PG",
    "alt": [
     "SG"
@@ -910,7 +910,7 @@
   {
    "id": "isiah",
    "n": "Isiah Thomas",
-   "ovr": 88,
+   "ovr": 89,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -1042,7 +1042,7 @@
   {
    "id": "vcarter",
    "n": "Vince Carter",
-   "ovr": 94,
+   "ovr": 93,
    "pos": "SG",
    "alt": [
     "SF"
@@ -1056,7 +1056,7 @@
     "pla": 56,
     "reb": 43,
     "dif": 30,
-    "dpe": 69,
+    "dpe": 62,
     "atl": 98,
     "usg": 82
    },
@@ -1170,7 +1170,7 @@
     "tre": 20,
     "pla": 25,
     "reb": 84,
-    "dif": 84,
+    "dif": 76,
     "dpe": 40,
     "atl": 95,
     "usg": 58
@@ -1312,7 +1312,7 @@
   {
    "id": "penny",
    "n": "Penny Hardaway",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "PG",
    "alt": [
     "SG"
@@ -1326,7 +1326,7 @@
     "pla": 85,
     "reb": 42,
     "dif": 35,
-    "dpe": 70,
+    "dpe": 64,
     "atl": 76,
     "usg": 82
    },
@@ -1639,7 +1639,7 @@
    "attrs": {
     "sco": 78,
     "tre": 70,
-    "pla": 95,
+    "pla": 92,
     "reb": 32,
     "dif": 20,
     "dpe": 57,
@@ -1651,7 +1651,7 @@
   {
    "id": "arenas",
    "n": "Gilbert Arenas",
-   "ovr": 89,
+   "ovr": 90,
    "pos": "SG",
    "alt": [
     "PG"
@@ -1674,7 +1674,7 @@
   {
    "id": "manu",
    "n": "Manu Ginobili",
-   "ovr": 89,
+   "ovr": 90,
    "pos": "SG",
    "alt": [
     "SF"
@@ -1720,7 +1720,7 @@
   {
    "id": "derozan",
    "n": "DeMar DeRozan",
-   "ovr": 85,
+   "ovr": 86,
    "pos": "SG",
    "alt": [
     "SF"
@@ -1808,7 +1808,7 @@
   {
    "id": "brunson",
    "n": "Jalen Brunson",
-   "ovr": 88,
+   "ovr": 89,
    "pos": "PG",
    "alt": [
     "SG"
@@ -1842,7 +1842,7 @@
    "attrs": {
     "sco": 74,
     "tre": 90,
-    "pla": 98,
+    "pla": 95,
     "reb": 26,
     "dif": 20,
     "dpe": 54,
@@ -1877,7 +1877,7 @@
   {
    "id": "gobert",
    "n": "Rudy Gobert",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "C",
    "alt": [],
    "arc": "defensive-anchor",
@@ -2069,10 +2069,10 @@
    "attrs": {
     "sco": 72,
     "tre": 20,
-    "pla": 88,
+    "pla": 87,
     "reb": 52,
     "dif": 45,
-    "dpe": 85,
+    "dpe": 84,
     "atl": 70,
     "usg": 77
    },
@@ -2157,7 +2157,7 @@
    "attrs": {
     "sco": 84,
     "tre": 46,
-    "pla": 92,
+    "pla": 90,
     "reb": 54,
     "dif": 33,
     "dpe": 63,
@@ -2239,7 +2239,7 @@
   {
    "id": "rodman",
    "n": "Dennis Rodman",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "PF",
    "alt": [
     "C",
@@ -2263,7 +2263,7 @@
   {
    "id": "benwallace",
    "n": "Ben Wallace",
-   "ovr": 89,
+   "ovr": 88,
    "pos": "C",
    "alt": [
     "PF"
@@ -2353,7 +2353,7 @@
   {
    "id": "bam",
    "n": "Bam Adebayo",
-   "ovr": 89,
+   "ovr": 88,
    "pos": "C",
    "alt": [
     "PF"
@@ -2408,7 +2408,7 @@
    "attrs": {
     "sco": 87,
     "tre": 76,
-    "pla": 88,
+    "pla": 90,
     "reb": 26,
     "dif": 20,
     "dpe": 38,
@@ -2550,7 +2550,7 @@
   {
    "id": "moncrief",
    "n": "Sidney Moncrief",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "SG",
    "alt": [],
    "arc": "two-way-guard",
@@ -2571,7 +2571,7 @@
   {
    "id": "parish",
    "n": "Robert Parish",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "C",
    "alt": [],
    "arc": "post-scorer",
@@ -2582,7 +2582,7 @@
     "tre": 21,
     "pla": 44,
     "reb": 71,
-    "dif": 68,
+    "dif": 72,
     "dpe": 37,
     "atl": 53,
     "usg": 74
@@ -2592,7 +2592,7 @@
   {
    "id": "lowry",
    "n": "Kyle Lowry",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "PG",
    "alt": [
     "SG"
@@ -2615,7 +2615,7 @@
   {
    "id": "jrue",
    "n": "Jrue Holiday",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "PG",
    "alt": [
     "SG"
@@ -2691,7 +2691,7 @@
    "attrs": {
     "sco": 80,
     "tre": 75,
-    "pla": 94,
+    "pla": 90,
     "reb": 27,
     "dif": 20,
     "dpe": 52,
@@ -2841,7 +2841,7 @@
   {
    "id": "jjj",
    "n": "Jaren Jackson Jr.",
-   "ovr": 90,
+   "ovr": 89,
    "pos": "PF",
    "alt": [
     "C"
@@ -2854,7 +2854,7 @@
     "tre": 45,
     "pla": 25,
     "reb": 74,
-    "dif": 93,
+    "dif": 91,
     "dpe": 40,
     "atl": 63,
     "usg": 62
@@ -2910,7 +2910,7 @@
   {
    "id": "chet",
    "n": "Chet Holmgren",
-   "ovr": 89,
+   "ovr": 88,
    "pos": "C",
    "alt": [
     "PF"
@@ -2923,7 +2923,7 @@
     "tre": 47,
     "pla": 28,
     "reb": 74,
-    "dif": 88,
+    "dif": 85,
     "dpe": 36,
     "atl": 59,
     "usg": 48
@@ -2942,7 +2942,7 @@
    "attrs": {
     "sco": 76,
     "tre": 49,
-    "pla": 89,
+    "pla": 82,
     "reb": 71,
     "dif": 58,
     "dpe": 34,
@@ -2954,7 +2954,7 @@
   {
    "id": "horford",
    "n": "Al Horford",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "C",
    "alt": [
     "PF"
@@ -2986,7 +2986,7 @@
    "attrs": {
     "sco": 67,
     "tre": 46,
-    "pla": 87,
+    "pla": 80,
     "reb": 71,
     "dif": 65,
     "dpe": 34,
@@ -3009,7 +3009,7 @@
     "tre": 20,
     "pla": 24,
     "reb": 92,
-    "dif": 73,
+    "dif": 80,
     "dpe": 33,
     "atl": 88,
     "usg": 30
@@ -3019,7 +3019,7 @@
   {
    "id": "zbo",
    "n": "Zach Randolph",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "PF",
    "alt": [
     "C"
@@ -3042,7 +3042,7 @@
   {
    "id": "jamison",
    "n": "Antawn Jamison",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "PF",
    "alt": [
     "SF"
@@ -3279,7 +3279,7 @@
    "attrs": {
     "sco": 78,
     "tre": 90,
-    "pla": 93,
+    "pla": 90,
     "reb": 28,
     "dif": 20,
     "dpe": 52,
@@ -3379,7 +3379,7 @@
   {
    "id": "garland",
    "n": "Darius Garland",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -3388,7 +3388,7 @@
    "attrs": {
     "sco": 74,
     "tre": 77,
-    "pla": 92,
+    "pla": 86,
     "reb": 26,
     "dif": 20,
     "dpe": 46,
@@ -3400,7 +3400,7 @@
   {
    "id": "fvv",
    "n": "Fred VanVleet",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "PG",
    "alt": [
     "SG"
@@ -3467,7 +3467,7 @@
   {
    "id": "oladipo",
    "n": "Victor Oladipo",
-   "ovr": 89,
+   "ovr": 88,
    "pos": "SG",
    "alt": [
     "PG"
@@ -3481,7 +3481,7 @@
     "pla": 64,
     "reb": 33,
     "dif": 20,
-    "dpe": 88,
+    "dpe": 82,
     "atl": 56,
     "usg": 66
    },
@@ -3670,7 +3670,7 @@
   {
    "id": "mbridges",
    "n": "Mikal Bridges",
-   "ovr": 88,
+   "ovr": 89,
    "pos": "SF",
    "alt": [
     "SG"
@@ -3852,7 +3852,7 @@
   {
    "id": "kiki",
    "n": "Kiki Vandeweghe",
-   "ovr": 88,
+   "ovr": 89,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4003,7 +4003,7 @@
     "tre": 20,
     "pla": 23,
     "reb": 76,
-    "dif": 96,
+    "dif": 94,
     "dpe": 38,
     "atl": 60,
     "usg": 34
@@ -4022,7 +4022,7 @@
    "attrs": {
     "sco": 69,
     "tre": 45,
-    "pla": 92,
+    "pla": 82,
     "reb": 71,
     "dif": 54,
     "dpe": 27,
@@ -4043,7 +4043,7 @@
    "attrs": {
     "sco": 78,
     "tre": 44,
-    "pla": 89,
+    "pla": 75,
     "reb": 71,
     "dif": 58,
     "dpe": 32,
@@ -4097,7 +4097,7 @@
   {
    "id": "blopez",
    "n": "Brook Lopez",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "C",
    "alt": [],
    "arc": "stretch-center",
@@ -4194,7 +4194,7 @@
    "attrs": {
     "sco": 55,
     "tre": 38,
-    "pla": 94,
+    "pla": 88,
     "reb": 27,
     "dif": 20,
     "dpe": 82,
@@ -4215,7 +4215,7 @@
    "attrs": {
     "sco": 66,
     "tre": 56,
-    "pla": 95,
+    "pla": 90,
     "reb": 28,
     "dif": 20,
     "dpe": 50,
@@ -4261,7 +4261,7 @@
    "attrs": {
     "sco": 74,
     "tre": 56,
-    "pla": 85,
+    "pla": 82,
     "reb": 23,
     "dif": 20,
     "dpe": 46,
@@ -4284,7 +4284,7 @@
    "attrs": {
     "sco": 70,
     "tre": 74,
-    "pla": 91,
+    "pla": 85,
     "reb": 25,
     "dif": 20,
     "dpe": 44,
@@ -4330,7 +4330,7 @@
    "attrs": {
     "sco": 68,
     "tre": 51,
-    "pla": 90,
+    "pla": 86,
     "reb": 23,
     "dif": 20,
     "dpe": 46,
@@ -4356,7 +4356,7 @@
     "pla": 66,
     "reb": 32,
     "dif": 24,
-    "dpe": 90,
+    "dpe": 92,
     "atl": 52,
     "usg": 32
    },
@@ -4513,7 +4513,7 @@
     "pla": 41,
     "reb": 36,
     "dif": 23,
-    "dpe": 90,
+    "dpe": 85,
     "atl": 50,
     "usg": 40
    },
@@ -4582,7 +4582,7 @@
     "pla": 52,
     "reb": 35,
     "dif": 24,
-    "dpe": 93,
+    "dpe": 88,
     "atl": 55,
     "usg": 27
    },
@@ -4591,7 +4591,7 @@
   {
    "id": "oganunoby",
    "n": "OG Anunoby",
-   "ovr": 90,
+   "ovr": 89,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4605,7 +4605,7 @@
     "pla": 40,
     "reb": 37,
     "dif": 22,
-    "dpe": 90,
+    "dpe": 85,
     "atl": 52,
     "usg": 42
    },
@@ -4949,7 +4949,7 @@
     "tre": 42,
     "pla": 22,
     "reb": 72,
-    "dif": 93,
+    "dif": 90,
     "dpe": 32,
     "atl": 58,
     "usg": 46
@@ -4970,7 +4970,7 @@
     "tre": 20,
     "pla": 23,
     "reb": 85,
-    "dif": 69,
+    "dif": 75,
     "dpe": 29,
     "atl": 88,
     "usg": 34
