@@ -131,7 +131,7 @@
     "sco": 94,
     "tre": 70,
     "pla": 95,
-    "reb": 99,
+    "reb": 95,
     "dif": 57,
     "dpe": 40,
     "atl": 48,
@@ -186,7 +186,7 @@
   {
    "id": "hakeem",
    "n": "Hakeem Olajuwon",
-   "ovr": 98,
+   "ovr": 97,
    "pos": "C",
    "alt": [],
    "arc": "dominant-center",
@@ -196,7 +196,7 @@
     "sco": 96,
     "tre": 27,
     "pla": 59,
-    "reb": 98,
+    "reb": 94,
     "dif": 99,
     "dpe": 60,
     "atl": 78,
@@ -219,7 +219,7 @@
     "sco": 90,
     "tre": 22,
     "pla": 62,
-    "reb": 95,
+    "reb": 93,
     "dif": 90,
     "dpe": 49,
     "atl": 65,
@@ -242,7 +242,7 @@
     "sco": 84,
     "tre": 31,
     "pla": 70,
-    "reb": 88,
+    "reb": 92,
     "dif": 80,
     "dpe": 75,
     "atl": 80,
@@ -253,7 +253,7 @@
   {
    "id": "curry",
    "n": "Stephen Curry",
-   "ovr": 97,
+   "ovr": 98,
    "pos": "PG",
    "alt": [
     "SG"
@@ -369,7 +369,7 @@
   {
    "id": "dirk",
    "n": "Dirk Nowitzki",
-   "ovr": 95,
+   "ovr": 96,
    "pos": "PF",
    "alt": [
     "C"
@@ -461,7 +461,7 @@
   {
    "id": "embiid",
    "n": "Joel Embiid",
-   "ovr": 96,
+   "ovr": 95,
    "pos": "C",
    "alt": [],
    "arc": "dominant-center",
@@ -471,8 +471,8 @@
     "sco": 95,
     "tre": 52,
     "pla": 57,
-    "reb": 85,
-    "dif": 87,
+    "reb": 83,
+    "dif": 83,
     "dpe": 42,
     "atl": 76,
     "usg": 98
@@ -529,7 +529,7 @@
   {
    "id": "malone",
    "n": "Karl Malone",
-   "ovr": 93,
+   "ovr": 92,
    "pos": "PF",
    "alt": [
     "C"
@@ -541,7 +541,7 @@
     "sco": 95,
     "tre": 20,
     "pla": 62,
-    "reb": 93,
+    "reb": 89,
     "dif": 60,
     "dpe": 62,
     "atl": 77,
@@ -552,7 +552,7 @@
   {
    "id": "barkley",
    "n": "Charles Barkley",
-   "ovr": 92,
+   "ovr": 93,
    "pos": "PF",
    "alt": [
     "C",
@@ -755,7 +755,7 @@
   {
    "id": "ewing",
    "n": "Patrick Ewing",
-   "ovr": 94,
+   "ovr": 93,
    "pos": "C",
    "alt": [],
    "arc": "post-scorer",
@@ -788,7 +788,7 @@
     "sco": 90,
     "tre": 22,
     "pla": 52,
-    "reb": 95,
+    "reb": 98,
     "dif": 68,
     "dpe": 40,
     "atl": 70,
@@ -910,7 +910,7 @@
   {
    "id": "isiah",
    "n": "Isiah Thomas",
-   "ovr": 89,
+   "ovr": 88,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -941,7 +941,7 @@
     "sco": 70,
     "tre": 20,
     "pla": 28,
-    "reb": 91,
+    "reb": 96,
     "dif": 99,
     "dpe": 43,
     "atl": 75,
@@ -1157,7 +1157,7 @@
   {
    "id": "kemp",
    "n": "Shawn Kemp",
-   "ovr": 90,
+   "ovr": 89,
    "pos": "PF",
    "alt": [
     "C"
@@ -1169,7 +1169,7 @@
     "sco": 72,
     "tre": 20,
     "pla": 25,
-    "reb": 88,
+    "reb": 84,
     "dif": 84,
     "dpe": 40,
     "atl": 95,
@@ -1192,7 +1192,7 @@
     "sco": 74,
     "tre": 20,
     "pla": 29,
-    "reb": 87,
+    "reb": 83,
     "dif": 96,
     "dpe": 45,
     "atl": 70,
@@ -1203,7 +1203,7 @@
   {
    "id": "nique",
    "n": "Dominique Wilkins",
-   "ovr": 93,
+   "ovr": 94,
    "pos": "SF",
    "alt": [],
    "arc": "iso-scorer",
@@ -1854,7 +1854,7 @@
   {
    "id": "zion",
    "n": "Zion Williamson",
-   "ovr": 89,
+   "ovr": 88,
    "pos": "PF",
    "alt": [
     "C"
@@ -1866,7 +1866,7 @@
     "sco": 88,
     "tre": 25,
     "pla": 51,
-    "reb": 82,
+    "reb": 72,
     "dif": 61,
     "dpe": 52,
     "atl": 90,
@@ -1877,7 +1877,7 @@
   {
    "id": "gobert",
    "n": "Rudy Gobert",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "C",
    "alt": [],
    "arc": "defensive-anchor",
@@ -1887,7 +1887,7 @@
     "sco": 46,
     "tre": 20,
     "pla": 26,
-    "reb": 82,
+    "reb": 88,
     "dif": 92,
     "dpe": 41,
     "atl": 68,
@@ -1956,7 +1956,7 @@
     "sco": 84,
     "tre": 86,
     "pla": 43,
-    "reb": 90,
+    "reb": 93,
     "dif": 42,
     "dpe": 37,
     "atl": 43,
@@ -2215,7 +2215,7 @@
   {
    "id": "draymond",
    "n": "Draymond Green",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "PF",
    "alt": [
     "C",
@@ -2228,7 +2228,7 @@
     "sco": 48,
     "tre": 37,
     "pla": 63,
-    "reb": 87,
+    "reb": 80,
     "dif": 78,
     "dpe": 84,
     "atl": 64,
@@ -2239,7 +2239,7 @@
   {
    "id": "rodman",
    "n": "Dennis Rodman",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "PF",
    "alt": [
     "C",
@@ -2286,7 +2286,7 @@
   {
    "id": "mutombo",
    "n": "Dikembe Mutombo",
-   "ovr": 88,
+   "ovr": 89,
    "pos": "C",
    "alt": [],
    "arc": "defensive-anchor",
@@ -2296,7 +2296,7 @@
     "sco": 45,
     "tre": 20,
     "pla": 27,
-    "reb": 81,
+    "reb": 92,
     "dif": 99,
     "dpe": 39,
     "atl": 65,
@@ -2307,7 +2307,7 @@
   {
    "id": "jermaine",
    "n": "Jermaine O'Neal",
-   "ovr": 89,
+   "ovr": 90,
    "pos": "PF",
    "alt": [
     "C"
@@ -2353,7 +2353,7 @@
   {
    "id": "bam",
    "n": "Bam Adebayo",
-   "ovr": 88,
+   "ovr": 89,
    "pos": "C",
    "alt": [
     "PF"
@@ -2365,7 +2365,7 @@
     "sco": 70,
     "tre": 55,
     "pla": 35,
-    "reb": 75,
+    "reb": 80,
     "dif": 70,
     "dpe": 75,
     "atl": 64,
@@ -3008,7 +3008,7 @@
     "sco": 52,
     "tre": 20,
     "pla": 24,
-    "reb": 88,
+    "reb": 92,
     "dif": 73,
     "dpe": 33,
     "atl": 88,
@@ -3132,7 +3132,7 @@
   {
    "id": "randle",
    "n": "Julius Randle",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "PF",
    "alt": [
     "C"
@@ -3144,7 +3144,7 @@
     "sco": 82,
     "tre": 50,
     "pla": 47,
-    "reb": 86,
+    "reb": 82,
     "dif": 56,
     "dpe": 48,
     "atl": 58,
@@ -3647,7 +3647,7 @@
   {
    "id": "iguodala",
    "n": "Andre Iguodala",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "SF",
    "alt": [
     "SG"
@@ -4065,7 +4065,7 @@
     "sco": 58,
     "tre": 20,
     "pla": 20,
-    "reb": 90,
+    "reb": 95,
     "dif": 67,
     "dpe": 32,
     "atl": 87,
@@ -4076,7 +4076,7 @@
   {
    "id": "chandler",
    "n": "Tyson Chandler",
-   "ovr": 85,
+   "ovr": 86,
    "pos": "C",
    "alt": [],
    "arc": "rim-runner",
@@ -4086,7 +4086,7 @@
     "sco": 48,
     "tre": 20,
     "pla": 23,
-    "reb": 75,
+    "reb": 85,
     "dif": 80,
     "dpe": 33,
     "atl": 86,
@@ -4821,7 +4821,7 @@
   {
    "id": "horace",
    "n": "Horace Grant",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "PF",
    "alt": [
     "C"
@@ -4833,7 +4833,7 @@
     "sco": 50,
     "tre": 33,
     "pla": 56,
-    "reb": 86,
+    "reb": 80,
     "dif": 68,
     "dpe": 71,
     "atl": 53,
@@ -4879,7 +4879,7 @@
     "sco": 56,
     "tre": 31,
     "pla": 58,
-    "reb": 90,
+    "reb": 87,
     "dif": 53,
     "dpe": 66,
     "atl": 56,
@@ -4936,7 +4936,7 @@
   {
    "id": "mturner",
    "n": "Myles Turner",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "C",
    "alt": [
     "PF"
