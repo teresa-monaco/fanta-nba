@@ -369,7 +369,7 @@
   {
    "id": "dirk",
    "n": "Dirk Nowitzki",
-   "ovr": 93,
+   "ovr": 94,
    "pos": "PF",
    "alt": [
     "C"
@@ -664,7 +664,7 @@
   {
    "id": "erving",
    "n": "Julius Erving",
-   "ovr": 94,
+   "ovr": 93,
    "pos": "SF",
    "alt": [],
    "arc": "athletic-wing",
@@ -952,7 +952,7 @@
   {
    "id": "butler",
    "n": "Jimmy Butler",
-   "ovr": 94,
+   "ovr": 95,
    "pos": "SF",
    "alt": [
     "SG"
@@ -1042,7 +1042,7 @@
   {
    "id": "vcarter",
    "n": "Vince Carter",
-   "ovr": 95,
+   "ovr": 94,
    "pos": "SG",
    "alt": [
     "SF"
@@ -1291,7 +1291,7 @@
   {
    "id": "reggie",
    "n": "Reggie Miller",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "SG",
    "alt": [],
    "arc": "sharpshooter",
@@ -1358,7 +1358,7 @@
   {
    "id": "booker",
    "n": "Devin Booker",
-   "ovr": 92,
+   "ovr": 91,
    "pos": "SG",
    "alt": [
     "PG"
@@ -1381,7 +1381,7 @@
   {
    "id": "antedwards",
    "n": "Anthony Edwards",
-   "ovr": 91,
+   "ovr": 90,
    "pos": "SG",
    "alt": [
     "SF"
@@ -1404,7 +1404,7 @@
   {
    "id": "worthy",
    "n": "James Worthy",
-   "ovr": 90,
+   "ovr": 89,
    "pos": "SF",
    "alt": [
     "PF"
@@ -1448,7 +1448,7 @@
   {
    "id": "gasol",
    "n": "Pau Gasol",
-   "ovr": 91,
+   "ovr": 92,
    "pos": "PF",
    "alt": [
     "C"
@@ -1515,7 +1515,7 @@
   {
    "id": "griffin",
    "n": "Blake Griffin",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "PF",
    "alt": [
     "C"
@@ -1538,7 +1538,7 @@
   {
    "id": "boogie",
    "n": "DeMarcus Cousins",
-   "ovr": 90,
+   "ovr": 91,
    "pos": "C",
    "alt": [
     "PF"
@@ -2034,7 +2034,7 @@
   {
    "id": "dantley",
    "n": "Adrian Dantley",
-   "ovr": 85,
+   "ovr": 86,
    "pos": "SF",
    "alt": [
     "PF"
@@ -2102,7 +2102,7 @@
   {
    "id": "morant",
    "n": "Ja Morant",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "PG",
    "alt": [],
    "arc": "slasher",
@@ -2307,7 +2307,7 @@
   {
    "id": "jermaine",
    "n": "Jermaine O'Neal",
-   "ovr": 89,
+   "ovr": 90,
    "pos": "PF",
    "alt": [
     "C"
@@ -2506,7 +2506,7 @@
   {
    "id": "richmond",
    "n": "Mitch Richmond",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "SG",
    "alt": [],
    "arc": "sharpshooter",
@@ -2615,7 +2615,7 @@
   {
    "id": "jrue",
    "n": "Jrue Holiday",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "PG",
    "alt": [
     "SG"
@@ -2680,7 +2680,7 @@
   {
    "id": "melo-ball",
    "n": "LaMelo Ball",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "PG",
    "alt": [
     "SG"
@@ -2726,7 +2726,7 @@
   {
    "id": "lavine",
    "n": "Zach LaVine",
-   "ovr": 86,
+   "ovr": 87,
    "pos": "SG",
    "alt": [
     "SF"
@@ -2741,7 +2741,7 @@
     "reb": 31,
     "dif": 20,
     "dpe": 40,
-    "atl": 54,
+    "atl": 95,
     "usg": 71
    },
    "base": 87
@@ -3224,7 +3224,7 @@
   {
    "id": "sprewell",
    "n": "Latrell Sprewell",
-   "ovr": 88,
+   "ovr": 87,
    "pos": "SG",
    "alt": [
     "SF"
@@ -4227,7 +4227,7 @@
   {
    "id": "marion",
    "n": "Shawn Marion",
-   "ovr": 87,
+   "ovr": 88,
    "pos": "SF",
    "alt": [
     "PF"
@@ -4455,7 +4455,7 @@
   {
    "id": "ssmith",
    "n": "Steve Smith",
-   "ovr": 86,
+   "ovr": 85,
    "pos": "SG",
    "alt": [
     "SF"
@@ -4522,7 +4522,7 @@
   {
    "id": "cooper",
    "n": "Michael Cooper",
-   "ovr": 87,
+   "ovr": 86,
    "pos": "SG",
    "alt": [
     "SF"
