@@ -91,14 +91,16 @@ function frase(f, T, O, piuPesante) {
 
 // pA: la probabilita che A vincesse la serie, dalle stesse simulazioni delle
 // quote (la passa chi chiama, che le ha gia).
-export function analisiSerie(A, B, f, pA) {
+// opts.quadro = false toglie la prima voce: nel riepilogo lo dice gia la
+// barra "sulla carta" nel tabellone.
+export function analisiSerie(A, B, f, pA, opts = {}) {
   const W = f.winner === A.key ? A : B;
   const L = W === A ? B : A;
   const m = f.matchup || {};
   const out = [];
 
   // 1. Il quadro: chi partiva favorito, e da dove veniva il vantaggio.
-  if (typeof pA === 'number' && m.offA != null) {
+  if (opts.quadro !== false && typeof pA === 'number' && m.offA != null) {
     const pW = Math.round((W === A ? pA : 1 - pA) * 100);
     const fav = pW >= 50 ? W : L;
     const pFav = Math.max(pW, 100 - pW);

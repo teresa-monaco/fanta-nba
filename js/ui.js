@@ -1033,7 +1033,7 @@ function serieInCorso(s, session, x, T, isHost, ordine) {
   const idx = v && v.serie === x.id && v.n === n && v.g >= 0 && v.g < n ? v.g : n - 1;
 
   let out = `<div class="card serie attiva" id="serie-${esc(x.id)}" data-serie-attiva="${esc(x.id)}">`;
-  out += serieBoard(x.titolo, A, B, f, idx);
+  out += serieBoard(x.titolo, A, B, f, idx, ['4-0', '4-1', '4-2', '4-3'].reduce((t, k) => t + quote.esiti[k].p, 0));
   if (n === 0) {
     out += confronto(A, B);
     out += lavagna(s, session, x, A, B, quote);
@@ -1052,7 +1052,11 @@ function serieInCorso(s, session, x, T, isHost, ordine) {
 // schermo: e li che il numero sale quando si scopre una gara nuova. I sette
 // pallini sono le gare: del colore di chi l'ha vinta, e toccandone uno il
 // riquadro sotto mostra quella gara.
-function serieBoard(titolo, A, B, f, idx) {
+//
+// A SERIE CHIUSA I PALLINI LASCIANO IL POSTO ALLA BARRA "SULLA CARTA": quante
+// volte passava ciascuna, nei colori delle squadre e sopra i loro nomi. Stessa
+// altezza dei pallini, cosi il tabellone non salta quando la serie si chiude.
+function serieBoard(titolo, A, B, f, idx, pA) {
   const n = f.games.length;
   const g = f.games[idx] || null;
   const g7 = (f.wins.a === 3 && f.wins.b === 3) || n === 7;
@@ -1067,8 +1071,8 @@ function serieBoard(titolo, A, B, f, idx) {
       <div class="nm">${esc(X.name)}</div></div>`;
   return `<div class="jumbo serie-jumbo ${g7 ? 'gara7' : ''}">
     <div class="tabellina"><span>${esc(titolo)}</span>
-      <span>${f.done ? tr('chiusa', 'final') : (g7 ? tr('GARA 7', 'GAME 7') : (n ? tr(`gara ${n} di 7`, `game ${n} of 7`) : tr('si parte', 'tip-off')))}</span></div>
-    <div class="pallini" aria-label="${f.wins.a} ${tr('a', 'to')} ${f.wins.b}">${dots}</div>
+      <span>${f.done ? tr('chiusa · sulla carta', 'final · on paper') : (g7 ? tr('GARA 7', 'GAME 7') : (n ? tr(`gara ${n} di 7`, `game ${n} of 7`) : tr('si parte', 'tip-off')))}</span></div>
+    ${f.done ? barraPronostico(A, B, pA) : `<div class="pallini" aria-label="${f.wins.a} ${tr('a', 'to')} ${f.wins.b}">${dots}</div>`}
     <div class="punteggio" ${g ? `data-gara="${idx + 1}"` : ''}>
       ${lato(A, g?.scoreA, g && g.scoreA > g.scoreB)}
       <div class="serie-conto">${f.wins.a}<span>-</span>${f.wins.b}</div>
@@ -1196,6 +1200,7 @@ function riepilogo(s, x, A, B, f, quote, T) {
   const { tot, top } = marcatoriDi(f);
   const marc = top.map((id) => quote.marcatori.find((m) => m.id === id)).filter(Boolean);
   const e = `${f.wins.a}-${f.wins.b}`;
+  const pA = ['4-0', '4-1', '4-2', '4-3'].reduce((t, k) => t + quote.esiti[k].p, 0);
   return `<div class="riepilogo t-${W.key}">
     <div class="rp-tit">${x.finale ? tr('Campione', 'Champion') : (x.id === 'third' ? tr('Terzo posto', 'Third place') : tr('Passa il turno', 'Advances'))}</div>
     <div class="rp-n"><span class="dot"></span>${esc(W.name)} <span class="rp-c">${wv}-${wp}</span></div>
@@ -1207,11 +1212,22 @@ function riepilogo(s, x, A, B, f, quote, T) {
       <div><span>${tr('Esito', 'Result')}</span><b>${esc(esitoDetto(e, A, B))}</b><i>${tr('era a', 'was at')} ${fq(quote.esiti[e].q)}</i></div>
     </div>
     ${pronosticiSerie(s, x, A, B, f, quote)}
-    <details class="why"><summary>${tr('Perché ha vinto', 'Why it went to')} ${esc(W.name)}</summary>
-      <ul>${analisiSerie(A, B, f, ['4-0', '4-1', '4-2', '4-3'].reduce((t, k) => t + quote.esiti[k].p, 0))
-        .map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
-      <p class="tiny muted">${tr('I numeri fra parentesi sono il peso sul valore d\'attacco o di difesa; le squadre stanno fra 50 e 90.', 'The numbers in brackets are the weight on the offense or defense rating; teams range from 50 to 90.')}</p></details>
-    ${refertoCard(A, B, f)}
+    ${refertoCard(A, B, f, pA, W)}
+  </div>`;
+}
+
+// QUANTE VOLTE PASSAVA, A SERIE CHIUSA. Una barra nei colori delle due
+// squadre, lunga quanto la probabilita di ciascuna, col numero dentro: si
+// vede al volo se ha vinto la favorita o se e stata una rapina. E la stessa
+// probabilita delle quote, quindi non puo contraddire il resto della pagina.
+// Sta nel tabellone al posto dei pallini, con A a sinistra e B a destra come
+// i punteggi sotto: i nomi non servono, li danno i colori e la posizione.
+function barraPronostico(A, B, pA) {
+  const a = Math.round(pA * 100), b = 100 - a;
+  const fav = a >= b ? A : B;
+  const lato = (X, p, cls) => `<div class="pb-lato t-${X.key} ${cls}" style="flex-basis:${p}%">${p >= 12 ? `<b>${p}%</b>` : ''}</div>`;
+  return `<div class="pb" title="${tr('Sulla carta', 'On paper')}: ${esc(fav.name)} ${tr('passava', 'went through')} ${Math.max(a, b)} ${tr('volte su 100', 'times in 100')}">
+    <div class="pb-barra" aria-label="${tr('Sulla carta', 'On paper')}: ${esc(fav.name)} ${Math.max(a, b)}%">${lato(A, a, 'a')}${lato(B, b, 'b')}</div>
   </div>`;
 }
 
@@ -1374,11 +1390,12 @@ export function rivelaCampione(s) {
   </div>`;
 }
 
-// Il referto: quanto sono valse le scelte tecniche, in punti a partita.
-// Senza questo nessuna delle cinque scelte si impara mai — si tirano a caso
-// per sempre e tanto valeva non chiederle. Sta chiuso in un <details> perche
-// e la parte che si legge dopo, non durante.
-function refertoCard(A, B, f) {
+// IL REFERTO PARTITA: perche ha vinto chi ha vinto, e quanto sono valse le
+// scelte tecniche, in punti a partita. Erano due tendine separate una sotto
+// l'altra e si leggevano insieme: adesso sono una. Senza la parte sulle
+// scelte nessuna si impara mai — si tirano a caso per sempre. Sta chiuso in
+// un <details> perche e la parte che si legge dopo, non durante.
+function refertoCard(A, B, f, pA, W) {
   const blocchi = [A, B].map((T) => {
     const O = T === A ? B : A;
     let ref;
@@ -1404,11 +1421,18 @@ function refertoCard(A, B, f) {
     </div>`;
   }).join('');
 
-  return `<details class="referto-wrap mt"><summary>${tr('Il referto — hanno pagato le tue scelte?', 'The report — did your choices pay off?')}</summary>
-    <p class="tiny muted mt">${tr(`Punti a partita rispetto a scegliere a caso, contro <i>questo</i> avversario.
+  // Prima le scelte (la domanda che ognuno si fa: ho sbagliato io?), poi il
+  // perche della serie.
+  return `<details class="referto-wrap mt"><summary>${tr('Referto partita', 'Match report')}</summary>
+    <div class="ref-tit">${tr('Hanno pagato le scelte?', 'Did the choices pay off?')}</div>
+    <p class="tiny muted">${tr(`Punti a partita rispetto a scegliere a caso, contro <i>questo</i> avversario.
     Contro un altro le risposte cambiano.`, `Points per game compared to random picks, against <i>this</i> opponent.
     Against another one the answers change.`)}</p>
-    ${blocchi}</details>`;
+    ${blocchi}
+    <div class="ref-tit">${tr('Perché ha vinto', 'Why it went to')} ${esc(W.name)}</div>
+    <ul class="why-lista">${analisiSerie(A, B, f, pA, { quadro: false }).map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
+    <p class="tiny muted">${tr('I numeri fra parentesi sono il peso sul valore d\'attacco o di difesa; le squadre stanno fra 50 e 90.', 'The numbers in brackets are the weight on the offense or defense rating; teams range from 50 to 90.')}</p>
+    </details>`;
 }
 
 /* ---------- Pronostici ---------- */

@@ -504,9 +504,9 @@ ok(clean() && has('class="riepilogo', 'Passa il turno', 'MVP della serie', 'Migl
 ok(has('data-serie-attiva="0-0"'), 'e si resta li: non si passa da soli alla serie dopo');
 ok(has('data-act="avanti-serie" data-next="0-1"') || /data-act="avanti-serie"\s+data-next="0-1"/.test(html()), 'chi ospita ha "Avanti: Semifinale 2"');
 // Il referto: senza, nessuna delle scelte tecniche si impara mai.
-ok(has('Il referto') && has('class="referto"', 'Strategia', 'Ritmo', 'Allenatore', 'Primo violino'),
+ok(has('Referto partita') && has('class="referto"', 'Strategia', 'Ritmo', 'Allenatore', 'Primo violino'),
   'nel riepilogo c\'e il referto tattico, con tutte e quattro le scelte');
-ok(html().indexOf('Perché ha vinto') < html().indexOf('Il referto'), 'dopo la spiegazione: prima cosa e successo, poi di chi e la colpa');
+ok(html().indexOf('Hanno pagato le scelte?') < html().indexOf('Perché ha vinto'), 'nel referto prima le scelte, poi perche ha vinto');
 ok(html().includes('unti a partita rispetto a scegliere a caso'), 'il referto dichiara l\'unita: punti a partita');
 {
   // Il miglior marcatore del riepilogo e davvero quello col totale piu alto.
@@ -519,10 +519,17 @@ ok(html().includes('unti a partita rispetto a scegliere a caso'), 'il referto di
 // IL PERCHE, CON I NUMERI: chi partiva favorito, i fattori con i giocatori
 // che li hanno prodotti e il loro peso, la panchina.
 {
-  const perche = (html().match(/<details class="why">([\s\S]*?)<\/details>/) || [])[1] || '';
+  // Il perche ora vive dentro il referto partita, insieme alle scelte.
+  const perche = (html().match(/<ul class="why-lista">([\s\S]*?)<\/ul>/) || [])[1] || '';
+  const barra = (html().match(/<div class="pb"([\s\S]*?)<div class="punteggio"/) || [])[1] || '';
+  ok(/volte su 100/.test(barra) && /flex-basis:\d+%/.test(barra), 'la barra dice quante volte passava, nei colori delle squadre');
+  const jumbo = (html().match(/<div class="jumbo serie-jumbo[\s\S]*?<div class="punteggio"/) || [''])[0];
+  ok(jumbo.includes('class="pb"') && !jumbo.includes('class="pallini"'), 'a serie chiusa la barra sta nel tabellone al posto dei pallini');
+  ok(/<summary>Referto partita<\/summary>/.test(html()), 'perche ha vinto e scelte stanno in una tendina sola: Referto partita');
   const voci = (perche.match(/<li>/g) || []).length;
-  ok(/volte su 100/.test(perche), 'il perche dice chi partiva favorito e di quanto');
-  ok(voci >= 3, 'e spiega con piu motivi', `${voci} voci`);
+  // Chi partiva favorito lo dice la barra nel tabellone: nel perche non si ripete.
+  ok(!/volte su 100/.test(perche) && /volte su 100/.test(barra), 'chi partiva favorito lo dice la barra, il perche non lo ripete');
+  ok(voci >= 2, 'e spiega con piu motivi', `${voci} voci`);
   const nomi = [...T[costruisciBracket(F.state.po, T)[0][0].a].five, ...T[costruisciBracket(F.state.po, T)[0][0].b].five].map((p) => esc(p.n));
   ok(nomi.some((n) => perche.includes(n)), 'citando i giocatori che hanno pesato');
   ok(/\([+−]\d+,\d\)/.test(perche), 'con il peso di ogni fattore');

@@ -5,8 +5,9 @@
 // score reale. Il sarcasmo sta nel COME si dice, mai nel COSA: se il testo
 // sfotte il tuo spacing, quel buco nello spacing esiste nei numeri.
 //
-// Tono: roasting. Si prende in giro la squadra, la scelta tattica e la
-// prestazione in campo — mai la persona.
+// Tono: roasting senza freni, quello delle battute di gara 7 su Fabio. Si
+// sfotte chi ha costruito e schierato la squadra (l'asta, le scelte, la
+// panchina) per nome. Il limite resta il gioco: niente fuori dal tavolo.
 
 import { makeRng, hashStr } from './core.js';
 import { EN } from './lingua.js';
@@ -155,74 +156,76 @@ const FACTOR_LINES = EN ? ENG.FACTOR_LINES : {
 };
 
 /* ---------- Aperture, per quanto è finita male ---------- */
+// Da qui in giu si sfotte chi ha COSTRUITO e SCHIERATO la squadra: {W} e {L}
+// sono i nomi di chi siede al tavolo. Il tono e quello di gara 7 su Fabio.
 
 const OPEN_BLOWOUT = EN ? ENG.OPEN_BLOWOUT : [
-  'Vergognoso.',
-  'Chiamatela pure partita, se vi fa dormire meglio.',
-  'Finita nel riscaldamento. Il resto è stato accanimento.',
-  'In campo c\'era una squadra sola. L\'altra ha pagato il biglietto.',
-  'Hanno smesso di contare nel terzo quarto. Per pietà, non per stanchezza.',
-  'Non è una sconfitta, è un referto medico.',
-  'Cinque contro nessuno, e i nessuno avevano pure la maglia.',
-  'Uno scandalo sportivo. Nel senso che qualcuno dovrebbe indagare.',
-  'Se c\'era una scommessa sul divario, ha vinto chi ha detto "tanto".',
+  '{L} ha fatto l\'asta da sobrio? Le prove dicono di no.',
+  'Massacro. {L} dirà che stava solo provando un quintetto. Lo dice ogni volta.',
+  '{W} vince, {L} chiede il cambio di squadra a metà terzo quarto. Respinto.',
+  'Finita al primo timeout. {L} è rimasto in campo solo per contratto.',
+  'Qualcuno tolga la squadra a {L}: è un pericolo per sé e per gli altri.',
+  'Non è una sconfitta, è una denuncia. Contro {L}, per come ha fatto l\'asta.',
+  '{W} ha giocato a pallacanestro. {L} ha partecipato.',
+  'A fine partita {L} ha chiesto di non essere citato. Troppo tardi.',
+  'Partita chiusa nel riscaldamento. Il resto è stato accanimento su {L}, e se l\'è meritato.',
 ];
 const OPEN_CONTROL = EN ? ENG.OPEN_CONTROL : [
-  'Mai in discussione. Mai nemmeno interessante.',
-  'Gestita con la noia di chi sapeva già come finiva, e aveva ragione.',
-  'Un controllo talmente tranquillo da risultare offensivo.',
-  'Vantaggio preso, vantaggio amministrato, avversario ignorato.',
-  'Il classico +12 che sembra +4 e invece era +20 travestito.',
-  'Partita a senso unico con l\'educazione di non dirlo troppo forte.',
+  '{W} gestisce la partita con tutta la cura che {L} non ha messo nell\'asta.',
+  'Mai in discussione. {L} ci ha creduto per quattro minuti, poi ha mollato con dignità. Senza dignità, in realtà.',
+  '{W} in controllo dall\'inizio. {L} in controllo di niente, come al solito.',
+  'Vittoria comoda di {W}. {L} si consola dicendo che "la squadra c\'è". Non c\'è.',
+  '{W} la porta a casa senza sudare. {L} suda, ma per l\'imbarazzo.',
+  'Partita mai aperta: {L} aveva sbagliato la chiave già all\'asta.',
 ];
 const OPEN_CLOSE = EN ? ENG.OPEN_CLOSE : [
-  'Equilibrio, finché qualcuno si è ricordato di saper giocare a pallacanestro.',
-  'Sembrava una partita vera, poi il finale ha rimesso ognuno al suo posto.',
-  'Punto a punto per tre quarti. Poi è arrivato il quarto quarto e la verità.',
-  'Combattuta, tirata, e alla fine vinta da quella con i giocatori migliori. Che sorpresa.',
-  'Per trenta minuti è stata una partita. Poi è tornata a essere quello che era.',
+  'Equilibrio per tre quarti, poi {L} si è ricordato di essere {L}.',
+  '{L} ci ha creduto davvero. È questo che fa tenerezza.',
+  'Combattuta, finché {W} ha deciso di smettere di giocare col cibo.',
+  'Per un attimo {L} è sembrato un general manager. Poi è passato.',
+  'Partita vera fino al quarto quarto, quando la rosa di {L} si è mostrata per quello che è.',
 ];
 const OPEN_THRILLER = EN ? ENG.OPEN_THRILLER : [
-  'Decisa all\'ultimo possesso. Qualcuno stanotte non dorme.',
-  'Un finale così bello che quasi dispiace per chi ha perso. Quasi.',
-  'Poteva finire in due modi. È finita nel modo peggiore, per uno solo.',
-  'Due punti di scarto e un rimpianto a vita in omaggio.',
-  'Si decide su un possesso, e il possesso lo sbaglia sempre lo stesso.',
-  'Di quelle che si rivedono. O che si cancellano, dipende da come è andata.',
+  'Decisa all\'ultimo possesso. {L} stanotte riguarda la partita e la rosa, e piange per entrambe.',
+  'Due punti. Due. {L} li cercherà nei cassetti per anni.',
+  'Finale da infarto: a {W} il batticuore, a {L} l\'infarto vero.',
+  'Si decide su un possesso, e {L} come sempre lo mette in mano alla persona sbagliata.',
+  '{W} vince di un soffio. {L} perde di un soffio, che detto così sembra un complimento. Non lo è.',
+  'Bellissima, per chiunque non tifi {L}.',
 ];
 const OPEN_OT = EN ? ENG.OPEN_OT : [
-  'Supplementare, perché nessuno dei due era capace di chiuderla.',
-  'Quaranta minuti non sono bastati a stabilire chi fosse meno scarso.',
-  'Overtime: entrambe hanno fatto di tutto per perderla prima, senza riuscirci.',
-  'Un supplementare regalato dall\'incapacità di vincere nei tempi normali.',
+  'Supplementare: {L} non è riuscito a perderla nei tempi regolamentari e ha chiesto altri cinque minuti.',
+  'Quaranta minuti non bastano a {L} per capire come si chiude una partita. Nemmeno quarantacinque, si scoprirà.',
+  'Overtime. {W} e {L} hanno fatto di tutto per perderla, {L} con più talento.',
+  'Un supplementare regalato dalla panchina di {L}, che in panchina proprio non ci sa stare.',
 ];
 const OPEN_2OT = EN ? ENG.OPEN_2OT : [
-  'Doppio supplementare. A un certo punto diventa accanimento reciproco.',
-  'Due overtime: nessuna delle due voleva vincere, una ha dovuto arrendersi all\'evidenza.',
-  'Cinquanta minuti per capire una cosa che si sapeva dall\'inizio.',
+  'Doppio supplementare. {L} voleva soffrire il più a lungo possibile, ed è stato accontentato.',
+  'Cinquanta minuti per perdere una partita che {L} aveva già perso all\'asta.',
+  'Due overtime: a un certo punto {L} ha smesso di allenare e ha cominciato a pregare. Non ha funzionato.',
 ];
 
 /* ---------- Chiusure sul perdente ---------- */
 
 const LOSER_WITH_STAR = EN ? ENG.LOSER_WITH_STAR : [
-  'A {L} non bastano {n} punti di {p}. Gli altri quattro erano lì per il buffet.',
-  '{p} ne mette {n} e {L} perde lo stesso. Complimenti a chi ha costruito quel roster.',
-  '{n} punti di {p} buttati nel secchio insieme al resto di {L}.',
-  '{p} fa la sua parte con {n} punti. Il resto di {L} ha fatto la sua: niente.',
-  '{n} di {p}. A {L} serviva un secondo uomo e ne aveva comprati quattro finti.',
-  '{p} da {n} punti, e {L} perde: si chiama sprecare un patrimonio.',
-  'Un uomo solo al comando e quattro turisti: {p} ne fa {n}, {L} perde.',
+  '{p} ne mette {n} e {L} perde lo stesso: l\'unico acquisto giusto dell\'asta, circondato da quattro errori.',
+  '{n} punti di {p}. {L} gli ha costruito attorno una squadra che non meritava nemmeno di guardarlo.',
+  '{p} ne fa {n}. Gli altri quattro di {L} erano lì per le foto.',
+  '{p} ne fa {n} e a fine partita chiede la cessione. Lontano da {L}, possibilmente.',
+  '{n} punti di {p} sprecati da {L}, che ha un talento raro: rovinare quello degli altri.',
+  'Un uomo solo e quattro comparse: {p} ne fa {n}, {L} perde e dà la colpa agli arbitri.',
+  '{p} timbra {n} punti. {L} timbra il cartellino e torna a sbagliare aste.',
 ];
 const LOSER_FLAT = EN ? ENG.LOSER_FLAT : [
-  '{L} non ha mai trovato il possesso buono. Perché in rosa non ce l\'ha.',
-  '{L} ha provato tutto. Tutto, in questo caso, era pochissimo.',
-  'Di {L} si ricorderà soprattutto il silenzio imbarazzato in panchina.',
-  '{L} non è mai stata in partita, e a metà terzo quarto ha pure smesso di fingere.',
-  'A {L} è mancato tutto. A partire dai giocatori.',
-  '{L} ha giocato come se il risultato fosse già stato deciso. Lo era.',
-  '{L} in campo c\'era, ma nessuno se n\'è accorto.',
-  'La prestazione di {L} andrebbe studiata, se ci fosse qualcosa da studiare.',
-  '{L} ha reso un buon servizio alla partita: qualcuno doveva pur perdere.',
+  '{L} non ha mai trovato il possesso buono, perché all\'asta non l\'ha comprato.',
+  'A {L} è mancato tutto, a partire da un general manager.',
+  '{L} ha giocato come ha fatto l\'asta: male, ma con convinzione.',
+  'Di {L} resteranno il silenzio in panchina e le risate in tribuna.',
+  '{L} in campo c\'era. Purtroppo.',
+  '{L} ha reso un servizio alla partita: qualcuno doveva perderla, e si è offerto volontario.',
+  'La partita di {L} andrebbe studiata nei corsi per general manager, alla voce "cosa non fare".',
+  '{L} perde e ha già pronta la scusa. È la stessa della gara prima.',
+  'Qualcuno spieghi a {L} che il quintetto si sceglie con la testa, non tirando i dadi.',
 ];
 
 /* ---------- Frasi intermedie: anche queste con varianti ---------- */
@@ -292,6 +295,7 @@ export function narrateGame(A, B, g) {
   else if (g.margin >= 9) opener = ruota(OPEN_CONTROL, n, off);
   else if (g.margin >= 4) opener = ruota(OPEN_CLOSE, n, off);
   else opener = ruota(OPEN_THRILLER, n, off);
+  opener = opener.replaceAll('{W}', W.name).replaceAll('{L}', L.name);
 
   const top = wBox.slice().sort((x, y) => y.pts - x.pts)[0];
   const topL = lBox.slice().sort((x, y) => y.pts - x.pts)[0];
