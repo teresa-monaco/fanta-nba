@@ -840,7 +840,7 @@ function coachPicker(s, k, t, canEdit) {
     // Impaginazione in verticale: faccia su una riga sua, poi il testo a
     // tutta larghezza. Affiancati, su un telefono il testo finiva in una
     // colonna da una parola per riga.
-    return `<article class="ccard ${scelto ? 'on' : ''}" ${scelto ? 'data-coach-scelto' : ''}>
+    return `<article class="ccard ${scelto ? 'on' : ''}" ${scelto ? `data-coach-scelto="${c.id}"` : ''}>
       <div class="ctesta">
         <div class="cface">${avatarSVG(c, 72)}</div>
         <span class="cconta">${i + 1}/${liberi.length}</span>

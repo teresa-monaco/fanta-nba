@@ -136,8 +136,10 @@ function paint() {
   // In coda arrivano i cambi fatti a mano in lobby, che stanno nello stato.
   applicaNomi(state.seed, state.nomi, S.personeAlTavolo(state));
   const ctx = { state, session };
+  const posto = ricordaPosto();
   renderTopbar(topbar, ctx);
   render(root, ctx);
+  rimettiPosto(posto);
   effettiNomi();
   tornaInCima();
   effettoPallina();
@@ -149,7 +151,6 @@ function paint() {
   guidaBot();
   seguiLaPartita();
   momentoCampione();
-  tieniIlPosto();
   registraAlbo();
 }
 
@@ -246,14 +247,55 @@ function tornaInCima() {
   catch { try { window.scrollTo(0, 0); } catch { /* vecchi browser: pazienza */ } }
 }
 
-// Scegliere un allenatore ridisegna la schermata, e la striscia tornerebbe
-// da capo: avresti scorso fino al quinto, toccato "Scegli", e ti ritroveresti
-// a guardare il primo. Dopo ogni ridisegno la carta scelta si rimette dov'era.
-function tieniIlPosto() {
-  for (const strip of root.querySelectorAll('[data-coach-strip]')) {
-    const scelta = strip.querySelector('[data-coach-scelto]');
-    if (scelta) strip.scrollLeft = scelta.offsetLeft - strip.offsetLeft;
+// IL POSTO DI OGNUNO, A OGNI RIDISEGNO. Ogni volta che qualcuno al tavolo
+// fa qualcosa la pagina si ridisegna da zero, e a distanza succede di
+// continuo. Si perdeva tutto quello che era solo tuo: la striscia degli
+// allenatori tornava all'allenatore scelto mentre la stavi scorrendo, le
+// tendine aperte (referto, quintetti, box score) si richiudevano, la scheda
+// del giocatore tornava in cima. Prima di ridisegnare si prende nota, dopo si
+// rimette tutto com'era.
+//
+// La striscia degli allenatori torna sulla carta scelta solo quando la scelta
+// CAMBIA (o la prima volta): avresti scorso fino al quinto, toccato "Scegli",
+// e senza questo ti ritroveresti a guardare il primo.
+const coachVisto = {};
+
+function chiaveTendina(d, conta) {
+  const k = `${d.className}|${(d.querySelector?.('summary')?.textContent || '').trim()}`;
+  conta[k] = (conta[k] || 0) + 1;
+  return `${k}#${conta[k]}`;
+}
+
+function tutti(sel) {
+  return root?.querySelectorAll ? [...root.querySelectorAll(sel)] : [];
+}
+
+function ricordaPosto() {
+  const strisce = {};
+  for (const el of tutti('[data-coach-strip], [data-tieni-scroll]')) if (el.id) strisce[el.id] = el.scrollLeft;
+  const tendine = {}, conta = {};
+  for (const d of tutti('details')) tendine[chiaveTendina(d, conta)] = d.open;
+  const pop = root?.querySelector?.('.scheda-pop');
+  return { strisce, tendine, pop: pop ? pop.scrollTop : null };
+}
+
+function rimettiPosto(p) {
+  const conta = {};
+  for (const d of tutti('details')) {
+    const k = chiaveTendina(d, conta);
+    if (k in p.tendine) d.open = p.tendine[k];
   }
+  for (const el of tutti('[data-tieni-scroll]')) if (el.id && el.id in p.strisce) el.scrollLeft = p.strisce[el.id];
+  for (const strip of tutti('[data-coach-strip]')) {
+    const scelta = strip.querySelector('[data-coach-scelto]');
+    const id = strip.id;
+    const ora = scelta ? scelta.dataset.coachScelto : null;
+    if (scelta && coachVisto[id] !== ora) strip.scrollLeft = scelta.offsetLeft - strip.offsetLeft;
+    else if (id in p.strisce) strip.scrollLeft = p.strisce[id];
+    coachVisto[id] = ora;
+  }
+  const pop = root?.querySelector?.('.scheda-pop');
+  if (pop && p.pop != null) pop.scrollTop = p.pop;
 }
 
 // Chi guarda e basta restava fermo su gara 1 mentre il tavolo era a gara 6:
@@ -669,8 +711,10 @@ document.addEventListener('click', async (ev) => {
         return;
 
       case 'chiudi-scheda':
-        // Solo se si tocca il velo o il tasto, non la scheda stessa.
-        if (el.dataset.act !== 'chiudi-scheda') return;
+        // Solo se si tocca il velo o il tasto, non la scheda stessa. Il velo
+        // contiene la scheda, quindi un tocco dentro la scheda risaliva fino
+        // al velo e la chiudeva: si chiude solo se il tocco e PROPRIO sul velo.
+        if (el.tagName !== 'BUTTON' && ev.target !== el) return;
         ui.scheda = null;
         paint();
         return;
