@@ -661,10 +661,13 @@ ok(has('class="jumbo br-jumbo"') && /class="br-cella br-oro chiusa"/.test(html()
   const tutto = scritte.join(' | ');
   const fin = costruisciBracket(F.state.po, Tc)[1][0];
   ok(tutto.includes(Tc[fin.res.winner].name.toUpperCase()), 'la card porta il nome del campione', Tc[fin.res.winner].name);
-  ok(d.rosa.length === 5 && d.rosa.every((p) => tutto.includes(p.n.toUpperCase())), 'e tutto il quintetto',
-    d.rosa.map((p) => `${p.n} ${p.prezzo}cr`).join(', '));
-  ok(d.rosa.every((p) => p.prezzo === F.state.auction.log.find((l) => l.playerId === db().byId[F.state.lineups[fin.res.winner][p.pos]].id)?.price),
-    'con il prezzo pagato all\'asta per ognuno');
+  // La pagella: tutti in classifica, il campione primo, una frase per ogni
+  // persona e mai per un bot.
+  ok(d.classifica.length === S.attive(F.state).length && d.classifica.every((r) => tutto.includes(r.nome.toUpperCase())),
+    'c\'e la classifica finale con tutti', d.classifica.map((r) => `${r.pos}. ${r.nome}`).join(', '));
+  ok(d.classifica[0].key === fin.res.winner, 'col campione in cima');
+  ok(d.classifica.every((r) => (r.umano ? r.roast.length > 10 : r.roast === '')), 'una frase cattiva per ogni persona, niente per i bot',
+    d.classifica.filter((r) => r.umano).map((r) => r.roast).join(' / ').slice(0, 120));
   ok(tutto.includes(fin.res.mvp.n.toUpperCase()), 'e l\'MVP delle Finals', fin.res.mvp.n);
   ok(d.riquadri.some((r) => r.tit.includes('colpo')), 'e il colpo dell\'asta');
   ok(!/undefined|NaN|null/.test(tutto), 'niente "undefined" o "NaN" nell\'immagine');

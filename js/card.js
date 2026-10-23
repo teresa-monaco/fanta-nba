@@ -1,23 +1,42 @@
 // card.js — la serata in un'immagine, da mandare nella chat di gruppo.
 //
-// La partita si gioca fra amici e il risultato finisce in chat: uno
-// screenshot della pagina taglia, e dice poco a chi non c'era. Questa e una
-// locandina fatta apposta — campione, quintetto con i prezzi pagati, MVP, il
-// colpo dell'asta — in formato verticale, quello che le chat mostrano meglio.
+// Era un poster del campione (quintetto e prezzi pagati): celebrava chi
+// aveva vinto e degli altri non diceva niente, quindi in chat non faceva
+// ridere nessuno. Adesso e una pagella: la classifica finale con una frase
+// cattiva per ogni persona vera al tavolo (i bot non si sfottono), la
+// classifica dei pronostici, e in fondo MVP, colpo e bidone. Ogni frase
+// parte da un dato vero della serata.
 //
 // Due pezzi separati di proposito. datiCard() raccoglie cosa scrivere ed e
 // pura: si prova senza browser. disegnaCard() la stende su un canvas e non
 // decide niente.
 
-import { db, SLOTS, TEAM_NAMES, NOMI_SQUADRA } from './core.js';
+import { db, TEAM_NAMES, NOMI_SQUADRA } from './core.js';
 import { costruisciBracket } from './engine.js';
 import { premiSerata } from './premi.js';
-import { classificaPronostici, reDeiPronostici } from './pronostici.js';
+import { classificaPronostici, quoteSerie } from './pronostici.js';
+import { ordineSerie } from './serie.js';
 import { nameOfSeat } from './state.js';
 import { tr } from './lingua.js';
 
 export const LARGHEZZA = 1080;
 export const ALTEZZA = 1350;
+
+const ESITI_A = ['4-0', '4-1', '4-2', '4-3'];
+
+// La frase per una persona, dalla piu cattiva che i dati permettono.
+function roastDi(r) {
+  if (r.pos === 1) return r.favoritoInFinale
+    ? tr('Campione, ma partiva favorito: complimenti per il coraggio.', 'Champion, but he was the favorite: what courage.')
+    : tr('Campione da sfavorito: fortuna sfacciata, e lo sa.', 'Champion as the underdog: pure luck, and he knows it.');
+  if (r.sorpresa) return tr(`Era favorito al ${r.sorpresa}% e ha perso. Talento raro.`, `He was the ${r.sorpresa}% favorite and lost. A rare talent.`);
+  if (r.bidone) return tr(`${r.bidone.prezzo} crediti per ${r.bidone.n}. Bruciarli sarebbe stato più utile.`, `${r.bidone.prezzo} credits for ${r.bidone.n}. Burning them would have been more useful.`);
+  if (r.avanzati >= 10) return tr(`Ha chiuso l'asta con ${r.avanzati} crediti in tasca. Se li porterà nella tomba.`, `Finished the auction with ${r.avanzati} credits in his pocket. He'll take them to the grave.`);
+  if (r.ultimo) return tr('Ultimo. Anche i bot lo guardano dall\'alto.', 'Last. Even the bots look down on him.');
+  if (r.pronFlop) return tr(`0 pronostici presi su ${r.pronFlop}: tirando a caso avrebbe fatto meglio.`, `0 predictions right out of ${r.pronFlop}: guessing at random would have done better.`);
+  if (r.pos === 2) return tr('Secondo: il primo dei perdenti. Glielo ricorderemo.', 'Second: the first of the losers. We\'ll remind him.');
+  return tr(`${r.pos}° posto. Presente, e basta.`, `${r.pos}th place. Present, and that's it.`);
+}
 
 export function datiCard(s, T) {
   if (!s?.po) return null;
@@ -27,48 +46,73 @@ export function datiCard(s, T) {
   const D = db();
   const W = T[fin.res.winner];
   const L = T[fin.res.winner === fin.a ? fin.b : fin.a];
-  const chi = (k) => nameOfSeat(s, k) || '';
-
+  const chi = (k) => nameOfSeat(s, k) || TEAM_NAMES[k] || '';
   const prezzo = {};
   for (const l of s.auction?.log || []) prezzo[l.playerId] = l.price;
-  const rosa = SLOTS.map((sl) => {
-    const p = D.byId[s.lineups?.[W.key]?.[sl]];
-    return p ? { pos: sl, n: p.n, ovr: p.ovr, tm: `${p.tm || ''} ${p.era || ''}`.trim(), prezzo: prezzo[p.id] ?? null } : null;
-  }).filter(Boolean);
-
   const premi = premiSerata(s, T);
   const premio = (k) => premi.find((p) => p.chiave === k) || null;
-  const re = reDeiPronostici(classificaPronostici(s, T));
 
-  // Tre riquadri in fondo. Il terzo e il re dei pronostici se c'e, se no il
-  // bidone: in chat fa ridere quanto il campione.
+  // LA CLASSIFICA FINALE: campione, finalista, poi chi ha vinto e perso la
+  // finalina, poi gli altri per turno di eliminazione e serie vinte.
+  const serie = ordineSerie(s, T).filter((x) => x.a && x.b && x.f?.done);
+  const info = {};
+  for (const k of Object.keys(T)) info[k] = { key: k, turno: -1, vinte: 0, sorpresa: 0 };
+  for (const x of serie) {
+    const turno = x.id === 'third' ? -0.5 : x.r;
+    const pA = ESITI_A.reduce((tot, e) => tot + quoteSerie(T[x.a], T[x.b], x.seed).esiti[e].p, 0);
+    for (const [k, p] of [[x.a, pA], [x.b, 1 - pA]]) {
+      const r = info[k];
+      if (!r) continue;
+      if (x.id !== 'third') r.turno = Math.max(r.turno, turno);
+      if (x.f.winner === k) r.vinte++;
+      else if (p >= 0.65) r.sorpresa = Math.max(r.sorpresa, Math.round(p * 100));
+      if (x.id === 'third') r.finalina = x.f.winner === k ? 1 : 2;
+      if (x.finale) r.pFinale = p;
+    }
+  }
+  const ordine = Object.values(info).filter((r) => r.turno >= 0 || r.finalina).sort((a, b) =>
+    (b.key === W.key) - (a.key === W.key) || (b.key === L.key) - (a.key === L.key)
+    || (a.finalina || 9) - (b.finalina || 9) || b.turno - a.turno || b.vinte - a.vinte);
+  const pron = classificaPronostici(s, T);
+  const umano = (k) => !s.bots?.[k];
+  const classifica = ordine.map((r, i) => {
+    const b = premio('bidone');
+    const p = pron.find((x) => x.key === r.key);
+    const fatti = {
+      pos: i + 1, ultimo: i === ordine.length - 1 && ordine.length > 2,
+      favoritoInFinale: r.key === W.key && (r.pFinale ?? 0) >= 0.5,
+      sorpresa: r.key === W.key ? 0 : r.sorpresa,
+      bidone: b && b.team === r.key ? { n: b.nome, prezzo: prezzo[b.id] } : null,
+      avanzati: s.teams?.[r.key]?.credits ?? 0,
+      pronFlop: p && p.chiusi > 0 && p.presi === 0 ? p.chiusi * 2 : 0,
+    };
+    return { pos: i + 1, key: r.key, nome: chi(r.key), umano: umano(r.key), roast: umano(r.key) ? roastDi(fatti) : '' };
+  });
+
+  // In fondo sempre tutti e tre: MVP, colpo e bidone.
+  const diChi = (p) => (p.team && chi(p.team) ? ` · ${chi(p.team)}` : '');
   const riquadri = [];
   if (fin.res.mvp) riquadri.push({ tit: tr('MVP delle Finals', 'Finals MVP'), nome: fin.res.mvp.n, riga: tr(`${fin.res.mvp.ppg.toFixed(1)} punti a partita`, `${fin.res.mvp.ppg.toFixed(1)} points per game`) });
-  // Colpo e bidone possono essere di chiunque, non del campione: la riga dice
-  // di chi, o in chat non si capisce con chi prendersela.
-  const diChi = (p) => (p.team && chi(p.team) ? ` · ${chi(p.team)}` : '');
   const colpo = premio('colpo');
   if (colpo) {
     const pz = prezzo[colpo.id];
     riquadri.push({ tit: tr('Il colpo dell\'asta', 'Steal of the auction'), nome: colpo.nome, team: colpo.team,
       riga: tr(`ovr ${D.byId[colpo.id]?.ovr} per ${pz} ${pz === 1 ? 'credito' : 'crediti'}${diChi(colpo)}`, `ovr ${D.byId[colpo.id]?.ovr} for ${pz} ${pz === 1 ? 'credit' : 'credits'}${diChi(colpo)}`) });
   }
-  if (re) riquadri.push({ tit: tr('Re dei pronostici', 'Prediction king'), nome: chi(re.key) || TEAM_NAMES[re.key], riga: tr(`${re.punti.toFixed(2)} punti, ${re.presi} ${re.presi === 1 ? 'pronostico preso' : 'pronostici presi'}`, `${re.punti.toFixed(2)} points, ${re.presi} ${re.presi === 1 ? 'correct prediction' : 'correct predictions'}`) });
-  else if (premio('bidone')) {
-    const b = premio('bidone');
-    riquadri.push({ tit: tr('Il bidone', 'The bust'), nome: b.nome, team: b.team, brutto: true,
-      riga: tr(`pagato ${prezzo[b.id]} crediti${diChi(b)}`, `paid ${prezzo[b.id]} credits${diChi(b)}`) });
-  }
+  const b = premio('bidone');
+  if (b) riquadri.push({ tit: tr('Il bidone', 'The bust'), nome: b.nome, team: b.team, brutto: true,
+    riga: tr(`pagato ${prezzo[b.id]} crediti${diChi(b)}`, `paid ${prezzo[b.id]} credits${diChi(b)}`) });
 
-  // In grande chi ha vinto, sotto il soprannome che aveva la sua squadra:
-  // il nome che si vede e gia quello della persona (vedi core.applicaNomi).
   const wv = Math.max(fin.res.wins.a, fin.res.wins.b), wp = Math.min(fin.res.wins.a, fin.res.wins.b);
   const sopr = NOMI_SQUADRA[W.key] && NOMI_SQUADRA[W.key] !== W.name ? NOMI_SQUADRA[W.key] : '';
   return {
     key: W.key, squadra: W.name, soprannome: sopr,
     finale: `${wv}-${wp} ${tr('su', 'over')} ${L.name}`,
-    rosa, riquadri: riquadri.slice(0, 3),
-    testo: tr(`Fanta NBA — Campione: ${W.name}${sopr ? ` (${sopr})` : ''}, ${wv}-${wp} su ${L.name}.`, `Fanta NBA — Champion: ${W.name}${sopr ? ` (${sopr})` : ''}, ${wv}-${wp} over ${L.name}.`),
+    classifica,
+    pronostici: pron.filter((p) => p.chiusi > 0).map((p) => ({ nome: chi(p.key), punti: p.punti })),
+    riquadri: riquadri.slice(0, 3),
+    testo: tr(`Fanta NBA — Campione: ${W.name}${sopr ? ` (${sopr})` : ''}, ${wv}-${wp} su ${L.name}. Ultimo: ${classifica[classifica.length - 1]?.nome || '—'}.`,
+      `Fanta NBA — Champion: ${W.name}${sopr ? ` (${sopr})` : ''}, ${wv}-${wp} over ${L.name}. Last: ${classifica[classifica.length - 1]?.nome || '—'}.`),
   };
 }
 
@@ -89,6 +133,27 @@ function scriviIn(ctx, testo, x, y, maxW, px, peso = 800, font = 'Saira Condense
   ctx.fillText(testo, x, y);
 }
 
+// La frase di roasting va a capo su due righe; se non basta si accorcia.
+function righeDi(ctx, testo, maxW, px, quante) {
+  ctx.font = `500 ${px}px "Barlow", sans-serif`;
+  const parole = testo.split(' ');
+  const out = [];
+  let riga = '';
+  for (const w of parole) {
+    const prova = riga ? `${riga} ${w}` : w;
+    if (ctx.measureText(prova).width <= maxW || !riga) riga = prova;
+    else { out.push(riga); riga = w; }
+  }
+  if (riga) out.push(riga);
+  if (out.length > quante) {
+    out.length = quante;
+    let ultima = out[quante - 1];
+    while (ultima.length > 1 && ctx.measureText(`${ultima}…`).width > maxW) ultima = ultima.slice(0, -1);
+    out[quante - 1] = `${ultima}…`;
+  }
+  return out;
+}
+
 const spazio = (ctx, px) => { if ('letterSpacing' in ctx) ctx.letterSpacing = `${px}px`; };
 
 export function disegnaCard(ctx, d, colori = {}) {
@@ -96,72 +161,81 @@ export function disegnaCard(ctx, d, colori = {}) {
   const tc = C[d.key] || C.gold;
   const W = LARGHEZZA, H = ALTEZZA, mx = 60;
 
-  // Fondo, e la luce del colore della squadra che scende dall'alto.
   ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
-  const luce = ctx.createLinearGradient(0, 0, 0, 640);
+  const luce = ctx.createLinearGradient(0, 0, 0, 340);
   luce.addColorStop(0, tc); luce.addColorStop(1, C.bg);
-  ctx.globalAlpha = 0.38; ctx.fillStyle = luce; ctx.fillRect(0, 0, W, 640); ctx.globalAlpha = 1;
+  ctx.globalAlpha = 0.32; ctx.fillStyle = luce; ctx.fillRect(0, 0, W, 340); ctx.globalAlpha = 1;
   ctx.fillStyle = tc; ctx.fillRect(0, 0, W, 10);
 
   ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'left'; ctx.fillStyle = C.gold; spazio(ctx, 6);
   scriviIn(ctx, 'FANTA NBA', mx, 74, 400, 30);
   ctx.textAlign = 'right'; ctx.fillStyle = C.muted; spazio(ctx, 3);
-  scriviIn(ctx, tr('SERATA FINITA', 'GAME NIGHT OVER'), W - mx, 74, 400, 24, 700);
+  scriviIn(ctx, tr('IL VERDETTO DELLA SERATA', 'THE NIGHT\'S VERDICT'), W - mx, 74, 560, 24, 700);
 
-  // Il trofeo, scalato dal disegno 64x64.
+  // Il campione in una riga: trofeo piccolo, nome, finale.
   ctx.save();
-  ctx.translate(W / 2 - 80, 104); ctx.scale(2.5, 2.5);
+  ctx.translate(mx - 6, 104); ctx.scale(1.6, 1.6);
   const oro = ctx.createLinearGradient(0, 8, 0, 55);
   oro.addColorStop(0, '#ffe7a3'); oro.addColorStop(0.5, '#ffd166'); oro.addColorStop(1, '#c9921f');
   ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 3; ctx.lineCap = 'round';
   ctx.stroke(new Path2D(MANICI));
   for (const [p, f] of TROFEO) { ctx.fillStyle = f === 'oro' ? oro : f; ctx.fill(new Path2D(p)); }
   ctx.restore();
-
-  ctx.textAlign = 'center';
-  ctx.fillStyle = C.gold; spazio(ctx, 12);
-  scriviIn(ctx, tr('CAMPIONE', 'CHAMPION'), W / 2, 330, W - 2 * mx, 38);
-  ctx.fillStyle = '#ffffff'; spazio(ctx, 2);
-  scriviIn(ctx, d.squadra.toUpperCase(), W / 2, 448, W - 2 * mx, 118);
-  ctx.fillStyle = tc; spazio(ctx, 3);
-  if (d.soprannome) scriviIn(ctx, d.soprannome.toUpperCase(), W / 2, 506, W - 2 * mx, 40, 700);
+  const tx = mx + 120, tw = W - mx - tx;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = C.gold; spazio(ctx, 8); scriviIn(ctx, tr('CAMPIONE', 'CHAMPION'), tx, 146, tw, 26);
+  ctx.fillStyle = '#ffffff'; spazio(ctx, 1); scriviIn(ctx, d.squadra.toUpperCase(), tx, 212, tw, 68);
   ctx.fillStyle = C.muted2; spazio(ctx, 0);
-  scriviIn(ctx, d.finale, W / 2, 560, W - 2 * mx, 34, 500, 'Barlow');
+  scriviIn(ctx, `${d.finale}${d.soprannome ? ` · ${d.soprannome}` : ''}`, tx, 252, tw, 28, 500, 'Barlow');
 
-  // Il quintetto, con quanto e costato: e la parte che fa discutere.
-  let y = 632;
+  // La classifica, con la frase per ogni persona.
+  let y = 290;
   ctx.fillStyle = C.line; ctx.fillRect(mx, y, W - 2 * mx, 2);
-  y += 52;
+  y += 46;
   ctx.textAlign = 'left'; ctx.fillStyle = C.muted; spazio(ctx, 5);
-  scriviIn(ctx, tr('IL QUINTETTO', 'THE LINEUP'), mx, y, 400, 24, 700);
-  ctx.textAlign = 'right';
-  scriviIn(ctx, tr('OVR · PAGATO', 'OVR · PAID'), W - mx, y, 400, 24, 700);
-  y += 20;
-  for (const p of d.rosa) {
-    y += 72;
-    ctx.fillStyle = C.surf; ctx.fillRect(mx, y - 50, W - 2 * mx, 64);
-    ctx.fillStyle = tc; ctx.fillRect(mx, y - 50, 6, 64);
+  scriviIn(ctx, tr('LA CLASSIFICA', 'THE STANDINGS'), mx, y, 500, 22, 700);
+  y += 16;
+  const n = d.classifica.length || 1;
+  const rowH = Math.min(118, Math.floor(620 / n));
+  const gap = 8, quante = rowH >= 100 ? 2 : 1;
+  for (const r of d.classifica) {
+    const h = rowH - gap;
+    ctx.fillStyle = C.surf; ctx.fillRect(mx, y, W - 2 * mx, h);
+    ctx.fillStyle = C[r.key] || C.muted; ctx.fillRect(mx, y, 6, h);
     ctx.textAlign = 'left';
-    ctx.fillStyle = C.gold; spazio(ctx, 2); scriviIn(ctx, p.pos, mx + 26, y - 6, 70, 28);
-    // Nome e squadra d'epoca devono finire prima dell'overall (a 780): la
-    // squadra si accorcia, e se non c'e posto si toglie — il nome resta.
-    ctx.fillStyle = '#ffffff'; spazio(ctx, 1); scriviIn(ctx, p.n.toUpperCase(), mx + 108, y - 6, 440, 40);
-    const dopoNome = mx + 108 + Math.min(440, ctx.measureText(p.n.toUpperCase()).width) + 16;
-    if (780 - dopoNome >= 70) { ctx.fillStyle = C.muted; spazio(ctx, 0); scriviIn(ctx, p.tm, dopoNome, y - 6, 780 - dopoNome, 24, 500, 'Barlow'); }
-    ctx.textAlign = 'right';
-    ctx.fillStyle = C.muted2; scriviIn(ctx, p.prezzo == null ? '—' : `${p.prezzo} cr`, W - mx - 24, y - 6, 120, 30, 700);
-    ctx.fillStyle = C.gold; scriviIn(ctx, String(p.ovr), W - mx - 160, y - 6, 80, 40);
+    ctx.fillStyle = r.pos === 1 ? C.gold : C.muted2; spazio(ctx, 0);
+    scriviIn(ctx, String(r.pos), mx + 24, y + Math.min(52, h - 14), 56, Math.min(46, h - 14));
+    const nx = mx + 92, nw = W - mx - 24 - nx;
+    ctx.fillStyle = '#ffffff'; spazio(ctx, 1);
+    if (r.roast) {
+      scriviIn(ctx, r.nome.toUpperCase(), nx, y + Math.min(42, h * 0.45), nw, Math.min(34, h * 0.36));
+      const righe = righeDi(ctx, r.roast, nw, Math.min(23, h * 0.24), quante);
+      ctx.fillStyle = C.muted2; spazio(ctx, 0);
+      righe.forEach((riga, j) => { ctx.font = `500 ${Math.min(23, h * 0.24)}px "Barlow", sans-serif`; ctx.fillText(riga, nx, y + Math.min(42, h * 0.45) + (j + 1) * Math.min(28, h * 0.28)); });
+    } else {
+      scriviIn(ctx, r.nome.toUpperCase(), nx, y + h / 2 + 12, nw, Math.min(34, h * 0.4));
+    }
+    y += rowH;
   }
 
-  // I riquadri dei premi, in fila.
-  const n = d.riquadri.length;
-  if (n) {
-    const gap = 20, top = 1100, h = 170;
-    const w = (W - 2 * mx - gap * (n - 1)) / n;
+  // I pronostici, in una riga.
+  if (d.pronostici?.length) {
+    y += 34;
+    ctx.textAlign = 'left'; ctx.fillStyle = C.muted; spazio(ctx, 4);
+    scriviIn(ctx, tr('PRONOSTICI', 'PREDICTIONS'), mx, y, 260, 22, 700);
+    ctx.fillStyle = C.muted2; spazio(ctx, 0);
+    scriviIn(ctx, d.pronostici.map((p) => `${p.nome} ${p.punti.toFixed(1)}`).join(' · '), mx + 230, y, W - 2 * mx - 230, 26, 600, 'Barlow');
+  }
+
+  // MVP, colpo, bidone.
+  const nq = d.riquadri.length;
+  if (nq) {
+    const gq = 20, top = 1110, hq = 170;
+    const w = (W - 2 * mx - gq * (nq - 1)) / nq;
     d.riquadri.forEach((r, i) => {
-      const x = mx + i * (w + gap);
-      ctx.fillStyle = C.surf; ctx.fillRect(x, top, w, h);
+      const x = mx + i * (w + gq);
+      ctx.fillStyle = C.surf; ctx.fillRect(x, top, w, hq);
       ctx.fillStyle = r.brutto ? C.bad : (C[r.team] || C.gold); ctx.fillRect(x, top, w, 6);
       ctx.textAlign = 'left';
       ctx.fillStyle = r.brutto ? C.bad : C.gold; spazio(ctx, 3);

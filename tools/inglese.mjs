@@ -166,7 +166,7 @@ for (const conStagione of [false, true]) {
   ok(/Champion/.test(fine), `la serata ${conStagione ? 'con stagione ' : ''}si chiude con il campione`);
   setaccio('rivela', UI.rivelaCampione(s));
   const d = datiCard(s, T);
-  setaccio('card', [d.squadra, d.soprannome, d.finale, d.testo, ...d.riquadri.flatMap((r) => [r.tit, r.nome, r.riga])].join('\n'));
+  setaccio('card', [d.squadra, d.soprannome, d.finale, d.testo, ...d.riquadri.flatMap((r) => [r.tit, r.nome, r.riga]), ...d.classifica.map((r) => r.roast)].join('\n'));
 }
 
 // Le stringhe d'errore e di rete non passano dal disegno: si controllano qui.
