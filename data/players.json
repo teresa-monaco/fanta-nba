@@ -207,7 +207,7 @@
   {
    "id": "duncan",
    "n": "Tim Duncan",
-   "ovr": 96,
+   "ovr": 97,
    "pos": "PF",
    "alt": [
     "C"
@@ -346,7 +346,7 @@
   {
    "id": "tmac",
    "n": "Tracy McGrady",
-   "ovr": 94,
+   "ovr": 95,
    "pos": "SG",
    "alt": [
     "SF"
@@ -360,7 +360,7 @@
     "pla": 68,
     "reb": 45,
     "dif": 27,
-    "dpe": 60,
+    "dpe": 65,
     "atl": 80,
     "usg": 99
    },
@@ -401,13 +401,13 @@
    "era": "2000s",
    "tm": "Heat",
    "attrs": {
-    "sco": 95,
+    "sco": 94,
     "tre": 31,
     "pla": 82,
     "reb": 48,
     "dif": 55,
-    "dpe": 76,
-    "atl": 99,
+    "dpe": 73,
+    "atl": 95,
     "usg": 92
    },
    "base": 96
@@ -415,7 +415,7 @@
   {
    "id": "kawhi",
    "n": "Kawhi Leonard",
-   "ovr": 97,
+   "ovr": 96,
    "pos": "SF",
    "alt": [
     "PF"
@@ -424,13 +424,13 @@
    "era": "2010s",
    "tm": "Raptors",
    "attrs": {
-    "sco": 86,
-    "tre": 78,
+    "sco": 85,
+    "tre": 75,
     "pla": 62,
-    "reb": 55,
+    "reb": 50,
     "dif": 42,
-    "dpe": 88,
-    "atl": 78,
+    "dpe": 78,
+    "atl": 70,
     "usg": 81
    },
    "base": 96
@@ -438,7 +438,7 @@
   {
    "id": "harden",
    "n": "James Harden",
-   "ovr": 97,
+   "ovr": 96,
    "pos": "SG",
    "alt": [
     "PG"
@@ -447,13 +447,13 @@
    "era": "2010s",
    "tm": "Rockets",
    "attrs": {
-    "sco": 95,
+    "sco": 93,
     "tre": 88,
-    "pla": 98,
-    "reb": 62,
+    "pla": 95,
+    "reb": 52,
     "dif": 24,
     "dpe": 40,
-    "atl": 84,
+    "atl": 79,
     "usg": 99
    },
    "base": 96
@@ -492,12 +492,12 @@
    "era": "2020s",
    "tm": "Mavericks",
    "attrs": {
-    "sco": 96,
+    "sco": 93,
     "tre": 84,
     "pla": 99,
-    "reb": 75,
+    "reb": 68,
     "dif": 40,
-    "dpe": 50,
+    "dpe": 47,
     "atl": 65,
     "usg": 99
    },
@@ -541,8 +541,8 @@
     "sco": 95,
     "tre": 20,
     "pla": 62,
-    "reb": 89,
-    "dif": 60,
+    "reb": 90,
+    "dif": 62,
     "dpe": 62,
     "atl": 77,
     "usg": 88
@@ -576,7 +576,7 @@
   {
    "id": "robinson",
    "n": "David Robinson",
-   "ovr": 96,
+   "ovr": 97,
    "pos": "C",
    "alt": [],
    "arc": "dominant-center",
@@ -597,7 +597,7 @@
   {
    "id": "cp3",
    "n": "Chris Paul",
-   "ovr": 95,
+   "ovr": 96,
    "pos": "PG",
    "alt": [],
    "arc": "floor-general",
@@ -618,7 +618,7 @@
   {
    "id": "ad",
    "n": "Anthony Davis",
-   "ovr": 96,
+   "ovr": 93,
    "pos": "PF",
    "alt": [
     "C"
@@ -627,11 +627,11 @@
    "era": "2010s",
    "tm": "Pelicans",
    "attrs": {
-    "sco": 92,
+    "sco": 89,
     "tre": 26,
     "pla": 55,
-    "reb": 88,
-    "dif": 92,
+    "reb": 84,
+    "dif": 86,
     "dpe": 60,
     "atl": 82,
     "usg": 86
@@ -641,7 +641,7 @@
   {
    "id": "tatum",
    "n": "Jayson Tatum",
-   "ovr": 93,
+   "ovr": 94,
    "pos": "SF",
    "alt": [
     "PF"
@@ -975,7 +975,7 @@
   {
    "id": "drose",
    "n": "Derrick Rose",
-   "ovr": 91,
+   "ovr": 92,
    "pos": "PG",
    "alt": [],
    "arc": "slasher",
@@ -987,7 +987,7 @@
     "pla": 86,
     "reb": 45,
     "dif": 27,
-    "dpe": 68,
+    "dpe": 71,
     "atl": 97,
     "usg": 88
    },
@@ -1065,7 +1065,7 @@
   {
    "id": "pgeorge",
    "n": "Paul George",
-   "ovr": 97,
+   "ovr": 95,
    "pos": "SF",
    "alt": [
     "SG"
@@ -1074,12 +1074,12 @@
    "era": "2010s",
    "tm": "Pacers",
    "attrs": {
-    "sco": 85,
-    "tre": 81,
+    "sco": 80,
+    "tre": 78,
     "pla": 62,
-    "reb": 52,
+    "reb": 48,
     "dif": 38,
-    "dpe": 88,
+    "dpe": 76,
     "atl": 72,
     "usg": 80
    },
@@ -1088,7 +1088,7 @@
   {
    "id": "melo",
    "n": "Carmelo Anthony",
-   "ovr": 96,
+   "ovr": 97,
    "pos": "SF",
    "alt": [
     "PF"
@@ -1134,7 +1134,7 @@
   {
    "id": "cwebb",
    "n": "Chris Webber",
-   "ovr": 92,
+   "ovr": 91,
    "pos": "PF",
    "alt": [
     "C"
@@ -1245,7 +1245,7 @@
   {
    "id": "pierce",
    "n": "Paul Pierce",
-   "ovr": 95,
+   "ovr": 96,
    "pos": "SF",
    "alt": [
     "SG"
