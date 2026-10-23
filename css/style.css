@@ -295,6 +295,10 @@ table.referto tr.giusta .scelta { color: var(--ok); }
   text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
 }
 .cdesc { font-size: 13px; line-height: 1.4; color: var(--muted-2); margin: 0 0 6px; }
+/* Il livello dell'allenatore: stelline oro, la leggenda si nota. */
+.cliv { display: inline-flex; align-items: baseline; gap: 6px; color: var(--gold); font-size: 13px; letter-spacing: 1px; }
+.cliv i { font: 800 9.5px var(--cond); font-style: normal; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); }
+.cliv.liv-3 i { color: var(--gold); }
 .ceff { font-size: 11.5px; line-height: 1.35; color: var(--muted); margin: 0 0 3px; }
 .cvia { font-size: 10.5px; color: var(--muted); margin: 0; opacity: .8; }
 .csel {

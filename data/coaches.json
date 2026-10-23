@@ -155,6 +155,7 @@
       "id": "jackson",
       "n": "Phil Jackson",
       "arc": "stella",
+      "liv": 3,
       "look": "rado,bianco,barba,occhiali",
       "tm": [
         "Bulls|1990s",
@@ -165,6 +166,7 @@
       "id": "lue",
       "n": "Tyronn Lue",
       "arc": "stella",
+      "liv": 2,
       "look": "calvo,scura,barba",
       "tm": [
         "Cavaliers|2010s"
@@ -174,6 +176,7 @@
       "id": "brooks",
       "n": "Scott Brooks",
       "arc": "stella",
+      "liv": 1,
       "look": "corti,castano",
       "tm": [
         "Thunder|2010s",
@@ -184,6 +187,7 @@
       "id": "kcjones",
       "n": "K.C. Jones",
       "arc": "stella",
+      "liv": 2,
       "look": "corti,grigio,scura",
       "tm": [
         "Celtics|1980s"
@@ -193,6 +197,7 @@
       "id": "woodson",
       "n": "Mike Woodson",
       "arc": "stella",
+      "liv": 1,
       "look": "calvo,scura,baffi",
       "tm": [
         "Hawks|2000s"
@@ -202,6 +207,7 @@
       "id": "popovich",
       "n": "Gregg Popovich",
       "arc": "sistema",
+      "liv": 3,
       "look": "rado,grigio,pizzetto",
       "tm": [
         "Spurs|1990s",
@@ -213,6 +219,7 @@
       "id": "kerr",
       "n": "Steve Kerr",
       "arc": "sistema",
+      "liv": 3,
       "look": "corti,castano",
       "tm": [
         "Warriors|2010s",
@@ -223,6 +230,7 @@
       "id": "carlisle",
       "n": "Rick Carlisle",
       "arc": "sistema",
+      "liv": 2,
       "look": "corti,castano",
       "tm": [
         "Mavericks|2010s",
@@ -234,6 +242,7 @@
       "id": "stevens",
       "n": "Brad Stevens",
       "arc": "sistema",
+      "liv": 1,
       "look": "corti,castano",
       "tm": [
         "Celtics|2010s"
@@ -243,6 +252,7 @@
       "id": "larrybrown",
       "n": "Larry Brown",
       "arc": "sistema",
+      "liv": 2,
       "look": "rado,bianco,occhiali",
       "tm": [
         "Nets|1980s",
@@ -256,6 +266,7 @@
       "id": "thibodeau",
       "n": "Tom Thibodeau",
       "arc": "difesa",
+      "liv": 2,
       "look": "rado,grigio",
       "tm": [
         "Bulls|2010s",
@@ -266,6 +277,7 @@
       "id": "jvangundy",
       "n": "Jeff Van Gundy",
       "arc": "difesa",
+      "liv": 2,
       "look": "calvo,occhiali",
       "tm": [
         "Knicks|1990s",
@@ -276,6 +288,7 @@
       "id": "vogel",
       "n": "Frank Vogel",
       "arc": "difesa",
+      "liv": 2,
       "look": "calvo,castano",
       "tm": [
         "Pacers|2010s"
@@ -285,6 +298,7 @@
       "id": "joerger",
       "n": "Dave Joerger",
       "arc": "difesa",
+      "liv": 1,
       "look": "corti,castano",
       "tm": [
         "Grizzlies|2010s"
@@ -294,6 +308,7 @@
       "id": "riley",
       "n": "Pat Riley",
       "arc": "fisico",
+      "liv": 3,
       "look": "folti,scuro",
       "tm": [
         "Lakers|1980s",
@@ -305,6 +320,7 @@
       "id": "daly",
       "n": "Chuck Daly",
       "arc": "fisico",
+      "liv": 2,
       "look": "folti,bianco",
       "tm": [
         "Pistons|1980s"
@@ -314,6 +330,7 @@
       "id": "unseld",
       "n": "Wes Unseld",
       "arc": "fisico",
+      "liv": 1,
       "look": "calvo,scura,baffi",
       "tm": [
         "Wizards|1990s"
@@ -323,6 +340,7 @@
       "id": "billups",
       "n": "Chauncey Billups",
       "arc": "fisico",
+      "liv": 1,
       "look": "calvo,scura,barba",
       "tm": [
         "Blazers|2020s"
@@ -332,6 +350,7 @@
       "id": "green",
       "n": "Willie Green",
       "arc": "fisico",
+      "liv": 1,
       "look": "calvo,scura",
       "tm": [
         "Pelicans|2020s"
@@ -341,6 +360,7 @@
       "id": "dantoni",
       "n": "Mike D'Antoni",
       "arc": "corsa",
+      "liv": 2,
       "look": "corti,grigio,baffi",
       "tm": [
         "Suns|2000s",
@@ -352,6 +372,7 @@
       "id": "karl",
       "n": "George Karl",
       "arc": "corsa",
+      "liv": 2,
       "look": "rado,bianco",
       "tm": [
         "Sonics|1990s",
@@ -363,6 +384,7 @@
       "id": "nelson",
       "n": "Don Nelson",
       "arc": "corsa",
+      "liv": 2,
       "look": "rado,bianco",
       "tm": [
         "Bucks|1980s",
@@ -375,6 +397,7 @@
       "id": "moe",
       "n": "Doug Moe",
       "arc": "corsa",
+      "liv": 1,
       "look": "corti,grigio",
       "tm": [
         "Nuggets|1980s"
@@ -384,6 +407,7 @@
       "id": "cunningham",
       "n": "Billy Cunningham",
       "arc": "corsa",
+      "liv": 1,
       "look": "corti,castano",
       "tm": [
         "Sixers|1980s"
@@ -393,6 +417,7 @@
       "id": "westphal",
       "n": "Paul Westphal",
       "arc": "corsa",
+      "liv": 1,
       "look": "corti,castano",
       "tm": [
         "Suns|1990s"
@@ -402,6 +427,7 @@
       "id": "budenholzer",
       "n": "Mike Budenholzer",
       "arc": "tiro",
+      "liv": 1,
       "look": "rado,castano",
       "tm": [
         "Hawks|2010s",
@@ -412,6 +438,7 @@
       "id": "mazzulla",
       "n": "Joe Mazzulla",
       "arc": "tiro",
+      "liv": 1,
       "look": "corti,scuro,barba",
       "tm": [
         "Celtics|2020s"
@@ -421,6 +448,7 @@
       "id": "stotts",
       "n": "Terry Stotts",
       "arc": "tiro",
+      "liv": 1,
       "look": "corti,grigio",
       "tm": [
         "Blazers|2010s"
@@ -430,6 +458,7 @@
       "id": "finch",
       "n": "Chris Finch",
       "arc": "tiro",
+      "liv": 1,
       "look": "corti,castano",
       "tm": [
         "Timberwolves|2020s"
@@ -439,6 +468,7 @@
       "id": "hardy",
       "n": "Will Hardy",
       "arc": "tiro",
+      "liv": 1,
       "look": "corti,castano",
       "tm": [
         "Jazz|2020s"
@@ -448,6 +478,7 @@
       "id": "mosley",
       "n": "Jamahl Mosley",
       "arc": "tiro",
+      "liv": 1,
       "look": "corti,scura,barba",
       "tm": [
         "Magic|2020s"
@@ -457,6 +488,7 @@
       "id": "sloan",
       "n": "Jerry Sloan",
       "arc": "pickroll",
+      "liv": 3,
       "look": "corti,grigio",
       "tm": [
         "Jazz|1980s",
@@ -468,6 +500,7 @@
       "id": "adelman",
       "n": "Rick Adelman",
       "arc": "pickroll",
+      "liv": 2,
       "look": "corti,grigio",
       "tm": [
         "Blazers|1990s",
@@ -480,6 +513,7 @@
       "id": "mmalone",
       "n": "Michael Malone",
       "arc": "pickroll",
+      "liv": 2,
       "look": "corti,castano,barba",
       "tm": [
         "Kings|2010s",
@@ -490,6 +524,7 @@
       "id": "dunleavy",
       "n": "Mike Dunleavy",
       "arc": "pickroll",
+      "liv": 1,
       "look": "corti,grigio",
       "tm": [
         "Bucks|1990s",
@@ -500,6 +535,7 @@
       "id": "mcmillan",
       "n": "Nate McMillan",
       "arc": "pickroll",
+      "liv": 1,
       "look": "calvo,scura",
       "tm": [
         "Sonics|2000s",
@@ -510,6 +546,7 @@
       "id": "kidd",
       "n": "Jason Kidd",
       "arc": "pickroll",
+      "liv": 1,
       "look": "calvo,scura",
       "tm": [
         "Mavericks|2020s"
@@ -519,6 +556,7 @@
       "id": "spoelstra",
       "n": "Erik Spoelstra",
       "arc": "versatile",
+      "liv": 3,
       "look": "corti,scuro,olivastra",
       "tm": [
         "Heat|2010s",
@@ -529,6 +567,7 @@
       "id": "nurse",
       "n": "Nick Nurse",
       "arc": "versatile",
+      "liv": 2,
       "look": "corti,grigio,occhiali",
       "tm": [
         "Raptors|2010s",
@@ -540,6 +579,7 @@
       "id": "daigneault",
       "n": "Mark Daigneault",
       "arc": "versatile",
+      "liv": 2,
       "look": "corti,castano,barba",
       "tm": [
         "Thunder|2020s"
@@ -549,6 +589,7 @@
       "id": "udoka",
       "n": "Ime Udoka",
       "arc": "versatile",
+      "liv": 1,
       "look": "calvo,scura,barba",
       "tm": [
         "Rockets|2020s"
@@ -558,6 +599,7 @@
       "id": "snyder",
       "n": "Quin Snyder",
       "arc": "versatile",
+      "liv": 1,
       "look": "folti,castano",
       "tm": [
         "Jazz|2010s",
@@ -568,6 +610,7 @@
       "id": "bickerstaff",
       "n": "J.B. Bickerstaff",
       "arc": "versatile",
+      "liv": 1,
       "look": "calvo,scura,barba",
       "tm": [
         "Cavaliers|2020s"
@@ -577,6 +620,7 @@
       "id": "wilkens",
       "n": "Lenny Wilkens",
       "arc": "equilibrio",
+      "liv": 2,
       "look": "corti,grigio,scura",
       "tm": [
         "Sonics|1980s",
@@ -590,6 +634,7 @@
       "id": "rivers",
       "n": "Doc Rivers",
       "arc": "equilibrio",
+      "liv": 2,
       "look": "corti,grigio,scura",
       "tm": [
         "Celtics|2000s",
@@ -600,6 +645,7 @@
       "id": "clifford",
       "n": "Steve Clifford",
       "arc": "equilibrio",
+      "liv": 1,
       "look": "rado,grigio",
       "tm": [
         "Hornets|2010s",
@@ -610,6 +656,7 @@
       "id": "hornacek",
       "n": "Jeff Hornacek",
       "arc": "equilibrio",
+      "liv": 1,
       "look": "corti,castano",
       "tm": [
         "Suns|2010s"
@@ -619,6 +666,7 @@
       "id": "motta",
       "n": "Dick Motta",
       "arc": "equilibrio",
+      "liv": 1,
       "look": "corti,grigio,occhiali",
       "tm": [
         "Mavericks|1980s"
@@ -628,6 +676,7 @@
       "id": "fitzsimmons",
       "n": "Cotton Fitzsimmons",
       "arc": "equilibrio",
+      "liv": 1,
       "look": "rado,grigio",
       "tm": [
         "Spurs|1980s"
@@ -637,6 +686,7 @@
       "id": "bird",
       "n": "Larry Bird",
       "arc": "equilibrio",
+      "liv": 1,
       "look": "folti,biondo",
       "tm": [
         "Pacers|1990s"
@@ -646,6 +696,7 @@
       "id": "collins",
       "n": "Doug Collins",
       "arc": "equilibrio",
+      "liv": 1,
       "look": "corti,grigio",
       "tm": [
         "Pistons|1990s"
@@ -655,6 +706,7 @@
       "id": "ejordan",
       "n": "Eddie Jordan",
       "arc": "equilibrio",
+      "liv": 1,
       "look": "corti,scura",
       "tm": [
         "Wizards|2000s"
@@ -664,6 +716,7 @@
       "id": "bscott",
       "n": "Byron Scott",
       "arc": "equilibrio",
+      "liv": 1,
       "look": "corti,scura,baffi",
       "tm": [
         "Nets|2000s"
@@ -673,6 +726,7 @@
       "id": "mbrown",
       "n": "Mike Brown",
       "arc": "equilibrio",
+      "liv": 1,
       "look": "corti,scuro,scura",
       "tm": [
         "Cavaliers|2000s",
@@ -683,6 +737,7 @@
       "id": "donovan",
       "n": "Billy Donovan",
       "arc": "equilibrio",
+      "liv": 1,
       "look": "corti,grigio",
       "tm": [
         "Bulls|2020s"
@@ -692,6 +747,7 @@
       "id": "jenkins",
       "n": "Taylor Jenkins",
       "arc": "equilibrio",
+      "liv": 1,
       "look": "corti,castano,barba",
       "tm": [
         "Grizzlies|2020s"
@@ -701,6 +757,7 @@
       "id": "monty",
       "n": "Monty Williams",
       "arc": "equilibrio",
+      "liv": 1,
       "look": "calvo,scura",
       "tm": [
         "Pelicans|2010s",
@@ -712,6 +769,7 @@
       "id": "rudyt",
       "n": "Rudy Tomjanovich",
       "arc": "dentro",
+      "liv": 2,
       "look": "corti,grigio,baffi",
       "tm": [
         "Rockets|1990s"
@@ -721,6 +779,7 @@
       "id": "hubie",
       "n": "Hubie Brown",
       "arc": "dentro",
+      "liv": 1,
       "look": "rado,bianco,occhiali",
       "tm": [
         "Knicks|1980s"
@@ -730,6 +789,7 @@
       "id": "cowens",
       "n": "Dave Cowens",
       "arc": "dentro",
+      "liv": 1,
       "look": "riccio,rosso,barba",
       "tm": [
         "Hornets|1990s"
@@ -739,6 +799,7 @@
       "id": "saunders",
       "n": "Flip Saunders",
       "arc": "dentro",
+      "liv": 1,
       "look": "corti,scuro",
       "tm": [
         "Timberwolves|2000s"
@@ -748,6 +809,7 @@
       "id": "svangundy",
       "n": "Stan Van Gundy",
       "arc": "dentro",
+      "liv": 1,
       "look": "rado,scuro,baffi,occhiali",
       "tm": [
         "Magic|2000s",
@@ -758,6 +820,7 @@
       "id": "hill",
       "n": "Brian Hill",
       "arc": "dentro",
+      "liv": 1,
       "look": "rado,grigio",
       "tm": [
         "Magic|1990s"
@@ -767,6 +830,7 @@
       "id": "issel",
       "n": "Dan Issel",
       "arc": "dentro",
+      "liv": 1,
       "look": "corti,castano",
       "tm": [
         "Nuggets|1990s"
@@ -776,6 +840,7 @@
       "id": "brettbrown",
       "n": "Brett Brown",
       "arc": "dentro",
+      "liv": 1,
       "look": "corti,grigio",
       "tm": [
         "Sixers|2010s"

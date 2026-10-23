@@ -4,7 +4,7 @@
 
 import { db, SLOTS, SLOT_LABEL, TEAM_KEYS, TEAM_NAMES, NOMI_SQUADRA, AMICI, STRATEGIES, ROSTER_SIZE, START_CREDITS } from './core.js';
 import { buildTeam, simSeriesUpTo, costruisciBracket, nomeTurno,
-  simStagione, giriStagione, potenzaSotto, RITMI, refertoTattico } from './engine.js';
+  simStagione, giriStagione, potenzaSotto, RITMI, refertoTattico, LIVELLO_COACH } from './engine.js';
 import { narrateGame, teamIdentity, verdettoReferto } from './narrator.js';
 import * as S from './state.js';
 import { now } from './net.js';
@@ -847,6 +847,7 @@ function coachPicker(s, k, t, canEdit) {
       </div>
       <div class="cinfo">
         <b>${esc(c.n)}</b>
+        <span class="cliv liv-${c.liv || 1}" title="${[tr('Allenatore normale', 'Regular coach'), tr('Ottimo allenatore', 'Great coach'), tr('Leggenda', 'Legend')][(c.liv || 1) - 1]}">${'★'.repeat(c.liv || 1)}<i>${[tr('normale', 'regular'), tr('ottimo', 'great'), tr('leggenda', 'legend')][(c.liv || 1) - 1]}</i></span>
         <span class="cid">${esc(c.label)}</span>
         <p class="cdesc">${esc(c.desc)}</p>
         <p class="ceff">${esc(effettoInParole(c))}</p>
@@ -878,8 +879,10 @@ function effettoInParole(c) {
       dif: 'protezione ferro', dpe: 'difesa perimetro', atl: 'atletismo', usg: 'palla richiesta' };
   const e = c.eff || {};
   const parti = [];
+  // I numeri sono gia quelli del suo livello: una leggenda da di piu e toglie meno.
+  const [piu, meno] = LIVELLO_COACH[c.liv] || LIVELLO_COACH[1];
   const elenco = (obj, chi) => Object.entries(obj || {})
-    .map(([a, v]) => `${v > 0 ? '+' : ''}${v} ${N[a] || a}${chi}`);
+    .map(([a, v]) => { const x = Math.round(v * (v > 0 ? piu : meno)); return `${x > 0 ? '+' : ''}${x} ${N[a] || a}${chi}`; });
   parti.push(...elenco(e.attr, tr(' a tutti', ' to everyone')));
   parti.push(...elenco(e.star, tr(' al primo violino', ' to the first option')));
   parti.push(...elenco(e.altri, tr(' agli altri', ' to the others')));

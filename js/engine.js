@@ -290,6 +290,10 @@ export const RITMI = {
 // L'allenatore modifica gli attributi dei cinque PRIMA che se ne ricavi il
 // profilo. E sempre un patto: da e toglie. Un bonus senza costo non sarebbe
 // una scelta, sarebbe il calcolo di quale numero e piu grande.
+// Per livello (3 leggenda, 2 ottimo, 1 normale): [moltiplicatore dei bonus
+// dello stile, moltiplicatore dei malus]. La leggenda da di piu e paga meno.
+export const LIVELLO_COACH = { 1: [1, 1], 2: [1.15, 0.9], 3: [1.4, 0.7] };
+
 function applicaAllenatore(five, tactics, key, factors) {
   const D = db();
   const c = D.coachById?.[tactics?.coach];
@@ -299,6 +303,9 @@ function applicaAllenatore(five, tactics, key, factors) {
 
   const e = arc.eff || {};
   const starId = tactics.v1 || five.slice().sort((x, y) => y.attrs.sco - x.attrs.sco)[0]?.id;
+  // IL LIVELLO DELL'ALLENATORE. Lo stile decide COSA cambia, il livello QUANTO:
+  // Popovich e Larry Brown hanno lo stesso stile ma non valgono uguale.
+  const [piu, meno] = LIVELLO_COACH[c.liv] || LIVELLO_COACH[1];
 
   const out = five.map((p) => {
     const delta = { ...(e.attr || {}) };
@@ -308,7 +315,7 @@ function applicaAllenatore(five, tactics, key, factors) {
     const attrs = { ...p.attrs };
     for (const [k, v] of Object.entries(delta)) {
       if (attrs[k] === undefined) continue;
-      attrs[k] = clamp(attrs[k] + v, 20, 99);
+      attrs[k] = clamp(attrs[k] + v * (v > 0 ? piu : meno), 20, 99);
     }
     return { ...p, attrs };
   });
@@ -325,14 +332,6 @@ function applicaAllenatore(five, tactics, key, factors) {
    2. STRATEGIE — modificatori che dipendono dall'avversario
    ========================================================== */
 
-// RITARATE SULLE MEDIE VERE (rose da asta dei primi 120). Prima le soglie
-// stavano sotto la media: l'atletismo partiva da 67 con una media di 68,5 e
-// la difesa perimetrale "forte" da 54 con una media di 64,6, quindi attacco al
-// ferro e palla alla star erano un malus per quasi tutti (migliori nello 0% e
-// nel 2% delle rose) mentre pick and roll e post-up vincevano piu di meta
-// delle volte. Adesso ogni strategia rende come "equilibrato" su una rosa
-// media e diventa la scelta giusta per un tipo di rosa riconoscibile.
-// Verificabile con la misura "migliore nel X% delle rose".
 // RITARATE SULLE MEDIE VERE (rose da asta dei primi 120). Prima le soglie
 // stavano sotto la media: l'atletismo partiva da 67 con una media di 68,5 e
 // la difesa perimetrale "forte" da 54 con una media di 64,6, quindi attacco al
