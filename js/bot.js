@@ -193,15 +193,15 @@ const TRATTI = {
   // quattro. Adesso resta il cacciatore di stelle — concentra quasi tutto sui
   // primi — ma proprio per questo deve avere meno da spendere.
   bruno: {
-    curva: [3.4, 2.3, 1.05, 0.45, 0.18], spinta: 1.35, fretta: 1.15, prudenza: 0.20,
+    curva: [3.4, 2.3, 1.05, 0.45, 0.18], spinta: 1.35, fretta: 1.15, prudenza: 0.20, salto: 1,
     gusti: { strategy: 'palla-star', ritmo: 'veloce' },
   },
   cleo: {
-    curva: [1.9, 1.6, 1.30, 0.95, 0.45], spinta: 1.38, fretta: 0.85, prudenza: 0.80,
+    curva: [1.9, 1.6, 1.30, 0.95, 0.45], spinta: 1.38, fretta: 0.85, prudenza: 0.80, salto: -1,
     gusti: { strategy: 'equilibrato', ritmo: 'lento' },
   },
   dino: {
-    curva: [2.8, 2.05, 1.20, 0.60, 0.28], spinta: 1.52, fretta: 1.15, prudenza: 0.30,
+    curva: [2.8, 2.05, 1.20, 0.60, 0.28], spinta: 1.52, fretta: 1.15, prudenza: 0.30, salto: 1,
     gusti: { strategy: 'transizione', ritmo: 'run-gun' },
   },
   // Il quinto non doveva somigliare a nessuno dei quattro. Lascia perdere i
@@ -452,6 +452,19 @@ export function offerta(st, k, S, momento, memoria) {
     const max = S.maxBid(st, k);
     const secco = Math.max(minimo, Math.round(max * (0.82 + Math.random() * 0.18)));
     if (S.canBid(st, k, secco)) return secco;
+  }
+
+  // A SALTI CONTRO UN ALTRO BOT. Due bot che si rilanciano un credito alla
+  // volta tengono il tavolo fermo a guardare un duello lunghissimo. Contro un
+  // bot si sale di +3 se al proprio tetto mancano almeno 10 crediti, +2 se
+  // ne mancano 5, altrimenti +1; contro una persona sempre +1, per non
+  // regalarle niente. Il carattere sposta il salto di uno (Bruno e Dino hanno
+  // fretta, Cleo no). Mai oltre il tetto.
+  if (cur && st.bots?.[cur.team]) {
+    const manca = m.tetto - minimo;
+    const passo = Math.max(1, (manca >= 10 ? 3 : manca >= 5 ? 2 : 1) + (bot.tr?.salto || 0));
+    const offerto = Math.min(m.tetto, minimo + passo - 1);
+    if (offerto > minimo && S.canBid(st, k, offerto)) return offerto;
   }
   return S.canBid(st, k, minimo) ? minimo : null;
 }
