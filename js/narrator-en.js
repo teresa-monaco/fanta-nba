@@ -140,93 +140,239 @@ export const FACTOR_LINES = {
 };
 
 export const OPEN_BLOWOUT = [
-  'Did {L} run the auction sober? The evidence says no.',
-  'A massacre. {L} will say he was just trying out a lineup. He says that every time.',
-  '{W} wins, {L} asks to swap teams midway through the third quarter. Denied.',
-  'Over by the first timeout. {L} stayed on the floor only because of the contract.',
-  'Someone take the team away from {L}: he is a danger to himself and others.',
-  'That\'s not a loss, that\'s a lawsuit. Against {L}, for that auction.',
-  '{W} played basketball. {L} participated.',
-  'After the game {L} asked not to be quoted. Too late.',
-  'Over in warm-ups. The rest was cruelty against {L}, and he earned it.',
+  '{W} wins by {m}. {L} built this team in forty seconds of auction and it shows: even a vacuum cleaner has more offensive ideas.',
+  '{L} loses by {m} and stares at the scoreboard as if it were the scoreboard\'s fault.',
+  '{W} by {m}. Asked for a comment, {L} said he was trying out a lineup. He has been trying it for three nights.',
+  '{W} by {m}. Someone take the team away from {L}: he is a danger to himself and others.',
+  'It ends with a {m}-point margin. Midway through, {L} asked to swap teams. Denied.',
+  '{W} played basketball. {L} took part, and not much.',
 ];
 export const OPEN_CONTROL = [
-  '{W} manages the game with all the care {L} didn\'t put into the auction.',
+  '{W} manages it with all the care {L} didn\'t put into the auction.',
   'Never in doubt. {L} believed for four minutes, then gave up with dignity. Without dignity, actually.',
   '{W} in control from the start. {L} in control of nothing, as usual.',
   'Easy win for {W}. {L} says "the team is there". It isn\'t.',
   '{W} takes it home without breaking a sweat. {L} is sweating, from embarrassment.',
-  'Never a game: {L} picked the wrong key back at the auction.',
 ];
 export const OPEN_CLOSE = [
   'Balanced for three quarters, then {L} remembered being {L}.',
-  '{L} really believed. That\'s the touching part.',
+  '{L} really believed, which is the touching part. {W} less so, but won.',
   'Hard-fought, until {W} decided to stop playing with its food.',
-  'For a moment {L} looked like a general manager. It passed.',
-  'A real game until the fourth quarter, when {L}\'s roster showed what it is.',
+  'For a moment {L} looked like a general manager. Then {W} scored and the illusion ended.',
 ];
 export const OPEN_THRILLER = [
-  'Decided on the last possession. Tonight {L} rewatches the game and the roster, and cries over both.',
-  'Two points. Two. {L} will be looking for them in drawers for years.',
+  'Decided on the last possession. {W} celebrates, {L} rewatches the game and the roster tonight and cries over both.',
+  'Two points. Two. {L} will look for them in drawers for years, while {W} has already spent them.',
   'A heart-stopping finish: {W} gets the thrill, {L} gets the actual heart attack.',
-  'It comes down to one possession, and {L} as always hands it to the wrong guy.',
-  '{W} wins by a whisker. {L} loses by a whisker, which almost sounds like a compliment. It isn\'t.',
-  'Beautiful, for anyone not rooting for {L}.',
+  'It comes down to one possession, and {L} as always hands it to the wrong guy. {W} says thanks.',
 ];
 export const OPEN_OT = [
-  'Overtime: {L} couldn\'t manage to lose it in regulation and asked for five more minutes.',
-  'Forty minutes aren\'t enough for {L} to figure out how to close a game. Neither are forty-five, it turns out.',
+  'Overtime: neither wanted to win. {L} wouldn\'t know what to do with it, {W} got there by accident.',
+  'Forty minutes aren\'t enough for {L} to figure out how to close a game. Neither are forty-five: {W} wins.',
   'Overtime. {W} and {L} both tried their best to lose it, {L} with more talent.',
-  'An overtime gifted by {L}\'s bench, which really can\'t sit still.',
 ];
 export const OPEN_2OT = [
-  'Double overtime. {L} wanted to suffer as long as possible, and got his wish.',
-  'Fifty minutes to lose a game {L} had already lost at the auction.',
-  'Two overtimes: at some point {L} stopped coaching and started praying. It didn\'t work.',
+  'Double overtime. {L} wanted to suffer as long as possible, and {W} granted the wish.',
+  'Fifty minutes to lose a game {L} had already lost at the auction. {W} wins, by exhaustion.',
 ];
-export const LOSER_WITH_STAR = [
+export const STELLA = [
+  '{p} scores {n} for {W}, who for once bought someone who can play.',
+  '{n} points from {p}: {W} spent the credits well, and the world is still in shock.',
+  '{p} scores {n} and {W} takes the credit. As if he had coached him.',
+  '{p} punches in {n} for {W}. The defense guarded him the way you guard a friend at the bar: from afar.',
+  '{n} points from {p}. {W} watches him score the way you watch an investment that worked by accident.',
+];
+export const STELLA_PERDE = [
   '{p} scores {n} and {L} loses anyway: the one good buy of the auction, surrounded by four mistakes.',
   '{n} points from {p}. {L} built around him a team that didn\'t deserve to watch him.',
   '{p} scores {n}. {L}\'s other four were there for the photos.',
   '{p} scores {n} and asks for a trade after the game. Far from {L}, preferably.',
-  '{n} points from {p} wasted by {L}, who has a rare talent: ruining other people\'s.',
   'One man and four extras: {p} scores {n}, {L} loses and blames the referees.',
-  '{p} punches in {n} points. {L} punches the clock and goes back to botching auctions.',
 ];
-export const LOSER_FLAT = [
+export const PERDE_PIATTO = [
   '{L} never found a good possession, because he didn\'t buy one at the auction.',
   '{L} was missing everything, starting with a general manager.',
   '{L} played the way he ran the auction: badly, but with conviction.',
   'What remains of {L} is the silence on the bench and the laughter in the stands.',
   '{L} was on the floor. Unfortunately.',
-  '{L} did the game a favor: someone had to lose it, and he volunteered.',
   '{L}\'s game should be studied in general manager courses, under "what not to do".',
-  '{L} loses and already has the excuse ready. Same as last game.',
   'Someone tell {L} that a lineup is picked with your head, not by rolling dice.',
 ];
-
-export const PUNTI = [
-  '{p} drops {n} for {T}',
-  '{n} points from {p} for {T}',
-  '{p} finishes with {n} for {T}',
-  '{T} hangs on to {p}\'s {n} points',
-  '{T} gets through on {p}\'s {n} points',
-  '{p} punches in {n} points and {T} says thanks',
-];
 export const ASSIST = [
-  '{p} hands out {n} assists',
-  '{p} serves {n} assists to people who didn\'t deserve them',
-  '{n} assists from {p}, with the ball moving the way it should',
-  '{p} sets the table {n} times',
-  '{n} assists from {p}, who sees things nobody else sees',
+  '{p} hands out {n} assists to teammates who didn\'t deserve them. One was picked by {L}... no wait, he\'s {W}\'s. It shows anyway.',
+  '{n} assists from {p}: passes {L} wouldn\'t see even in slow motion.',
+  '{p} sets the table {n} times. The others eat, {L} watches.',
 ];
 export const RIMBALZI = [
-  '{p} grabs {n} rebounds',
-  '{p} pulls down {n} rebounds unopposed',
-  '{n} rebounds from {p}, basically on his own',
-  '{p} cleans the glass: {n} rebounds',
-  '{n} rebounds from {p}, who decides everything under the basket',
+  '{p} grabs {n} rebounds. {L} grabbed fewer in the whole auction, of the right decisions.',
+  '{n} rebounds from {p}: he put a "private property" sign under the basket.',
+  '{p} cleans the glass: {n} rebounds. {L}\'s guys watched the ball go up, paying customers.',
 ];
+export const VIOLINO = [
+  '{L} gave the ball to {v} as first option. His best player was {p}: details a general manager notices. Not {L}.',
+  '{L}\'s first option: {v}. {L}\'s best player: {p}. Two lines that explain the loss better than an hour of analysis.',
+];
+export const SCELTA = [
+  '{L} had picked "{s}". Brave. Wrong, but brave.',
+  '{L}\'s plan was "{s}". The plan lasted until the tip-off.',
+  '"{s}", said {L}\'s whiteboard. The players didn\'t read it, and it was their best moment.',
+];
+export const PERSONA = {
+  'Allen Iverson': {
+    vince: [
+      '{p} scores {n} for {W}, then asks if there\'s practice tomorrow. Practice? We\'re talking about practice?',
+      '{n} points from {p} for {W}, almost all on his own: passing is for tall people.',
+    ],
+    perde: [
+      '{p} scores {n} and {L} loses anyway. He\'s skipping tomorrow\'s practice either way.',
+    ],
+  },
+  'Michael Jordan': {
+    vince: [
+      '{p} scores {n} for {W} and takes it personally anyway, even though he won.',
+      '{n} points from {p} for {W}. Someone trash-talked him in warm-ups: don\'t trash-talk {p}.',
+    ],
+    perde: [
+      '{p} scores {n} and loses. He looked at the teammates {L} picked like a man taking it personally. {L}, brace yourself.',
+    ],
+  },
+  'Kobe Bryant': {
+    vince: [
+      '{p} takes shots as if they were free: {n} points for {W}, and one pass by mistake.',
+    ],
+    perde: [
+      '{p} scores {n} with more shots than teammates. {L} applauds anyway, knowing as much about basketball as about auctions.',
+    ],
+  },
+  'Shaquille O\'Neal': {
+    vince: [
+      '{p} scores {n} for {W} without ever leaving the paint. At the free-throw line, though, the arena covers its eyes.',
+    ],
+    perde: [
+      '{p} scores {n} and {L} loses: at the line he decided to do charity.',
+    ],
+  },
+  'James Harden': {
+    vince: [
+      '{p} scores {n} for {W}, half from the line: nobody really touched him, but the referee saw his face and took pity.',
+    ],
+    perde: [
+      '{p} scores {n} and {L} loses anyway. He asked for a foul on the final buzzer too.',
+    ],
+  },
+  'Carmelo Anthony': {
+    vince: [
+      '{p} scores {n} for {W} and defends zero: at least he\'s consistent.',
+    ],
+    perde: [
+      '{p} scores {n} and leaves the defense at home. {L} spent the credits to watch him guard the air.',
+    ],
+  },
+  'Russell Westbrook': {
+    vince: [
+      '{p} finishes with {n} for {W} and the usual urge to do everything himself, wrong things included.',
+    ],
+    perde: [
+      '{p} scores {n}: gorgeous stats for a losing team. Like {L}\'s résumé.',
+    ],
+  },
+  'Stephen Curry': {
+    vince: [
+      '{p} scores {n} for {W} and turns around before the ball goes in. Rude, but effective.',
+    ],
+    perde: [
+      '{p} scores {n} and loses: even he isn\'t enough alone, especially with teammates picked by {L}.',
+    ],
+  },
+  'LeBron James': {
+    vince: [
+      '{p} scores {n} for {W} and doubles as general manager, since {W} could use one.',
+    ],
+    perde: [
+      '{p} scores {n} and loses. He\'ll ask for a trade by summer. Far from {L}.',
+    ],
+  },
+  'Kevin Durant': {
+    vince: [
+      '{p} scores {n} for {W} without looking up, then opens a fake account to compliment himself.',
+    ],
+    perde: [
+      '{p} scores {n} and loses. Tonight he opens a fake account to defend {L}. He\'ll be the only one.',
+    ],
+  },
+  'Kawhi Leonard': {
+    vince: [
+      '{p} scores {n} for {W} without changing expression. Nobody knows if he\'s happy. Not even him.',
+    ],
+    perde: [
+      '{p} scores {n}, then sits out the next two as a precaution. {L} understands: he\'d rest himself too.',
+    ],
+  },
+  'Giannis Antetokounmpo': {
+    vince: [
+      '{p} scores {n} for {W}, reaching the rim in two steps from half court.',
+    ],
+    perde: [
+      '{p} scores {n} and loses: he takes so long at the line that {L} has time to botch another auction.',
+    ],
+  },
+  'Kareem Abdul-Jabbar': {
+    vince: [
+      '{p} scores {n} for {W} with the skyhook: nobody has blocked it in fifty years.',
+    ],
+    perde: [
+      '{p} scores {n} with the skyhook and {L} loses: the hook was pretty, the rest of the team wasn\'t.',
+    ],
+  },
+  'Hakeem Olajuwon': {
+    vince: [
+      '{p} scores {n} for {W} with the Dream Shake: his defender is still spinning.',
+    ],
+    perde: [
+      '{p} scores {n} and loses: his teammates did the Dream Shake on defense too, spinning at nothing.',
+    ],
+  },
+  'Dirk Nowitzki': {
+    vince: [
+      '{p} scores {n} for {W} on one leg. He uses the other to mock whoever guards him.',
+    ],
+    perde: [
+      '{p} scores {n} on one leg. {L} loses on both.',
+    ],
+  },
+  'Larry Bird': {
+    vince: [
+      '{p} scores {n} for {W}, and before tip-off he had already told the defense where he\'d shoot from.',
+    ],
+    perde: [
+      '{p} scores {n} and loses, and now has to explain to everyone why he agreed to play for {L}.',
+    ],
+  },
+  'Magic Johnson': {
+    vince: [
+      '{p} scores {n} for {W} with a smile, the most humiliating way to beat someone.',
+    ],
+    perde: [
+      '{p} scores {n} and smiles anyway. {L}, a bit less.',
+    ],
+  },
+  'Joel Embiid': {
+    vince: [
+      '{p} scores {n} for {W} and is questionable for the next one. As always.',
+    ],
+    perde: [
+      '{p} scores {n} and loses. Questionable tomorrow, as always, and {L} no longer knows whether to hope.',
+    ],
+  },
+  'Nikola Jokic': {
+    vince: [
+      '{p} scores {n} for {W} looking like he\'d rather be at the horse races already.',
+    ],
+    perde: [
+      '{p} scores {n} and loses. He doesn\'t care: there are horses tonight.',
+    ],
+  },
+};
 
 // Game 7 easter egg: Fabio has nothing to do with the game, which is exactly
 // why it's funny. Same condition as the Italian: game 7 only.

@@ -9,7 +9,7 @@
 // sfotte chi ha costruito e schierato la squadra (l'asta, le scelte, la
 // panchina) per nome. Il limite resta il gioco: niente fuori dal tavolo.
 
-import { makeRng, hashStr } from './core.js';
+import { makeRng, hashStr, STRATEGIES } from './core.js';
 import { EN } from './lingua.js';
 import * as ENG from './narrator-en.js';
 
@@ -149,103 +149,249 @@ const FACTOR_LINES = EN ? ENG.FACTOR_LINES : {
   ],
 };
 
-/* ---------- Aperture, per quanto è finita male ---------- */
-// Da qui in giu si sfotte chi ha COSTRUITO e SCHIERATO la squadra: {W} e {L}
-// sono i nomi di chi siede al tavolo. Il tono e quello di gara 7 su Fabio.
+/* ---------- La cronaca: roasting pesante ---------- */
+// Si sfotte chi gioca al tavolo ({W} vince, {L} perde: sono i nomi di chi ha
+// fatto l'asta) e il personaggio dei campioni in campo (Iverson e
+// l'allenamento, Shaq e i liberi). Ogni battuta parte da un dato vero della
+// gara: punteggio, chi ha segnato, chi ha scelto cosa. Mai fatti inventati.
 
 const OPEN_BLOWOUT = EN ? ENG.OPEN_BLOWOUT : [
-  '{L} ha fatto l\'asta da sobrio? Le prove dicono di no.',
-  'Massacro. {L} dirà che stava solo provando un quintetto. Lo dice ogni volta.',
-  '{W} vince, {L} chiede il cambio di squadra a metà terzo quarto. Respinto.',
-  'Finita al primo timeout. {L} è rimasto in campo solo per contratto.',
-  'Qualcuno tolga la squadra a {L}: è un pericolo per sé e per gli altri.',
-  'Non è una sconfitta, è una denuncia. Contro {L}, per come ha fatto l\'asta.',
-  '{W} ha giocato a pallacanestro. {L} ha partecipato.',
-  'A fine partita {L} ha chiesto di non essere citato. Troppo tardi.',
-  'Partita chiusa nel riscaldamento. Il resto è stato accanimento su {L}, e se l\'è meritato.',
+  '{W} vince di {m}. {L} ha costruito questa squadra in quaranta secondi d\'asta e si vede: anche un aspirapolvere ha più idee offensive.',
+  '{L} perde di {m} e guarda il tabellone come se fosse colpa del tabellone.',
+  'Più {m} per {W}. A {L} hanno chiesto un commento: ha risposto che stava provando un quintetto. Lo prova da tre serate.',
+  '{W} di {m}. Qualcuno tolga la squadra a {L}: è un pericolo per sé e per gli altri.',
+  'Finisce con {m} punti di scarto. {L} a metà partita ha chiesto il cambio di squadra. Respinto.',
+  '{W} ha giocato a pallacanestro. {L} ha partecipato, e nemmeno tanto.',
 ];
 const OPEN_CONTROL = EN ? ENG.OPEN_CONTROL : [
-  '{W} gestisce la partita con tutta la cura che {L} non ha messo nell\'asta.',
+  '{W} la gestisce con tutta la cura che {L} non ha messo nell\'asta.',
   'Mai in discussione. {L} ci ha creduto per quattro minuti, poi ha mollato con dignità. Senza dignità, in realtà.',
   '{W} in controllo dall\'inizio. {L} in controllo di niente, come al solito.',
   'Vittoria comoda di {W}. {L} si consola dicendo che "la squadra c\'è". Non c\'è.',
   '{W} la porta a casa senza sudare. {L} suda, ma per l\'imbarazzo.',
-  'Partita mai aperta: {L} aveva sbagliato la chiave già all\'asta.',
 ];
 const OPEN_CLOSE = EN ? ENG.OPEN_CLOSE : [
   'Equilibrio per tre quarti, poi {L} si è ricordato di essere {L}.',
-  '{L} ci ha creduto davvero. È questo che fa tenerezza.',
+  '{L} ci ha creduto davvero, ed è questo che fa tenerezza. {W} un po\' meno, ma ha vinto.',
   'Combattuta, finché {W} ha deciso di smettere di giocare col cibo.',
-  'Per un attimo {L} è sembrato un general manager. Poi è passato.',
-  'Partita vera fino al quarto quarto, quando la rosa di {L} si è mostrata per quello che è.',
+  'Per un attimo {L} è sembrato un general manager. Poi {W} ha segnato e l\'illusione è finita.',
 ];
 const OPEN_THRILLER = EN ? ENG.OPEN_THRILLER : [
-  'Decisa all\'ultimo possesso. {L} stanotte riguarda la partita e la rosa, e piange per entrambe.',
-  'Due punti. Due. {L} li cercherà nei cassetti per anni.',
+  'Decisa all\'ultimo possesso. {W} festeggia, {L} stanotte riguarda la partita e la rosa e piange per entrambe.',
+  'Due punti. Due. {L} li cercherà nei cassetti per anni, mentre {W} li ha già spesi.',
   'Finale da infarto: a {W} il batticuore, a {L} l\'infarto vero.',
-  'Si decide su un possesso, e {L} come sempre lo mette in mano alla persona sbagliata.',
-  '{W} vince di un soffio. {L} perde di un soffio, che detto così sembra un complimento. Non lo è.',
-  'Bellissima, per chiunque non tifi {L}.',
+  'Si decide su un possesso, e {L} come sempre lo mette in mano alla persona sbagliata. {W} ringrazia.',
 ];
 const OPEN_OT = EN ? ENG.OPEN_OT : [
-  'Supplementare: {L} non è riuscito a perderla nei tempi regolamentari e ha chiesto altri cinque minuti.',
-  'Quaranta minuti non bastano a {L} per capire come si chiude una partita. Nemmeno quarantacinque, si scoprirà.',
+  'Supplementare: nessuno dei due voleva vincerla. {L} perché non saprebbe cosa farsene, {W} perché ci è arrivato per sbaglio.',
+  'Quaranta minuti non bastano a {L} per capire come si chiude una partita. Nemmeno quarantacinque: vince {W}.',
   'Overtime. {W} e {L} hanno fatto di tutto per perderla, {L} con più talento.',
-  'Un supplementare regalato dalla panchina di {L}, che in panchina proprio non ci sa stare.',
 ];
 const OPEN_2OT = EN ? ENG.OPEN_2OT : [
-  'Doppio supplementare. {L} voleva soffrire il più a lungo possibile, ed è stato accontentato.',
-  'Cinquanta minuti per perdere una partita che {L} aveva già perso all\'asta.',
-  'Due overtime: a un certo punto {L} ha smesso di allenare e ha cominciato a pregare. Non ha funzionato.',
+  'Doppio supplementare. {L} voleva soffrire il più a lungo possibile, ed è stato accontentato da {W}.',
+  'Cinquanta minuti per perdere una partita che {L} aveva già perso all\'asta. Vince {W}, per sfinimento.',
 ];
-
-/* ---------- Chiusure sul perdente ---------- */
-
-const LOSER_WITH_STAR = EN ? ENG.LOSER_WITH_STAR : [
+const STELLA = EN ? ENG.STELLA : [
+  '{p} ne mette {n} per {W}, che per una volta ha comprato qualcuno che sa giocare.',
+  '{n} punti di {p}: {W} ha speso bene i crediti, e il mondo è ancora sotto shock.',
+  '{p} ne fa {n} e {W} si prende i meriti. Come se l\'avesse allenato lui.',
+  '{p} timbra {n} punti per {W}. Gli avversari lo marcavano come si marca un amico al bar: da lontano.',
+  '{n} punti di {p}. {W} lo guarda segnare come si guarda un investimento azzeccato per sbaglio.',
+];
+const STELLA_PERDE = EN ? ENG.STELLA_PERDE : [
   '{p} ne mette {n} e {L} perde lo stesso: l\'unico acquisto giusto dell\'asta, circondato da quattro errori.',
   '{n} punti di {p}. {L} gli ha costruito attorno una squadra che non meritava nemmeno di guardarlo.',
   '{p} ne fa {n}. Gli altri quattro di {L} erano lì per le foto.',
   '{p} ne fa {n} e a fine partita chiede la cessione. Lontano da {L}, possibilmente.',
-  '{n} punti di {p} sprecati da {L}, che ha un talento raro: rovinare quello degli altri.',
   'Un uomo solo e quattro comparse: {p} ne fa {n}, {L} perde e dà la colpa agli arbitri.',
-  '{p} timbra {n} punti. {L} timbra il cartellino e torna a sbagliare aste.',
 ];
-const LOSER_FLAT = EN ? ENG.LOSER_FLAT : [
+const PERDE_PIATTO = EN ? ENG.PERDE_PIATTO : [
   '{L} non ha mai trovato il possesso buono, perché all\'asta non l\'ha comprato.',
   'A {L} è mancato tutto, a partire da un general manager.',
   '{L} ha giocato come ha fatto l\'asta: male, ma con convinzione.',
   'Di {L} resteranno il silenzio in panchina e le risate in tribuna.',
   '{L} in campo c\'era. Purtroppo.',
-  '{L} ha reso un servizio alla partita: qualcuno doveva perderla, e si è offerto volontario.',
   'La partita di {L} andrebbe studiata nei corsi per general manager, alla voce "cosa non fare".',
-  '{L} perde e ha già pronta la scusa. È la stessa della gara prima.',
   'Qualcuno spieghi a {L} che il quintetto si sceglie con la testa, non tirando i dadi.',
 ];
-
-/* ---------- Frasi intermedie: anche queste con varianti ---------- */
-
-const PUNTI = EN ? ENG.PUNTI : [
-  '{p} ne mette {n} per {T}',
-  '{n} punti di {p} per {T}',
-  '{p} chiude a quota {n} per {T}',
-  '{T} si aggrappa ai {n} punti di {p}',
-  '{T} passa con i {n} punti di {p}',
-  '{p} timbra {n} punti e {T} ringrazia',
-];
 const ASSIST = EN ? ENG.ASSIST : [
-  '{p} smista {n} assist',
-  '{p} serve {n} assist a gente che non se li meritava',
-  '{n} assist di {p}, con la palla che gira come si deve',
-  '{p} apparecchia {n} volte',
-  '{n} assist di {p}, che vede cose che gli altri non vedono',
+  '{p} serve {n} assist a compagni che non li meritavano. Uno l\'ha scelto {L}... no, aspetta, è di {W}. Si nota lo stesso.',
+  '{n} assist di {p}: vede passaggi che a {L} non verrebbero in mente nemmeno con la moviola.',
+  '{p} apparecchia {n} volte. Gli altri mangiano, {L} guarda.',
 ];
 const RIMBALZI = EN ? ENG.RIMBALZI : [
-  '{p} prende {n} rimbalzi',
-  '{p} si prende {n} rimbalzi senza trovare opposizione',
-  '{n} rimbalzi di {p}, praticamente da solo',
-  '{p} ripulisce i tabelloni: {n} rimbalzi',
-  '{n} rimbalzi di {p}, che sotto canestro decide lui',
+  '{p} prende {n} rimbalzi. {L} in tutta l\'asta ne ha presi meno, ma di decisioni giuste.',
+  '{n} rimbalzi di {p}: sotto canestro ha messo il cartello "proprietà privata".',
+  '{p} ripulisce i tabelloni: {n} rimbalzi. Quelli di {L} guardavano la palla salire, paganti.',
 ];
+const VIOLINO = EN ? ENG.VIOLINO : [
+  '{L} ha dato la palla a {v} come primo violino. Il migliore dei suoi è stato {p}: dettagli che un general manager nota. Non {L}.',
+  'Primo violino di {L}: {v}. Il migliore in campo dei suoi: {p}. Due righe che spiegano la sconfitta meglio di un\'ora di analisi.',
+];
+const SCELTA = EN ? ENG.SCELTA : [
+  '{L} aveva scelto "{s}". Coraggioso. Sbagliato, ma coraggioso.',
+  'Il piano di {L} era "{s}". Il piano è durato fino alla palla a due.',
+  '"{s}", diceva la lavagna di {L}. I giocatori non l\'hanno letta, ed è stato il loro momento migliore.',
+];
+
+// Le battute sul personaggio: scattano quando quel giocatore e il migliore
+// della sua squadra. Gli altri prendono la battuta generica.
+const PERSONA = EN ? ENG.PERSONA : {
+  'Allen Iverson': {
+    vince: [
+      '{p} ne mette {n} per {W}, poi chiede se domani c\'è allenamento. Allenamento? Stiamo parlando di allenamento?',
+      '{n} punti di {p} per {W}, quasi tutti presi da solo: passare la palla è roba da gente alta.',
+    ],
+    perde: [
+      '{p} ne fa {n} e {L} perde lo stesso. Lui comunque all\'allenamento di domani non ci va.',
+    ],
+  },
+  'Michael Jordan': {
+    vince: [
+      '{p} ne mette {n} per {W} e se la lega al dito lo stesso, anche se ha vinto.',
+      '{n} punti di {p} per {W}. Qualcuno lo ha provocato nel riscaldamento: non provocate {p}.',
+    ],
+    perde: [
+      '{p} ne fa {n} e perde. Ha guardato i compagni scelti da {L} con la faccia di chi se la lega al dito. {L}, preparati.',
+    ],
+  },
+  'Kobe Bryant': {
+    vince: [
+      '{p} prende tiri come se fossero gratis: {n} punti per {W}, e per sbaglio anche un passaggio.',
+    ],
+    perde: [
+      '{p} ne fa {n} con più tiri che compagni. {L} applaude lo stesso, perché di basket ne capisce quanto di aste.',
+    ],
+  },
+  'Shaquille O\'Neal': {
+    vince: [
+      '{p} ne mette {n} per {W} senza mai allontanarsi più di un metro dal ferro. Ai tiri liberi però il palazzetto si copre gli occhi.',
+    ],
+    perde: [
+      '{p} ne fa {n} e {L} perde: in lunetta ha deciso di fare beneficenza.',
+    ],
+  },
+  'James Harden': {
+    vince: [
+      '{p} ne mette {n} per {W}, metà dalla lunetta: nessuno lo ha toccato davvero, ma l\'arbitro ha visto la sua faccia e ha avuto pietà.',
+    ],
+    perde: [
+      '{p} ne fa {n} e {L} perde lo stesso. Ha chiesto un fallo anche sulla sirena finale.',
+    ],
+  },
+  'Carmelo Anthony': {
+    vince: [
+      '{p} ne mette {n} per {W} e difende zero: almeno è coerente.',
+    ],
+    perde: [
+      '{p} ne fa {n}, la difesa la lascia a casa. {L} ha speso i crediti per guardarlo marcare l\'aria.',
+    ],
+  },
+  'Russell Westbrook': {
+    vince: [
+      '{p} chiude con {n} punti per {W} e la solita voglia di fare tutto da solo, anche le cose sbagliate.',
+    ],
+    perde: [
+      '{p} ne mette {n}: statistiche bellissime per una squadra che ha perso. Come il curriculum di {L}.',
+    ],
+  },
+  'Stephen Curry': {
+    vince: [
+      '{p} ne mette {n} per {W} e si gira prima che la palla entri. Maleducato, ma efficace.',
+    ],
+    perde: [
+      '{p} ne fa {n} e perde: da solo non basta neanche lui, soprattutto con i compagni scelti da {L}.',
+    ],
+  },
+  'LeBron James': {
+    vince: [
+      '{p} ne mette {n} per {W} e fa anche da general manager, visto che {W} ne avrebbe bisogno.',
+    ],
+    perde: [
+      '{p} ne fa {n} e perde. Entro l\'estate chiederà la cessione. Lontano da {L}.',
+    ],
+  },
+  'Kevin Durant': {
+    vince: [
+      '{p} ne mette {n} per {W} senza alzare lo sguardo, poi apre un profilo falso per farsi i complimenti da solo.',
+    ],
+    perde: [
+      '{p} ne fa {n} e perde. Stanotte apre un profilo falso per difendere {L}. Sarà l\'unico.',
+    ],
+  },
+  'Kawhi Leonard': {
+    vince: [
+      '{p} ne mette {n} per {W} senza cambiare espressione. Nessuno sa se sia contento. Nemmeno lui.',
+    ],
+    perde: [
+      '{p} ne fa {n}, poi salta le prossime due per precauzione. {L} lo capisce: anche lui si risparmierebbe.',
+    ],
+  },
+  'Giannis Antetokounmpo': {
+    vince: [
+      '{p} ne mette {n} per {W} arrivando al ferro in due passi da metà campo.',
+    ],
+    perde: [
+      '{p} ne fa {n} e perde: ai liberi ci mette così tanto che {L} fa in tempo a sbagliare un\'altra asta.',
+    ],
+  },
+  'Kareem Abdul-Jabbar': {
+    vince: [
+      '{p} ne mette {n} per {W} col gancio cielo: nessuno lo stoppa da cinquant\'anni.',
+    ],
+    perde: [
+      '{p} ne fa {n} col gancio cielo e {L} perde: il gancio era bello, il resto della squadra no.',
+    ],
+  },
+  'Hakeem Olajuwon': {
+    vince: [
+      '{p} ne mette {n} per {W} col Dream Shake: il suo difensore sta ancora girando su se stesso.',
+    ],
+    perde: [
+      '{p} ne fa {n} e perde: i suoi compagni hanno fatto il Dream Shake anche in difesa, girando a vuoto.',
+    ],
+  },
+  'Dirk Nowitzki': {
+    vince: [
+      '{p} ne mette {n} per {W} su una gamba sola. L\'altra la usa per prendere in giro chi lo marca.',
+    ],
+    perde: [
+      '{p} ne fa {n} su una gamba. {L} perde su tutte e due.',
+    ],
+  },
+  'Larry Bird': {
+    vince: [
+      '{p} ne mette {n} per {W}, e prima della palla a due aveva già detto agli avversari da dove avrebbe tirato.',
+    ],
+    perde: [
+      '{p} ne fa {n} e perde, e adesso deve spiegare a tutti perché ha accettato di giocare per {L}.',
+    ],
+  },
+  'Magic Johnson': {
+    vince: [
+      '{p} ne mette {n} per {W} sorridendo, che è il modo più umiliante di battere qualcuno.',
+    ],
+    perde: [
+      '{p} ne fa {n} e sorride lo stesso. {L} un po\' meno.',
+    ],
+  },
+  'Joel Embiid': {
+    vince: [
+      '{p} ne mette {n} per {W} ed è in dubbio per la prossima. Come sempre.',
+    ],
+    perde: [
+      '{p} ne fa {n} e perde. Domani è in dubbio, come sempre, e {L} non sa più se sperarci.',
+    ],
+  },
+  'Nikola Jokic': {
+    vince: [
+      '{p} ne mette {n} per {W} con la faccia di chi vorrebbe già essere alle corse dei cavalli.',
+    ],
+    perde: [
+      '{p} ne fa {n} e perde. Non gliene importa niente: stasera ci sono i cavalli.',
+    ],
+  },
+};
 
 /* ---------- Gara 7: si insulta Fabio ---------- */
 // Easter egg. Compare SOLO in gara 7, e Fabio non c'entra niente con la
@@ -273,6 +419,10 @@ const ruota = (arr, n, off = 0) => arr[(n + off) % arr.length];
 
 /* ---------- Cronaca di una singola gara ---------- */
 
+// Da tre a cinque frasi: apertura sul punteggio, il migliore di chi vince,
+// chi perde; poi, quando c'e materia, una battuta su un dato (assist,
+// rimbalzi, il violino sbagliato) e una sulla scelta tattica di chi perde.
+// In gara 7 in fondo arriva Fabio.
 export function narrateGame(A, B, g) {
   const aWon = g.scoreA > g.scoreB;
   const W = aWon ? A : B, L = aWon ? B : A;
@@ -281,45 +431,54 @@ export function narrateGame(A, B, g) {
   // Sfasamento stabile per serie: due serie diverse non partono dalla stessa frase.
   const off = hashStr(A.key + B.key + A.tactics.strategy) % 7;
   const n = g.n ?? 1;
+  const riempi = (s, p = {}) => s.replaceAll('{W}', W.name).replaceAll('{L}', L.name)
+    .replaceAll('{m}', String(g.margin)).replaceAll('{p}', p.n ?? '').replaceAll('{n}', String(p.num ?? ''))
+    .replaceAll('{v}', p.v ?? '').replaceAll('{s}', p.s ?? '');
 
-  let opener;
-  if (g.ot >= 2) opener = ruota(OPEN_2OT, n, off);
-  else if (g.ot) opener = ruota(OPEN_OT, n, off);
-  else if (g.margin >= 16) opener = ruota(OPEN_BLOWOUT, n, off);
-  else if (g.margin >= 9) opener = ruota(OPEN_CONTROL, n, off);
-  else if (g.margin >= 4) opener = ruota(OPEN_CLOSE, n, off);
-  else opener = ruota(OPEN_THRILLER, n, off);
-  opener = opener.replaceAll('{W}', W.name).replaceAll('{L}', L.name);
+  let apri;
+  if (g.ot >= 2) apri = OPEN_2OT;
+  else if (g.ot) apri = OPEN_OT;
+  else if (g.margin >= 16) apri = OPEN_BLOWOUT;
+  else if (g.margin >= 9) apri = OPEN_CONTROL;
+  else if (g.margin >= 4) apri = OPEN_CLOSE;
+  else apri = OPEN_THRILLER;
+  const frasi = [riempi(ruota(apri, n, off))];
 
   const top = wBox.slice().sort((x, y) => y.pts - x.pts)[0];
   const topL = lBox.slice().sort((x, y) => y.pts - x.pts)[0];
+  const pv = PERSONA[top.n]?.vince;
+  frasi.push(riempi(ruota(pv || STELLA, n, off), { n: top.n, num: top.pts }));
+
+  const pp = PERSONA[topL.n]?.perde;
+  frasi.push(topL.pts >= 28 || pp
+    ? riempi(ruota(pp || STELLA_PERDE, n, off), { n: topL.n, num: topL.pts })
+    : riempi(ruota(PERDE_PIATTO, n, off)));
+
+  // Le battute in piu, solo se c'e il dato che le giustifica. Ogni giocatore
+  // compare una volta sola: senza il controllo usciva "Sabonis apparecchia 11
+  // volte, 20 rimbalzi di Sabonis".
+  const citati = new Set([top.id, topL.id]);
+  const extra = [];
   const dime = wBox.slice().sort((x, y) => y.ast - x.ast)[0];
-  const glass = wBox.slice().sort((x, y) => y.reb - x.reb)[0];
-
-  const riempi = (t, p, num) => t.replaceAll('{p}', p).replaceAll('{n}', String(num)).replaceAll('{T}', W.name);
-  // Ogni pezzo della frase deve parlare di un giocatore DIVERSO: senza questo
-  // controllo usciva "Sabonis apparecchia 11 volte, 20 rimbalzi di Sabonis".
-  const citati = new Set([top.id]);
-  const bits = [riempi(ruota(PUNTI, n, off), top.n, top.pts)];
-  if (!citati.has(dime.id) && dime.ast >= 7) {
-    citati.add(dime.id);
-    bits.push(riempi(ruota(ASSIST, n, off + 1), dime.n, dime.ast));
+  const glass = [...wBox, ...lBox].sort((x, y) => y.reb - x.reb)[0];
+  if (dime.ast >= 10 && !citati.has(dime.id)) { citati.add(dime.id); extra.push(riempi(ruota(ASSIST, n, off + 1), { n: dime.n, num: dime.ast })); }
+  else if (glass.reb >= 16 && !citati.has(glass.id)) { citati.add(glass.id); extra.push(riempi(ruota(RIMBALZI, n, off + 2), { n: glass.n, num: glass.reb })); }
+  const v1 = L.five.find((p) => p.id === L.tactics.v1);
+  if (v1 && v1.id !== topL.id && topL.pts - (lBox.find((x) => x.id === v1.id)?.pts ?? 0) >= 10) {
+    extra.push(riempi(ruota(VIOLINO, n, off), { n: topL.n, v: v1.n }));
   }
-  if (!citati.has(glass.id) && glass.reb >= 11) {
-    citati.add(glass.id);
-    bits.push(riempi(ruota(RIMBALZI, n, off + 2), glass.n, glass.reb));
-  }
-  const second = `${bits.join(', ')}.`;
+  const nomeStrategia = STRATEGIES[L.tactics.strategy]?.label;
+  if (nomeStrategia) extra.push(riempi(ruota(SCELTA, n, off + 3), { s: nomeStrategia }));
 
-  const third = topL.pts >= 28
-    ? ruota(LOSER_WITH_STAR, n, off).replaceAll('{L}', L.name).replaceAll('{p}', topL.n).replaceAll('{n}', String(topL.pts))
-    : ruota(LOSER_FLAT, n, off).replaceAll('{L}', L.name);
+  // Quante in piu: zero, una o due, a seconda della gara (sempre la stessa
+  // per la stessa gara, su ogni telefono). In gara 7 una sola: c'e Fabio.
+  const quante = Math.min(extra.length, n >= 7 ? 1 : hashStr(g.scoreA + ':' + g.scoreB + W.key) % 3);
+  frasi.push(...extra.slice(0, quante));
 
   // Gara 7: il commento se la prende con Fabio, che con questa partita non
   // c'entra niente. E il punto.
-  const fabio = n >= 7 ? ` ${ruota(FABIO, hashStr(g.scoreA + '-' + g.scoreB + A.key), off)}` : '';
-
-  return `${opener} ${second} ${third}${fabio}`;
+  if (n >= 7) frasi.push(ruota(FABIO, hashStr(g.scoreA + '-' + g.scoreB + A.key), off));
+  return frasi.join(' ');
 }
 
 /* ---------- Perché ha vinto la serie ---------- */
