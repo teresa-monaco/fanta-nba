@@ -1034,6 +1034,14 @@ document.addEventListener('click', async (ev) => {
         break;
       }
 
+      // A serata finita non serve conferma: non si perde niente che non sia
+      // gia nell'albo.
+      case 'rivincita': {
+        const re = reDeiPronostici(classificaPronostici(state, teamsFromState(state)));
+        await session.apply((s) => (s.host === session.uid ? S.rivincita(s, `${session.code}-${Date.now()}`, re?.key) : undefined));
+        break;
+      }
+
       case 'new-game': {
         if (!confirm(tr('Ricominciare da capo?\n\nLa partita in corso viene cancellata: asta, quintetti e playoff.', 'Start over?\n\nThe current game is deleted: auction, lineups and playoffs.'))) break;
         if (session.mode === 'local') {

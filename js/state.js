@@ -842,6 +842,15 @@ export function resetGame(s, seed) {
     bots: s.bots || {}, conStagione: !!s.conStagione };
 }
 
+// LA RIVINCITA: stesse persone, stessi bot, stesso formato, di nuovo in lobby
+// e col bonus dei pronostici gia dato al re della serata appena finita. Chi
+// ospita puo toglierlo o spostarlo come sempre: lo da il master, la rivincita
+// glielo prepara soltanto.
+export function rivincita(s, seed, reKey) {
+  const r = resetGame(s, seed);
+  return { ...r, bonus: reKey && seatTaken(r, reKey) ? reKey : null };
+}
+
 /* ---------- Utility di presentazione ---------- */
 
 export function teamOf(s, uid) { return s.seats[uid] || null; }

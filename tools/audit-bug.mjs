@@ -277,6 +277,26 @@ console.log('='.repeat(70) + '\n');
 }
 
 console.log('\n' + '='.repeat(70));
+console.log('1d. LA RIVINCITA');
+console.log('='.repeat(70) + '\n');
+{
+  let s = S.newGame('rivincita', 'host');
+  s = S.joinGame(s, 'host', 'Diego');
+  s = S.joinGame(s, 'u1', 'Fabio');
+  s = S.aggiungiBot(s, null, () => 0.3);
+  s = S.setFormato(s, true);
+  s = S.startAuction(s, tick(), S.attive(s));
+  const kFabio = s.seats.u1;
+  const r = S.rivincita(s, 'rivincita-2', kFabio);
+  ok(r.phase === 'lobby', 'la rivincita riporta in sala d\'attesa');
+  ok(JSON.stringify(r.seats) === JSON.stringify(s.seats) && JSON.stringify(r.bots) === JSON.stringify(s.bots), 'con le stesse persone e gli stessi bot');
+  ok(r.conStagione === true, 'e lo stesso formato');
+  ok(r.bonus === kFabio, 'e il bonus gia dato al re dei pronostici');
+  ok(S.rivincita(s, 'r3', 't12').bonus === null, 'ma mai a chi non e piu seduto al tavolo');
+  ok(r.seed !== s.seed, 'con un seme nuovo: e un\'altra partita');
+}
+
+console.log('\n' + '='.repeat(70));
 console.log('2. NUMERI DI SQUADRE NON AMMESSI');
 console.log('='.repeat(70) + '\n');
 {

@@ -139,7 +139,9 @@ function resetZone({ state: s, session }) {
   const ultimo = s.po?.turni?.[s.po.turni.length - 1]?.[0];
   const finita = (ultimo?.gamesPlayed ?? 0) >= 4;
   return `<div class="reset-zone">
-    <button class="${finita ? 'primary' : 'ghost'} wide" data-act="new-game">
+    ${finita && session.mode !== 'local' ? `<button class="primary wide mb" data-act="rivincita">${tr('Rivincita', 'Rematch')}</button>
+    <p class="tiny muted center mb">${tr('Stesse persone e stessi bot, di nuovo in sala d\'attesa. Il bonus va già al re dei pronostici.', 'Same people and bots, back in the lobby. The bonus already goes to the prediction king.')}</p>` : ''}
+    <button class="${finita && session.mode === 'local' ? 'primary' : 'ghost'} wide" data-act="new-game">
       ${finita ? tr('Nuova partita', 'New game') : tr('Ricomincia da capo', 'Start over')}
     </button>
     <p class="tiny muted center" style="margin-top:8px">
