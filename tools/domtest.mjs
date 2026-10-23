@@ -320,6 +320,7 @@ ok(Object.values(STRATEGIES).every((v) => has(v.label)), 'tutte le strategie son
   ok(has('class="conta-pronti'), 'in cima c\'e il conto di chi ha finito');
   ok(/mancano: [^<]+/.test(html()), 'e dice per nome chi manca');
   ok(has('class="altre-squadre"', 'data-tieni-scroll'), 'le squadre degli altri stanno in una striscia che scorre di lato');
+  ok(!has('class="reaz-barra"'), 'nella fase squadre niente emoji: li si ragiona');
   ok(has(`<b>0/${n}</b>`), 'e parte da zero', `0 su ${n}`);
   ok(has('data-act="conferma-pronto"'), 'ogni squadra che comandi ha il tasto');
   ok(!has('class="card t-t1 mine pronta"'), 'e di partenza nessun blocco e verde');
@@ -504,6 +505,7 @@ ui.garaVista = null;
 await giocaFinoAllaFine(0, 0);
 ok(clean() && has('class="riepilogo', 'Passa il turno', 'MVP della serie', 'Miglior marcatore'), 'a serie chiusa c\'e il riepilogo');
 ok(has('data-serie-attiva="0-0"'), 'e si resta li: non si passa da soli alla serie dopo');
+ok(has('class="reaz-barra"', 'data-act="reazione" data-e="capra"'), 'nei playoff c\'e la barra delle reazioni');
 ok(has('data-act="avanti-serie" data-next="0-1"') || /data-act="avanti-serie"\s+data-next="0-1"/.test(html()), 'chi ospita ha "Avanti: Semifinale 2"');
 // Il referto: senza, nessuna delle scelte tecniche si impara mai.
 ok(has('Referto partita') && has('class="referto"', 'Strategia', 'Ritmo', 'Allenatore', 'Primo violino'),

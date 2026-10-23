@@ -63,7 +63,20 @@ export function render(root, ctx) {
     (ui.banner ? `<div class="banner${ui.banner.err ? ' err' : ''}">${esc(ui.banner.text)}</div>` : '')
     + body
     + resetZone(ctx)
-    + schedaGiocatore();
+    + schedaGiocatore()
+    + barraReazioni(s);
+}
+
+// LE REAZIONI. In asta e nei playoff chi guarda vuole farsi sentire: tocchi
+// un'emoji e vola sullo schermo di tutti col tuo nome. Non nella fase
+// squadre: li si ragiona, e le emoji sopra le scelte darebbero fastidio.
+// Nel database viaggia la chiave, non l'emoji: niente sorprese di codifica.
+export const REAZIONI = { cacca: '💩', capra: '🐐', giu: '👎', fuoco: '🔥', ride: '😂', clown: '🤡', mattone: '🧱', re: '👑' };
+
+function barraReazioni(s) {
+  if (!['auction', 'playoffs'].includes(s.phase)) return '';
+  return `<div class="reaz-barra" role="toolbar" aria-label="${tr('Reazioni', 'Reactions')}">${Object.entries(REAZIONI)
+    .map(([k, e]) => `<button class="reaz" data-act="reazione" data-e="${k}" aria-label="${k}">${e}</button>`).join('')}</div>`;
 }
 
 // La scheda di un giocatore, aperta toccando il suo overall. Scegliere

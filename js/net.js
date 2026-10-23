@@ -80,6 +80,18 @@ export async function openRoom({ code, create, initialState, onState }) {
     if (v) onState(hydrate(v));
   });
 
+  // LE REAZIONI VIAGGIANO A PARTE, sotto reazioni/CODICE e non dentro la
+  // stanza: ogni cambio della stanza ridisegna la pagina a tutti, e una
+  // pioggia di emoji la farebbe ridisegnare di continuo. Si ascoltano solo
+  // quelle arrivate da adesso in poi, e ognuna si cancella da sola dopo
+  // dieci secondi: lo storico delle emoji non serve a nessuno.
+  const reazRef = f.ref(rdb, `reazioni/${code}`);
+  const ascoltatori = new Set();
+  const unsubReaz = f.onChildAdded(f.query(reazRef, f.orderByChild('t'), f.startAt(now() - 2000)), (snap) => {
+    const r = snap.val();
+    if (r) for (const cb of ascoltatori) cb(r);
+  });
+
   return {
     mode: 'cloud',
     uid,
@@ -92,7 +104,12 @@ export async function openRoom({ code, create, initialState, onState }) {
       });
       return res.committed;
     },
-    close() { unsub(); },
+    reagisci(e) {
+      const nuova = f.push(reazRef, { e, uid, t: now() });
+      setTimeout(() => { f.remove(nuova).catch(() => {}); }, 10000);
+    },
+    onReazione(cb) { ascoltatori.add(cb); return () => ascoltatori.delete(cb); },
+    close() { unsub(); unsubReaz(); },
   };
 }
 
@@ -110,11 +127,15 @@ function openLocal({ code, initialState, onState }) {
     onState(state);
   };
   queueMicrotask(push);
+  const ascoltatori = new Set();
 
   return {
     mode: 'local',
     uid: 'local',
     code: code || 'LOCALE',
+    // Su un solo schermo la reazione torna subito a chi l'ha mandata.
+    reagisci(e) { for (const cb of ascoltatori) cb({ e, uid: 'local', t: Date.now() }); },
+    onReazione(cb) { ascoltatori.add(cb); return () => ascoltatori.delete(cb); },
     async apply(reducer) {
       const next = reducer(state);
       if (next === undefined || next === state) return false;

@@ -4,7 +4,7 @@ import { loadData, TEAM_KEYS, TEAM_NAMES, NOMI_SQUADRA, applicaNomi, NOMI_SQUADR
 import { simSeriesUpTo, componiTabellone, costruisciBracket, giriStagione, tabelloneDaStagione, RITMI } from './engine.js';
 import * as S from './state.js';
 import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
-import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc, flapHTML, rivelaCampione, comeSiGioca } from './ui.js';
+import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc, flapHTML, rivelaCampione, comeSiGioca, REAZIONI } from './ui.js';
 import { sblocca, commutaAudio, tic, martelletto, nuovoLotto } from './suono.js';
 import * as BotAI from './bot.js';
 import { quoteSerie, pronosticoBot, classificaPronostici, reDeiPronostici } from './pronostici.js';
@@ -122,6 +122,7 @@ async function start({ code, create }) {
     initialState: S.newGame(`${code}-${Date.now()}`, null),
     onState: (s) => { state = s; paint(); },
   });
+  session.onReazione?.(mostraReazione);
   // Con il percorso intero: la pagina inglese ha un <base href="../">, e un
   // "?r=..." relativo si risolverebbe sulla base, cioe sull'indirizzo
   // italiano — la stanza creata in inglese tornava in italiano al ricarico.
@@ -224,6 +225,25 @@ function momentoCampione() {
   // tavolo non deve restare bloccato su una festa.
   rivelaTimer = setTimeout(chiudiRivela, 9000);
 }
+
+// UNA REAZIONE CHE VOLA. Fuori da render(), appesa al body come la festa
+// del campione: un ridisegno non deve tagliarla a meta volo. Parte dal basso
+// in un punto a caso, sale e sparisce. Mai piu di trenta in volo insieme, o
+// uno spam a quattro mani impallerebbe i telefoni vecchi.
+function mostraReazione(r) {
+  const e = REAZIONI[r?.e];
+  if (!e || typeof document.body?.insertAdjacentHTML !== 'function') return;
+  if (document.querySelectorAll('.reazione').length >= 30) return;
+  const chi = state ? (TEAM_NAMES[state.seats?.[r.uid]] || state.names?.[r.uid] || '') : '';
+  const x = (8 + Math.random() * 74).toFixed(1);
+  const id = `reaz-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+  document.body.insertAdjacentHTML('beforeend',
+    `<div class="reazione" id="${id}" style="left:${x}%"><span>${e}</span>${chi ? `<small>${esc(chi)}</small>` : ''}</div>`);
+  setTimeout(() => document.getElementById(id)?.remove(), 2600);
+}
+
+// Freno a mano: cinque reazioni al secondo a testa bastano per lo spam.
+const ultimeReazioni = [];
 
 // CAMBIANDO SCHERMATA SI TORNA IN CIMA.
 //
@@ -723,6 +743,16 @@ document.addEventListener('click', async (ev) => {
       case 'chiudi-rivela':
         chiudiRivela();
         return;
+
+      // Non passa dallo stato della partita: viaggia sul suo canale.
+      case 'reazione': {
+        const t = Date.now();
+        while (ultimeReazioni.length && t - ultimeReazioni[0] > 1000) ultimeReazioni.shift();
+        if (ultimeReazioni.length >= 5) return;
+        ultimeReazioni.push(t);
+        session?.reagisci?.(el.dataset.e);
+        return;
+      }
 
       case 'condividi-card':
         el.disabled = true;
