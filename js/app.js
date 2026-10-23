@@ -4,7 +4,7 @@ import { loadData, TEAM_KEYS, TEAM_NAMES, NOMI_SQUADRA, applicaNomi, NOMI_SQUADR
 import { simSeriesUpTo, componiTabellone, costruisciBracket, giriStagione, tabelloneDaStagione, RITMI } from './engine.js';
 import * as S from './state.js';
 import { openRoom, makeRoomCode, cloudAvailable, now } from './net.js';
-import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc, flapHTML, rivelaCampione } from './ui.js';
+import { render, renderTopbar, tickClock, ui, teamsFromState, stagioneFromState, esc, flapHTML, rivelaCampione, comeSiGioca } from './ui.js';
 import { sblocca, commutaAudio, tic, martelletto, nuovoLotto } from './suono.js';
 import * as BotAI from './bot.js';
 import { quoteSerie, pronosticoBot, classificaPronostici, reDeiPronostici } from './pronostici.js';
@@ -109,7 +109,8 @@ function landing(errMsg) {
       <input id="join-code" placeholder="${tr('CODICE', 'CODE')}" maxlength="4" class="grow"
              style="text-transform:uppercase;letter-spacing:4px;font-weight:800" autocomplete="off">
       <button data-act="join-room">${tr('Entra', 'Join')}</button>
-    </div>`;
+    </div>
+    <div class="mt">${comeSiGioca()}</div>`;
   topbar.innerHTML = '<div class="brand">FANTA<span>NBA</span></div>';
   avviaVetrina();
 }

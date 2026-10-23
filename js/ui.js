@@ -99,6 +99,25 @@ function schedaGiocatore() {
   </div>`;
 }
 
+// COME SI GIOCA: le regole in quattro righe, per chi entra la prima volta.
+// Solo le regole, mai consigli su cosa conviene: quello si impara giocando,
+// e lo dice il referto a fine serie. Sta in homepage e in lobby.
+export function comeSiGioca() {
+  return `<details class="card tight come-si-gioca">
+    <summary>${tr('Come si gioca', 'How to play')}</summary>
+    <ol>
+      <li>${tr('<b>Asta.</b> 50 crediti, 5 giocatori. Rilancia o vota "salta". Se non offri e non voti, il giocatore può toccare a te.',
+        '<b>Auction.</b> 50 credits, 5 players. Bid or vote "skip". If you don\'t bid and don\'t vote, the player can end up with you.')}</li>
+      <li>${tr('<b>Squadra.</b> Scegli strategia, violini, ritmo e allenatore. Poi premi "Ready".',
+        '<b>Team.</b> Pick strategy, first options, pace and coach. Then press "Ready".')}</li>
+      <li>${tr('<b>Playoff.</b> Serie al meglio delle 7. Prima di gara 1 pronostica esito e miglior marcatore: se indovini, prendi la quota in punti.',
+        '<b>Playoffs.</b> Best-of-7 series. Before game 1 predict the result and the top scorer: get it right and you score the odds as points.')}</li>
+      <li>${tr('<b>Vince</b> chi alza il trofeo. Chi fa più punti coi pronostici prende 5 crediti in più alla prossima asta.',
+        '<b>The winner</b> lifts the trophy. Whoever scores the most prediction points gets 5 extra credits at the next auction.')}</li>
+    </ol>
+  </details>`;
+}
+
 // Un unico punto per ricominciare, in fondo a ogni schermata a partita
 // avviata. Sta qui e non solo nella barra in alto perche un tasto piccolo
 // e grigio fra un'etichetta e un codice non lo trova nessuno.
@@ -245,6 +264,8 @@ function viewLobby({ state: s, session }) {
       </div>
       ${dentroAlTabellone}
     </div>
+
+    ${comeSiGioca()}
 
     ${local ? `
       <p class="tiny muted center mb">${tr(`Firebase non è configurato: la partita gira su questo solo schermo.
