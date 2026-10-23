@@ -179,6 +179,17 @@ export function togliBot(s, teamKey) {
   return leaveSeat(s, uidBot(teamKey));
 }
 
+// CHI OSPITA PUO TOGLIERE UNA PERSONA, solo in lobby. A distanza capita che a
+// qualcuno si spenga il telefono: la sua sedia restava occupata e non si
+// poteva mettere un bot al suo posto. Mai chi ospita, mai un bot (per quelli
+// c'e togliBot). Se chi e stato tolto rientra, torna spettatore e si risiede.
+export function togliPersona(s, chiOspita, teamKey) {
+  if (s.phase !== 'lobby' || s.host !== chiOspita || s.bots?.[teamKey]) return undefined;
+  const uid = Object.keys(s.seats).find((u) => s.seats[u] === teamKey);
+  if (!uid || uid === s.host) return undefined;
+  return leaveSeat(s, uid);
+}
+
 export function botDi(s) {
   return Object.keys(s.bots || {});
 }

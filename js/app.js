@@ -817,6 +817,13 @@ document.addEventListener('click', async (ev) => {
         await session.apply((s) => S.togliBot(s, team));
         break;
 
+      // Una persona si toglie solo dopo una conferma: e un gesto che si fa a
+      // qualcun altro, e un tocco sbagliato lo butterebbe fuori dalla stanza.
+      case 'togli-persona':
+        if (!confirm(tr(`Togli ${el.dataset.nome} dalla stanza? Al suo posto potrai mettere un bot.`, `Remove ${el.dataset.nome} from the room? You can put a bot in their place.`))) break;
+        await session.apply((s) => S.togliPersona(s, session.uid, team));
+        break;
+
       // Il bonus dei pronostici: lo da chi ospita, a mano.
       case 'bonus':
         await session.apply((s) => (s.host === session.uid ? S.daiBonus(s, team) : undefined));

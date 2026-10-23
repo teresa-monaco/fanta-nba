@@ -169,6 +169,7 @@ function viewLobby({ state: s, session }) {
       <span class="small muted" data-nome-team="${k}">${esc(NOMI_SQUADRA[k])}</span>
       ${bonus}
       ${bot && isHost ? `<button class="sm ghost" data-act="togli-bot" data-team="${k}">${tr('Togli', 'Remove')}</button>` : ''}
+      ${!bot && isHost && !local && !mine ? `<button class="sm ghost" data-act="togli-persona" data-team="${k}" data-nome="${esc(TEAM_NAMES[k])}">${tr('Togli', 'Remove')}</button>` : ''}
     </div>`;
   }).join('');
 

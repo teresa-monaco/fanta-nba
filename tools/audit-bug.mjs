@@ -257,6 +257,26 @@ console.log('='.repeat(70) + '\n');
 }
 
 console.log('\n' + '='.repeat(70));
+console.log('1c. CHI OSPITA TOGLIE UNA PERSONA DALLA LOBBY');
+console.log('='.repeat(70) + '\n');
+{
+  let s = S.newGame('togli', 'host');
+  s = S.joinGame(s, 'host', 'Diego');
+  s = S.joinGame(s, 'u1', 'Agre');
+  const kAgre = s.seats.u1, kHost = s.seats.host;
+  ok(S.togliPersona(s, 'u1', kHost) === undefined, 'chi non ospita non puo togliere nessuno');
+  ok(S.togliPersona(s, 'host', kHost) === undefined, 'chi ospita non puo togliere se stesso');
+  const dopo = S.togliPersona(s, 'host', kAgre);
+  ok(dopo && !dopo.seats.u1 && !Object.values(dopo.seats).includes(kAgre), 'chi ospita toglie Agre e la sedia si libera');
+  const conBot = S.aggiungiBot(dopo, null, () => 0.1);
+  ok(conBot && Object.keys(conBot.bots || {}).length === 1, 'e al suo posto entra un bot');
+  const kBot = Object.keys(conBot.bots)[0];
+  ok(S.togliPersona(conBot, 'host', kBot) === undefined, 'un bot non si toglie da qui (c\'e il suo tasto)');
+  const partita = S.startAuction(S.joinGame(conBot, 'u2', 'Steve'), tick(), S.attive(S.joinGame(conBot, 'u2', 'Steve')));
+  ok(S.togliPersona(partita, 'host', partita.seats.u2) === undefined, 'a partita iniziata non si toglie nessuno');
+}
+
+console.log('\n' + '='.repeat(70));
 console.log('2. NUMERI DI SQUADRE NON AMMESSI');
 console.log('='.repeat(70) + '\n');
 {
