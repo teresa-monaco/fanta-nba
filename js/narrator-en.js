@@ -121,12 +121,6 @@ export const FACTOR_LINES = {
   'df-incompleto': [
     '{T}\'s inside-out game works halfway, because {T} bought half of the mechanism.',
   ],
-  'ho-tiro': [
-    'The handoffs free {T}\'s shooters on the move, and that\'s where the opposing defense stops existing.',
-  ],
-  'ho-lettura': [
-    '{T}\'s bigs read the handoffs well. It doesn\'t happen often, let\'s enjoy it.',
-  ],
   'eq-solido': [
     '{T} scares nobody and gives away nothing: the most boring team to watch and the most annoying to face.',
   ],

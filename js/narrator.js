@@ -131,12 +131,6 @@ const FACTOR_LINES = EN ? ENG.FACTOR_LINES : {
   'df-incompleto': [
     'Il dentro-fuori di {T} funziona a metà, perché {T} ha comprato metà del meccanismo.',
   ],
-  'ho-tiro': [
-    'Le consegne liberano i tiratori di {T} in movimento, ed è lì che la difesa avversaria smette di esistere.',
-  ],
-  'ho-lettura': [
-    'I lunghi di {T} leggono bene sulle consegne. Non capita spesso, godiamocelo.',
-  ],
   'eq-solido': [
     '{T} non spaventa nessuno e non regala niente: la squadra più noiosa da guardare e la più scomoda da affrontare.',
   ],

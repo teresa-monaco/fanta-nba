@@ -5,7 +5,7 @@
 // ricalcola da solo esattamente le stesse gare. Lo stato condiviso resta di
 // pochi KB e non esiste il rischio che due schermi mostrino risultati diversi.
 
-import { TEAM_KEYS, TEAM_NAMES, SLOTS, START_CREDITS, ROSTER_SIZE, NUMERI_SQUADRE, makeRng, shuffle, db, allenatoriDi, prossimoNome } from './core.js';
+import { TEAM_KEYS, TEAM_NAMES, SLOTS, START_CREDITS, ROSTER_SIZE, NUMERI_SQUADRE, STRATEGIES, makeRng, shuffle, db, allenatoriDi,prossimoNome } from './core.js';
 import { BOT, prossimoBot, uidBot, eBot } from './bot.js';
 
 // Era 15. Abbassato a 12 giocando: con i bot che ci ripensano a ogni rilancio
@@ -67,6 +67,8 @@ export function hydrate(raw) {
     const lu = s.lineups[k] || {};
     s.lineups[k] = Object.fromEntries(SLOTS.map((sl) => [sl, lu[sl] ?? null]));
     s.tactics[k] = { v1: null, v2: null, strategy: 'equilibrato', ritmo: 'medio', coach: null, ...(s.tactics[k] || {}) };
+    // Una strategia tolta dal gioco (l'handoff) torna equilibrata.
+    if (!STRATEGIES[s.tactics[k].strategy]) s.tactics[k].strategy = 'equilibrato';
   }
   const a = s.auction || {};
   s.auction = {
@@ -89,6 +91,7 @@ export function hydrate(raw) {
       const l = st.lineups?.[k] || {};
       lu[k] = Object.fromEntries(SLOTS.map((sl) => [sl, l[sl] ?? null]));
       tc[k] = { v1: null, v2: null, strategy: 'equilibrato', ritmo: 'medio', coach: null, ...(st.tactics?.[k] || {}) };
+      if (!STRATEGIES[tc[k].strategy]) tc[k].strategy = 'equilibrato';
     }
     s.stagione = { giri: st.giri ?? 1, seedBase: st.seedBase || s.seed, lineups: lu, tactics: tc };
   }

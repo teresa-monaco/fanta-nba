@@ -360,6 +360,5 @@ export const STRATEGIES = {
   'motion': { label: 'Motion offense', desc: tr('Palla che gira, tagli, nessuno monopolizza. Perdona i quintetti con troppe bocche da sfamare.', 'Ball movement, cuts, nobody hogs the ball. Forgives lineups with too many mouths to feed.') },
   'isolamento': { label: tr('Isolamento', 'Isolation'), desc: tr('Uno contro uno sistematico per i due violini. Efficace col talento, fragile contro difese fisiche.', 'Systematic one-on-one for the two first options. Works with talent, fragile against physical defenses.') },
   'dentro-fuori': { label: tr('Gioco dentro-fuori', 'Inside-out game'), desc: tr('Il lungo attira la difesa, i tiratori puniscono. Serve entrambe le cose.', 'The big man draws the defense, the shooters punish. You need both.') },
-  'handoff': { label: 'Handoff', desc: tr('Consegne e blocchi continui per liberare i tiratori in movimento.', 'Constant handoffs and screens to free the shooters on the move.') },
   'equilibrato': { label: tr('Sistema equilibrato', 'Balanced system'), desc: tr('Nessun estremo: niente bonus grossi, nessuna debolezza sfruttabile.', 'No extremes: no big bonuses, no weakness to exploit.') },
 };

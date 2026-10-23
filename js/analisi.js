@@ -56,11 +56,10 @@ function dettaglio(f, T, O) {
     case 'pnr-difesa-lenta': return tr(`nei cambi ci sono ${elenco(O.five.slice().sort((x, y) => x.attrs.atl - y.attrs.atl).slice(0, 2), 'atl')}`, `switching are ${elenco(O.five.slice().sort((x, y) => x.attrs.atl - y.attrs.atl).slice(0, 2), 'atl')}`);
     case 'post-peso': case 'df-lungo': return tr(`${elenco(top(T, 'sco', 1, lunghi), 'sco')} spalle a canestro`, `${elenco(top(T, 'sco', 1, lunghi), 'sco')} with his back to the basket`);
     case 'post-muro': case 'ferro-muro': return tr(`a protezione del ferro c'è ${elenco(top(O, 'dif'), 'dif')}`, `protecting the rim is ${elenco(top(O, 'dif'), 'dif')}`);
-    case 'post-scarichi': case 'tre-volume': case 'df-tiro': case 'ho-tiro': {
+    case 'post-scarichi': case 'tre-volume': case 'df-tiro': {
       return elenco(top(T, 'tre', 2), 'tre');
     }
     case 'df-incompleto': return tiratori(T).length < 2 ? `${tr('tiratori veri', 'real shooters')}: ${tiratori(T).length}` : tr('manca un lungo che segna', 'no big man who scores');
-    case 'ho-lettura': return tr(`${elenco(top(T, 'pla', 1, lunghi), 'pla')} è il lungo che riceve e smista`, `${elenco(top(T, 'pla', 1, lunghi), 'pla')} is the big who catches and distributes`);
     case 'ferro-atletismo': case 'tr-atletismo': return elenco(top(T, 'atl', 2), 'atl');
     case 'tr-pesantezza': return tr(`${elenco(top(O, 'reb', 2, lunghi), 'reb')} da rincorrere`, `${elenco(top(O, 'reb', 2, lunghi), 'reb')} trying to keep up`);
     case 'motion-lettura': case 'motion-armonia': return tr(`${elenco(top(T, 'pla', 2), 'pla')} a far girare la palla`, `${elenco(top(T, 'pla', 2), 'pla')} moving the ball`);

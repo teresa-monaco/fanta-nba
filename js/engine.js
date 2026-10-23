@@ -325,13 +325,30 @@ function applicaAllenatore(five, tactics, key, factors) {
    2. STRATEGIE — modificatori che dipendono dall'avversario
    ========================================================== */
 
+// RITARATE SULLE MEDIE VERE (rose da asta dei primi 120). Prima le soglie
+// stavano sotto la media: l'atletismo partiva da 67 con una media di 68,5 e
+// la difesa perimetrale "forte" da 54 con una media di 64,6, quindi attacco al
+// ferro e palla alla star erano un malus per quasi tutti (migliori nello 0% e
+// nel 2% delle rose) mentre pick and roll e post-up vincevano piu di meta
+// delle volte. Adesso ogni strategia rende come "equilibrato" su una rosa
+// media e diventa la scelta giusta per un tipo di rosa riconoscibile.
+// Verificabile con la misura "migliore nel X% delle rose".
+// RITARATE SULLE MEDIE VERE (rose da asta dei primi 120). Prima le soglie
+// stavano sotto la media: l'atletismo partiva da 67 con una media di 68,5 e
+// la difesa perimetrale "forte" da 54 con una media di 64,6, quindi attacco al
+// ferro e palla alla star erano un malus per quasi tutti (migliori nello 0% e
+// nel 2% delle rose) mentre pick and roll e post-up vincevano piu di meta
+// delle volte. Adesso ogni strategia rende come "equilibrato" su una rosa
+// media e diventa la scelta giusta per un tipo di rosa riconoscibile.
+// Verificabile con la misura "migliore nel X% delle rose".
 const STRAT = {
   'palla-star': { pace: 0, variance: 0.90, fx(t, o) {
     const f = [];
     const v1 = t.byId(t.tactics.v1) || t.five[0];
-    const lift = (v1.attrs.sco - t.avgSco) * 0.22;
+    // Conviene quando la star e MOLTO sopra i compagni: la media e 11,6.
+    const lift = 1.6 + ((v1.attrs.sco - t.avgSco) - 11) * 0.45;
     f.push({ key: 'star-usage', delta: lift, label: `${v1.n} ${tr('con la palla in mano', 'with the ball in his hands')}`, data: { player: v1.n } });
-    const pressure = -Math.max(0, o.perimD - 54) * 0.42;
+    const pressure = -Math.max(0, o.perimD - 68) * 0.30;
     if (pressure < -0.6) f.push({ key: 'star-contenuta', delta: pressure, label: tr('Attacco prevedibile contro una difesa perimetrale forte', 'Predictable offense against a strong perimeter defense'), data: { oppPerimD: Math.round(o.perimD) } });
     return f;
   }},
@@ -339,30 +356,33 @@ const STRAT = {
     const f = [];
     const v1 = t.byId(t.tactics.v1) || t.five[0];
     const v2 = t.byId(t.tactics.v2) || t.five[1];
-    f.push({ key: 'iso-talento', delta: ((v1.attrs.sco + v2.attrs.sco) / 2 - t.avgSco) * 0.22, label: tr('Uno contro uno per i due violini', 'One-on-one for the two first options'), data: { player: v1.n } });
-    f.push({ key: 'iso-ritmo', delta: -Math.max(0, o.perimD - 60) * 0.30, label: tr('Ritmo bloccato dalla difesa individuale avversaria', 'Rhythm stopped by the opposing man-to-man defense'), data: {} });
+    // Due realizzatori veri: la media della coppia sopra i compagni e 9,1.
+    f.push({ key: 'iso-talento', delta: 1.8 + (((v1.attrs.sco + v2.attrs.sco) / 2 - t.avgSco) - 9) * 0.50, label: tr('Uno contro uno per i due violini', 'One-on-one for the two first options'), data: { player: v1.n } });
+    f.push({ key: 'iso-ritmo', delta: -Math.max(0, o.perimD - 70) * 0.28, label: tr('Ritmo bloccato dalla difesa individuale avversaria', 'Rhythm stopped by the opposing man-to-man defense'), data: {} });
     return f;
   }},
   'pick-roll': { pace: 2, variance: 0.98, fx(t, o) {
     const f = [];
-    const quality = (Math.max(t.playmaking, 60) - 74) * 0.30 + (t.bigScoring - 78) * 0.22;
+    const quality = 1.8 + (Math.max(t.playmaking, 60) - 78) * 0.26 + (t.bigScoring - 88) * 0.20;
     f.push({ key: 'pnr-coppia', delta: quality, label: tr('Qualita della coppia nel pick and roll', 'Quality of the pick and roll pair'), data: {} });
-    const slow = Math.max(0, 67 - o.athleticism) * 0.20;
+    const slow = Math.max(0, 64 - o.athleticism) * 0.20;
     if (slow > 0.5) f.push({ key: 'pnr-difesa-lenta', delta: slow, label: tr('Difesa avversaria lenta nei cambi', 'Opposing defense slow on switches'), data: {} });
     return f;
   }},
   'post-up': { pace: -3, variance: 0.92, fx(t, o) {
     const f = [];
-    f.push({ key: 'post-peso', delta: (t.bigScoring - 80) * 0.40, label: tr('Peso offensivo nel pitturato', 'Offensive weight in the paint'), data: {} });
-    const wall = -Math.max(0, o.rimProtect - 72) * 0.42;
+    f.push({ key: 'post-peso', delta: 2.6 + (t.bigScoring - 88) * 0.32, label: tr('Peso offensivo nel pitturato', 'Offensive weight in the paint'), data: {} });
+    const wall = -Math.max(0, o.rimProtect - 80) * 0.36;
     if (wall < -0.6) f.push({ key: 'post-muro', delta: wall, label: tr('Il ferro avversario e protetto', 'The opposing rim is protected'), data: { oppRim: Math.round(o.rimProtect) } });
-    f.push({ key: 'post-scarichi', delta: (t.spazio - 2) * 1.8, label: tr('Scarichi sui tiratori dopo il raddoppio', 'Kick-outs to the shooters after the double team'), data: { shooters: t.shooters } });
+    f.push({ key: 'post-scarichi', delta: (t.spazio - 2.7) * 1.5, label: tr('Scarichi sui tiratori dopo il raddoppio', 'Kick-outs to the shooters after the double team'), data: { shooters: t.shooters } });
     return f;
   }},
   'attacco-ferro': { pace: 3, variance: 1.02, fx(t, o) {
     const f = [];
-    f.push({ key: 'ferro-atletismo', delta: (t.athleticism - 67) * 0.24, label: tr('Pressione atletica sul canestro', 'Athletic pressure on the rim'), data: {} });
-    f.push({ key: 'ferro-muro', delta: -Math.max(0, o.rimProtect - 72) * 0.36, label: tr('Protezione del ferro avversaria', 'Opposing rim protection'), data: { oppRim: Math.round(o.rimProtect) } });
+    // Atleti veri contro un ferro scoperto: la media di atletismo e 68,5,
+    // quella della protezione del ferro 71.
+    f.push({ key: 'ferro-atletismo', delta: 1.3 + (t.athleticism - 68.5) * 0.34, label: tr('Pressione atletica sul canestro', 'Athletic pressure on the rim'), data: {} });
+    f.push({ key: 'ferro-muro', delta: -(o.rimProtect - 71) * 0.10 - Math.max(0, o.rimProtect - 82) * 0.30, label: tr('Protezione del ferro avversaria', 'Opposing rim protection'), data: { oppRim: Math.round(o.rimProtect) } });
     return f;
   }},
   'tiro-3': { pace: 4, variance: 1.34, fx(t, o) {
@@ -373,7 +393,7 @@ const STRAT = {
   }},
   'transizione': { pace: 7, variance: 1.12, fx(t, o) {
     const f = [];
-    f.push({ key: 'tr-atletismo', delta: (t.athleticism - 67) * 0.26, label: tr('Gambe e campo aperto', 'Legs and open floor'), data: {} });
+    f.push({ key: 'tr-atletismo', delta: (t.athleticism - 69) * 0.26, label: tr('Gambe e campo aperto', 'Legs and open floor'), data: {} });
     const heavy = Math.max(0, o.size - 15) * 1.4;
     if (heavy > 0.5) f.push({ key: 'tr-pesantezza', delta: heavy, label: tr('Quintetto avversario troppo pesante per correre', 'Opposing lineup too heavy to run'), data: { oppSize: o.size } });
     return f;
@@ -385,22 +405,16 @@ const STRAT = {
       const heal = -t.usageClashDelta * 0.72;
       f.push({ key: 'motion-armonia', delta: heal, label: tr('Il movimento di palla disinnesca il conflitto di usage', 'Ball movement defuses the usage clash'), data: {} });
     }
-    f.push({ key: 'motion-lettura', delta: (t.playmaking - 74) * 0.24, label: tr('Letture collettive e gioco senza palla', 'Team reads and off-ball movement'), data: {} });
+    f.push({ key: 'motion-lettura', delta: 0.3 + (t.playmaking - 77) * 0.24, label: tr('Letture collettive e gioco senza palla', 'Team reads and off-ball movement'), data: {} });
     const solo = t.five.filter((p) => p.attrs.pla >= 72).length;
     if (solo <= 1) f.push({ key: 'motion-un-creatore', delta: -3.4, label: tr('Un solo creatore: il motion gira a vuoto', 'Only one creator: the motion goes nowhere'), data: {} });
     return f;
   }},
   'dentro-fuori': { pace: 0, variance: 1.04, fx(t, o) {
     const f = [];
-    f.push({ key: 'df-lungo', delta: 1.4 + (t.bigScoring - 78) * 0.26, label: tr('Il lungo attira la difesa', 'The big man draws the defense'), data: {} });
-    f.push({ key: 'df-tiro', delta: (t.spacing - 76) * 0.20, label: tr('Tiratori pronti sugli scarichi', 'Shooters ready on the kick-outs'), data: {} });
+    f.push({ key: 'df-lungo', delta: 0.8 + (t.bigScoring - 84) * 0.26, label: tr('Il lungo attira la difesa', 'The big man draws the defense'), data: {} });
+    f.push({ key: 'df-tiro', delta: (t.spacing - 68) * 0.20, label: tr('Tiratori pronti sugli scarichi', 'Shooters ready on the kick-outs'), data: {} });
     if (t.spazio < 2 || t.bigScoring < 80) f.push({ key: 'df-incompleto', delta: -3.0, label: tr('Manca meta del meccanismo dentro-fuori', 'Half of the inside-out mechanism is missing'), data: {} });
-    return f;
-  }},
-  'handoff': { pace: 2, variance: 1.00, fx(t, o) {
-    const f = [];
-    f.push({ key: 'ho-tiro', delta: 1.4 + (t.spacing - 74) * 0.20, label: tr('Tiratori liberati in movimento', 'Shooters freed on the move'), data: {} });
-    f.push({ key: 'ho-lettura', delta: (t.playmaking - 74) * 0.16 + (t.bigPlay - 66) * 0.12, label: tr('Consegne e letture dei lunghi', 'Handoffs and reads by the bigs'), data: {} });
     return f;
   }},
   'equilibrato': { pace: 0, variance: 1.00, fx() {
@@ -662,8 +676,6 @@ function usageMultipliers(T) {
         m *= p.attrs.atl >= 80 ? 1.16 : 0.92; break;
       case 'dentro-fuori':
         if (p.slot === 'C' || p.attrs.tre >= 78) m *= 1.14; break;
-      case 'handoff':
-        if (p.attrs.tre >= 76) m *= 1.14; break;
       default: break;
     }
     return m;

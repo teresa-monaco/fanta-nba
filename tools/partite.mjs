@@ -120,7 +120,7 @@ const PROVE = COPPIE * PER_CASELLA;
 
 const sigla = { 'palla-star': 'STAR', 'pick-roll': 'P&R', 'post-up': 'POST', 'attacco-ferro': 'FERRO',
   'tiro-3': 'TIRO3', 'transizione': 'TRANS', 'motion': 'MOTION', 'isolamento': 'ISO',
-  'dentro-fuori': 'D-F', 'handoff': 'HAND', 'equilibrato': 'EQUI' };
+  'dentro-fuori': 'D-F', 'equilibrato': 'EQUI' };
 
 process.stdout.write('  ' + 'attacca \\ difende'.padEnd(9));
 for (const b of STRAT) process.stdout.write(sigla[b].padStart(7));
