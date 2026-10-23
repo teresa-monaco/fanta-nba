@@ -656,7 +656,7 @@ function viewSquadra({ state: s, session }) {
   // La propria squadra per prima: e quella su cui si deve decidere.
   const ordine = myTeam ? [myTeam, ...S.attive(s).filter((k) => k !== myTeam)] : S.attive(s);
 
-  const cards = ordine.map((k) => {
+  const cardsArr = ordine.map((k) => {
     const mia = k === myTeam;
     const canEdit = mia || (isHost && !S.seatTaken(s, k));
     const t = s.tactics[k];
@@ -737,7 +737,15 @@ function viewSquadra({ state: s, session }) {
         ${confermata ? '&#10003; Ready' : 'Ready'}
       </button>` : ''}
     </div>`;
-  }).join('');
+  });
+  // LE ALTRE SQUADRE IN UNA STRISCIA CHE SCORRE DI LATO. Una sotto l'altra la
+  // pagina era lunghissima, e a distanza i ridisegni continui la facevano
+  // saltare sotto le dita. La tua resta a tutta pagina; le altre si guardano
+  // scorrendo, quando hai finito e vuoi farti i fatti loro.
+  const altre = myTeam ? cardsArr.slice(1) : cardsArr;
+  const cards = (myTeam ? cardsArr[0] : '') + (altre.length ? `
+    <div class="lbl-mini mt">${myTeam ? tr('Le altre squadre', 'The other teams') : tr('Le squadre', 'The teams')} <i class="tiny muted">— ${tr('scorri di lato', 'swipe sideways')}</i></div>
+    <div class="altre-squadre" id="altre-squadre" data-tieni-scroll>${altre.join('')}</div>` : '');
 
   const n = S.attive(s).length;
   const giri = giriStagione(n);
@@ -781,9 +789,13 @@ function viewSquadra({ state: s, session }) {
   // senza doversi rifare tutta la pagina per contare i bordi verdi.
   const pronti = S.quantiPronti(s);
   const mancano = S.attive(s).filter((k) => !S.haConfermato(s, k));
+  // Per nome, chi ha finito e chi no: a distanza non vedi gli schermi degli
+  // altri, e "2/4" non dice a chi scrivere in chiamata.
+  const siPronti = S.attive(s).filter((k) => S.haConfermato(s, k));
   const contatore = `<div class="conta-pronti ${pronti === n ? 'tutti' : ''}">
     <b>${pronti}/${n}</b>
-    <span>${pronti === n ? tr('tutti pronti', 'everyone ready') : `${tr('in attesa di', 'waiting for')} ${mancano.map((k) => esc(TEAM_NAMES[k])).join(', ')}`}</span>
+    <span>${pronti === n ? tr('tutti pronti', 'everyone ready')
+      : `${siPronti.length ? `${siPronti.map((k) => `${esc(TEAM_NAMES[k])} &#10003;`).join(' · ')} — ` : ''}${tr('mancano', 'missing')}: ${mancano.map((k) => esc(TEAM_NAMES[k])).join(', ')}`}</span>
   </div>`;
 
   // L'azione sta in una barra fissa, non in fondo alla pagina. Con quattro
@@ -801,7 +813,7 @@ function viewSquadra({ state: s, session }) {
     ${cards}
     <div class="azione-spacer"></div>
     <div class="azione-fissa">
-      ${isHost ? `${azione}${pronti < n && pronte ? `<p class="tiny muted center mt">${n - pronti} ${pl(n - pronti, 'squadra non ha ancora confermato. Puoi andare lo stesso.', 'squadre non hanno ancora confermato. Puoi andare lo stesso.', 'team hasn\'t confirmed yet. You can go anyway.', 'teams haven\'t confirmed yet. You can go anyway.')}</p>` : ''}`
+      ${isHost ? `${azione}${pronti < n && pronte ? `<p class="tiny muted center mt">${tr('Non hanno ancora confermato', 'Not confirmed yet')}: ${mancano.map((k) => esc(TEAM_NAMES[k])).join(', ')}. ${tr('Puoi andare lo stesso.', 'You can go anyway.')}</p>` : ''}`
     : `<p class="small muted center">${tr('In attesa di chi ospita.', 'Waiting for the host.')}</p>`}
     </div>
   `;

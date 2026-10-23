@@ -318,6 +318,8 @@ ok(Object.values(STRATEGIES).every((v) => has(v.label)), 'tutte le strategie son
 {
   const n = S.attive(F.state).length;
   ok(has('class="conta-pronti'), 'in cima c\'e il conto di chi ha finito');
+  ok(/mancano: [^<]+/.test(html()), 'e dice per nome chi manca');
+  ok(has('class="altre-squadre"', 'data-tieni-scroll'), 'le squadre degli altri stanno in una striscia che scorre di lato');
   ok(has(`<b>0/${n}</b>`), 'e parte da zero', `0 su ${n}`);
   ok(has('data-act="conferma-pronto"'), 'ogni squadra che comandi ha il tasto');
   ok(!has('class="card t-t1 mine pronta"'), 'e di partenza nessun blocco e verde');

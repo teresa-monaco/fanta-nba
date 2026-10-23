@@ -1072,6 +1072,17 @@ details summary {
 .conta-pronti span { font-size: 12.5px; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .conta-pronti.tutti { border-left-color: var(--ok); }
 .conta-pronti.tutti b { color: var(--ok); }
+/* I nomi di chi e pronto e di chi manca vanno a capo invece di tagliarsi. */
+.conta-pronti span { white-space: normal; line-height: 1.35; }
+
+/* Le altre squadre: affiancate, si scorrono di lato a scatti. Larghe quasi
+   tutto lo schermo, cosi si vede che ce n'e un'altra dopo. */
+.altre-squadre {
+  display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; margin-top: 6px;
+}
+.altre-squadre::-webkit-scrollbar { display: none; }
+.altre-squadre > .card { flex: 0 0 88%; min-width: 0; scroll-snap-align: start; margin: 0; }
 
 /* ---- l'overall apre la scheda ----
    Lo scambio e la scheda sono due azioni diverse sullo stesso giocatore,
