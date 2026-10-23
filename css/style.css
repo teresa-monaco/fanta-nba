@@ -1107,6 +1107,17 @@ details summary {
   @keyframes reazione-fade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
 }
 
+/* La classifica storica: una tabellina, numeri allineati. */
+.storico-tab { display: grid; gap: 4px; overflow-x: auto; }
+.storico-tab .st-testa, .storico-tab .st-riga {
+  display: grid; grid-template-columns: minmax(80px, 1.6fr) repeat(6, minmax(34px, .7fr)); gap: 6px; align-items: baseline;
+  font-variant-numeric: tabular-nums;
+}
+.storico-tab .st-testa span { font: 800 9.5px var(--cond); letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); text-align: center; }
+.storico-tab .st-riga { padding: 5px 0; border-top: 1px solid var(--line); font-size: 13.5px; text-align: center; }
+.storico-tab .st-riga .nm { text-align: left; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.storico-tab .st-riga b { color: var(--gold); }
+
 /* Come si gioca: quattro righe, si apre con un tocco. */
 .come-si-gioca > summary { font: 800 12px var(--cond); letter-spacing: 1.6px; text-transform: uppercase; color: var(--gold); cursor: pointer; }
 .come-si-gioca ol { margin: 10px 0 2px; padding-left: 20px; display: grid; gap: 7px; }

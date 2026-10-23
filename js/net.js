@@ -109,6 +109,20 @@ export async function openRoom({ code, create, initialState, onState }) {
       setTimeout(() => { f.remove(nuova).catch(() => {}); }, 10000);
     },
     onReazione(cb) { ascoltatori.add(cb); return () => ascoltatori.delete(cb); },
+    // LO STORICO PER NOME, fuori dalle stanze: vale fra serate con codici
+    // diversi. Una riga per serata e per persona, con la serata come chiave:
+    // scriverla due volte non conta doppio.
+    async scriviStorico(voci) {
+      await Promise.all(voci.map((v) => f.set(f.ref(rdb, `storico/${chiaveSicura(v.nome)}/serate/${chiaveSicura(v.seed)}`), { ...v.dati, nome: v.nome })));
+    },
+    async leggiStorico(nomi) {
+      const out = {};
+      await Promise.all(nomi.map(async (n) => {
+        const snap = await f.get(f.ref(rdb, `storico/${chiaveSicura(n)}/serate`));
+        out[n] = snap.exists() ? Object.values(snap.val()) : [];
+      }));
+      return out;
+    },
     close() { unsub(); unsubReaz(); },
   };
 }
@@ -135,6 +149,9 @@ function openLocal({ code, initialState, onState }) {
     code: code || 'LOCALE',
     // Su un solo schermo la reazione torna subito a chi l'ha mandata.
     reagisci(e) { for (const cb of ascoltatori) cb({ e, uid: 'local', t: Date.now() }); },
+    // Su un solo schermo non c'e uno storico fra serate: niente da salvare.
+    async scriviStorico() {},
+    async leggiStorico() { return {}; },
     onReazione(cb) { ascoltatori.add(cb); return () => ascoltatori.delete(cb); },
     async apply(reducer) {
       const next = reducer(state);
@@ -153,6 +170,12 @@ function openLocal({ code, initialState, onState }) {
 /* ==========================================================
    Sanificazione per Realtime Database
    ========================================================== */
+
+// Una chiave del database non puo contenere . # $ [ ] / e niente spazi: il
+// nome si normalizza cosi, e "Diego" e " diego " diventano la stessa persona.
+export function chiaveSicura(x) {
+  return String(x ?? '').trim().toLowerCase().replace(/[.#$[\]/\s]+/g, '_') || '_';
+}
 
 // RTDB cancella le chiavi con valore undefined e rifiuta i NaN. I null sono
 // leciti ma equivalgono a una cancellazione: hydrate() li rimette al ritorno.

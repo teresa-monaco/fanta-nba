@@ -10,6 +10,7 @@ import * as BotAI from './bot.js';
 import { quoteSerie, pronosticoBot, classificaPronostici, reDeiPronostici } from './pronostici.js';
 import { ordineSerie, serieCorrente } from './serie.js';
 import { datiCard, disegnaCard, LARGHEZZA, ALTEZZA } from './card.js';
+import { premiSerata } from './premi.js';
 import { tr } from './lingua.js';
 
 const root = document.getElementById('app');
@@ -154,6 +155,7 @@ function paint() {
   seguiLaPartita();
   momentoCampione();
   registraAlbo();
+  caricaStorico();
 }
 
 // IL MOMENTO DEL CAMPIONE. Si apre una volta sola, nel momento in cui la
@@ -400,9 +402,40 @@ async function registraAlbo() {
     const re = reDeiPronostici(classificaPronostici(state, T));
     if (re) voce.rePronostici = chi(re.key);
     await session.apply((s) => S.recordAlbo(s, voce));
+
+    // Lo storico per nome, fra serate e stanze diverse. Solo le persone vere:
+    // i bot non hanno una carriera. Se le regole del database non lo
+    // permettono ancora, la serata va avanti lo stesso.
+    const bidone = premiSerata(state, T).find((p) => p.chiave === 'bidone');
+    const voci = S.attive(state).filter((k) => !state.bots?.[k] && S.nameOfSeat(state, k)).map((k) => {
+      const sue = turni.flat().filter((m) => m.res?.done && (m.a === k || m.b === k));
+      return {
+        nome: S.nameOfSeat(state, k), seed: f.seed,
+        dati: {
+          t: Date.now(), campione: r.winner === k, finale: f.a === k || f.b === k,
+          sv: sue.filter((m) => m.res.winner === k).length, sp: sue.filter((m) => m.res.winner !== k).length,
+          re: re?.key === k, bidone: bidone?.team === k,
+        },
+      };
+    });
+    session.scriviStorico?.(voci).catch((e) => console.warn('storico non salvato:', e?.message));
   } catch (err) {
     console.error('albo:', err);
   }
+}
+
+// La classifica storica si legge in lobby, per le persone sedute al tavolo,
+// e solo quando il gruppo cambia: non a ogni ridisegno.
+let storicoChiesto = null;
+function caricaStorico() {
+  if (state.phase !== 'lobby' || session.mode !== 'cloud' || !session.leggiStorico) return;
+  const nomi = Object.entries(state.seats || {}).filter(([, k]) => !state.bots?.[k])
+    .map(([uid]) => state.names?.[uid]).filter(Boolean).sort();
+  const chiave = nomi.join('|');
+  if (!nomi.length || chiave === storicoChiesto) return;
+  storicoChiesto = chiave;
+  session.leggiStorico(nomi).then((m) => { ui.storico = m; paint(); })
+    .catch((e) => console.warn('storico non letto:', e?.message));
 }
 
 function fatal(err) {

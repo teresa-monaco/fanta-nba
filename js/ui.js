@@ -301,6 +301,7 @@ function viewLobby({ state: s, session }) {
       </div>`}`}
 
     ${sceltaFormato}
+    ${storicoCard()}
     ${alboCard(s)}
     ${rivalitaCard(s, session)}
 
@@ -1532,6 +1533,31 @@ export function rivalitaCard(s, session) {
       <span class="muted">— ${io.bestiaNera.vinte}-${io.bestiaNera.perse} ${tr('nelle serie', 'in series')}</span></p>` : ''}
     ${righe}
     <p class="tiny muted mt">${tr('Serie vinte fra persone, su tutte le serate.', 'Series won between people, across all game nights.')}</p>
+  </div>`;
+}
+
+/* ---------- Classifica storica ---------- */
+
+// Per nome, su tutte le serate e tutte le stanze: chi ha vinto di piu fra le
+// persone sedute stasera. Si riempie quando lo storico arriva dal database;
+// finche non c'e (o le regole non lo permettono) la scheda non compare.
+export function storicoCard() {
+  const m = ui.storico;
+  if (!m) return '';
+  const righe = Object.entries(m).map(([nome, serate]) => ({
+    nome, serate: serate.length,
+    titoli: serate.filter((x) => x.campione).length, finali: serate.filter((x) => x.finale).length,
+    sv: serate.reduce((t, x) => t + (x.sv || 0), 0), sp: serate.reduce((t, x) => t + (x.sp || 0), 0),
+    re: serate.filter((x) => x.re).length, bidoni: serate.filter((x) => x.bidone).length,
+  })).filter((r) => r.serate > 0).sort((a, b) => b.titoli - a.titoli || b.finali - a.finali || b.sv - a.sv);
+  if (!righe.length) return '';
+  return `<div class="card storico">
+    <h3 class="mb">${tr('Classifica storica', 'All-time standings')}</h3>
+    <div class="storico-tab">
+      <div class="st-testa"><span></span><span>${tr('Titoli', 'Titles')}</span><span>${tr('Finali', 'Finals')}</span><span>${tr('Serate', 'Nights')}</span><span>${tr('Serie', 'Series')}</span><span>&#128081;</span><span>&#128465;</span></div>
+      ${righe.map((r) => `<div class="st-riga"><span class="nm">${esc(r.nome)}</span><b>${r.titoli}</b><span>${r.finali}</span><span>${r.serate}</span><span>${r.sv}-${r.sp}</span><span>${r.re}</span><span>${r.bidoni}</span></div>`).join('')}
+    </div>
+    <p class="tiny muted mt">${tr('Su tutte le serate, anche in stanze diverse. &#128081; re dei pronostici · &#128465; bidone della serata.', 'Across all game nights, even in different rooms. &#128081; prediction king · &#128465; bust of the night.')}</p>
   </div>`;
 }
 
