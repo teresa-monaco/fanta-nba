@@ -71,7 +71,7 @@ export function render(root, ctx) {
 // un'emoji e vola sullo schermo di tutti col tuo nome. Non nella fase
 // squadre: li si ragiona, e le emoji sopra le scelte darebbero fastidio.
 // Nel database viaggia la chiave, non l'emoji: niente sorprese di codifica.
-export const REAZIONI = { cacca: '💩', capra: '🐐', su: '👍', giu: '👎', clown: '🤡', soldi: '💰' };
+export const REAZIONI = { cacca: '💩', capra: '🐐', su: '👍', giu: '👎', clown: '🤡', soldi: '💸' };
 
 const bottoniReazione = () => Object.entries(REAZIONI)
   .map(([k, e]) => `<button class="reaz" data-act="reazione" data-e="${k}" aria-label="${k}">${e}</button>`).join('');
