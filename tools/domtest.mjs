@@ -246,6 +246,10 @@ ok((html().match(/data-clock/g) || []).length >= 2,
   'il cronometro c\'e anche nella barra dei rilanci, non solo in cima');
 ok(html().lastIndexOf('data-clock') > html().indexOf('class="bidbar"'),
   'ed e dentro la barra fissa, non sopra');
+// In asta le reazioni stanno nella scheda del giocatore, lontane dai rilanci.
+ok(has('class="reaz-scheda"', 'data-act="reazione" data-e="soldi"') && !has('class="reaz-barra"')
+  && html().indexOf('class="reaz-scheda"') < html().indexOf('class="bidbar"'),
+  'in asta le emoji sono nella scheda del giocatore, non vicino ai rilanci');
 // Le caselle d'asta sono targate per ruolo: serve a vedere chi manca.
 ok(['PG', 'SG', 'SF', 'PF', 'C'].every((p) => html().includes(`<span class="pos">${p}</span>`))
   || !has('class="rslots"'), 'le caselle della propria rosa portano il ruolo');

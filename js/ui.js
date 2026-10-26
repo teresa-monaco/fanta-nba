@@ -71,12 +71,22 @@ export function render(root, ctx) {
 // un'emoji e vola sullo schermo di tutti col tuo nome. Non nella fase
 // squadre: li si ragiona, e le emoji sopra le scelte darebbero fastidio.
 // Nel database viaggia la chiave, non l'emoji: niente sorprese di codifica.
-export const REAZIONI = { cacca: '💩', capra: '🐐', giu: '👎', fuoco: '🔥', ride: '😂', clown: '🤡', mattone: '🧱', re: '👑' };
+export const REAZIONI = { cacca: '💩', capra: '🐐', su: '👍', giu: '👎', clown: '🤡', soldi: '💰' };
 
+const bottoniReazione = () => Object.entries(REAZIONI)
+  .map(([k, e]) => `<button class="reaz" data-act="reazione" data-e="${k}" aria-label="${k}">${e}</button>`).join('');
+
+// In asta stanno DENTRO la scheda del giocatore: si reagisce a lui e al suo
+// prezzo, e lontano dai rilanci non si sbaglia tasto.
+function reazioniScheda() {
+  return `<div class="reaz-scheda" role="toolbar" aria-label="${tr('Reazioni', 'Reactions')}">${bottoniReazione()}</div>`;
+}
+
+// Nei playoff in fondo allo schermo non c'e nessun tasto fisso: le emoji
+// stanno li, dove in asta ci sono i rilanci, in piccolo.
 function barraReazioni(s) {
-  if (!['auction', 'playoffs'].includes(s.phase)) return '';
-  return `<div class="reaz-barra" role="toolbar" aria-label="${tr('Reazioni', 'Reactions')}">${Object.entries(REAZIONI)
-    .map(([k, e]) => `<button class="reaz" data-act="reazione" data-e="${k}" aria-label="${k}">${e}</button>`).join('')}</div>`;
+  if (s.phase !== 'playoffs') return '';
+  return `<div class="reaz-spacer"></div><div class="reaz-barra" role="toolbar" aria-label="${tr('Reazioni', 'Reactions')}">${bottoniReazione()}</div>`;
 }
 
 // La scheda di un giocatore, aperta toccando il suo overall. Scegliere
@@ -441,6 +451,7 @@ function viewAuction({ state: s, session }) {
       ${pallina(p, arc)}
       <div class="ovr-riga"><span>Overall</span><b>${p.ovr}</b></div>
       <div class="attrs">${attrs}</div>
+      ${reazioniScheda()}
     </div>
 
     ${hostBar ? `<div class="card tight">${hostBar}</div>` : ''}
